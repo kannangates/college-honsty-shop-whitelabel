@@ -5,7 +5,7 @@ colleges:
       - public/logo.svg
       - public/logo-dark.svg
     mirrorRepo: https://github.com/shasun-honesty/honesty-shop.git
-    webhookUrl: https://hooks.shasuncollege.in/webhook-endpoint
+    webhookUrl: https://chat.googleapis.com/v1/spaces/AAQAoWicARw/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=nhH3Z6qWgPvEPuk8Jg9tDSh5XtKfFzF9YrD0qGC7ccs
 
   - name: alpha
     branch: alpha-college

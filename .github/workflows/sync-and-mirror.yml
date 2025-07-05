@@ -23,7 +23,7 @@ jobs:
         id: set-matrix
         run: |
           config=$(cat .github/college-sync-config.yml)
-          echo "matrix=$(echo \"$config\" | yq -o json | jq -c '.colleges')" >> $GITHUB_OUTPUT
+          echo "matrix=$(echo \"$config\" | yq -o json | jq -c '.colleges | map(select(.enabled == true))')" >> $GITHUB_OUTPUT
 
   sync-and-mirror:
     needs: generate-matrix
@@ -50,6 +50,10 @@ jobs:
           git fetch origin ${{ matrix.branch }} || git checkout -b ${{ matrix.branch }}
           git checkout ${{ matrix.branch }}
 
+      - name: Get last commit message
+        id: last_commit
+        run: echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+
       - name: Merge from main and exclude branding
         run: |
           git merge origin/main --no-commit || echo "No changes"
@@ -65,8 +69,13 @@ jobs:
           git push origin ${{ matrix.branch }} --force
 
       - name: Mirror to college GitHub repo
+        env:
+          COLLEGE_REPO_URL: ${{ matrix.mirrorRepo }}
+          COLLEGE_REPO_TOKEN: ${{ secrets.COLLEGE_REPO_TOKEN }}
         run: |
-          git remote add college https://x-access-token:${{ secrets.COLLEGE_REPO_TOKEN }}@${{ matrix.mirrorRepo#https:// }}
+          CLEAN_REPO_URL="${COLLEGE_REPO_URL/https:\/\//}"
+          echo "🔁 Pushing to: $CLEAN_REPO_URL"
+          git remote add college https://x-access-token:${COLLEGE_REPO_TOKEN}@${CLEAN_REPO_URL}
           git push college ${{ matrix.branch }}:main --force
 
       - name: Notify Success
@@ -75,11 +84,7 @@ jobs:
           curl -X POST "${{ matrix.webhookUrl }}" \
           -H 'Content-Type: application/json' \
           -d '{
-            "status": "success",
-            "college": "${{ matrix.name }}",
-            "branch": "${{ matrix.branch }}",
-            "timestamp": "'$(date -u +%FT%TZ)'",
-            "message": "✅ Successfully synced and mirrored ${{ matrix.branch }} to their repo"
+            "text": "✅ *Sync Success* for *${{ matrix.name }}* → `${{ matrix.branch }}`\n*Last Commit:* ${{ steps.last_commit.outputs.message }}\nTimestamp: $(date -u +%FT%TZ)"
           }'
 
       - name: Notify Failure
@@ -88,13 +93,9 @@ jobs:
           curl -X POST "${{ matrix.webhookUrl }}" \
           -H 'Content-Type: application/json' \
           -d '{
-            "status": "failure",
-            "college": "${{ matrix.name }}",
-            "branch": "${{ matrix.branch }}",
-            "timestamp": "'$(date -u +%FT%TZ)'",
-            "message": "❌ Sync failed for ${{ matrix.branch }}. Check GitHub Actions logs."
+            "text": "❌ *Sync Failed* for *${{ matrix.name }}* → `${{ matrix.branch }}`\nPlease check GitHub Actions logs.\nTimestamp: $(date -u +%FT%TZ)"
           }'
 
       - name: Final Log
         run: |
-          echo "✅ Synced ${{ matrix.branch }} → ${matrix.mirrorRepo#https://} main branch"
+          echo "✅ Synced ${{ matrix.branch }} → ${{ matrix.mirrorRepo }} main branch"
