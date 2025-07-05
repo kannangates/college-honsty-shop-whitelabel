@@ -1,0 +1,100 @@
+name: Auto Sync & Mirror to College Repos
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load college config
+        id: set-matrix
+        run: |
+          config=$(cat .github/college-sync-config.yml)
+          echo "matrix=$(echo \"$config\" | yq -o json | jq -c '.colleges')" >> $GITHUB_OUTPUT
+
+  sync-and-mirror:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+          token: ${{ secrets.COLLEGE_REPO_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Fetch and checkout target branch
+        run: |
+          git fetch origin ${{ matrix.branch }} || git checkout -b ${{ matrix.branch }}
+          git checkout ${{ matrix.branch }}
+
+      - name: Merge from main and exclude branding
+        run: |
+          git merge origin/main --no-commit || echo "No changes"
+          for file in ${{ join(matrix.brandingPaths, ' ') }}; do
+            echo "Excluding $file"
+            git restore --staged "$file" || true
+            git restore "$file" || true
+          done
+          git commit -m "🔁 Auto-merged from main (branding preserved)" || echo "No new commit"
+
+      - name: Push to internal college branch
+        run: |
+          git push origin ${{ matrix.branch }} --force
+
+      - name: Mirror to college GitHub repo
+        run: |
+          git remote add college https://x-access-token:${{ secrets.COLLEGE_REPO_TOKEN }}@${{ matrix.mirrorRepo#https:// }}
+          git push college ${{ matrix.branch }}:main --force
+
+      - name: Notify Success
+        if: success()
+        run: |
+          curl -X POST "${{ matrix.webhookUrl }}" \
+          -H 'Content-Type: application/json' \
+          -d '{
+            "status": "success",
+            "college": "${{ matrix.name }}",
+            "branch": "${{ matrix.branch }}",
+            "timestamp": "'$(date -u +%FT%TZ)'",
+            "message": "✅ Successfully synced and mirrored ${{ matrix.branch }} to their repo"
+          }'
+
+      - name: Notify Failure
+        if: failure()
+        run: |
+          curl -X POST "${{ matrix.webhookUrl }}" \
+          -H 'Content-Type: application/json' \
+          -d '{
+            "status": "failure",
+            "college": "${{ matrix.name }}",
+            "branch": "${{ matrix.branch }}",
+            "timestamp": "'$(date -u +%FT%TZ)'",
+            "message": "❌ Sync failed for ${{ matrix.branch }}. Check GitHub Actions logs."
+          }'
+
+      - name: Final Log
+        run: |
+          echo "✅ Synced ${{ matrix.branch }} → ${matrix.mirrorRepo#https://} main branch"

@@ -1,0 +1,16 @@
+colleges:
+  - name: shasun
+    branch: shasun-college
+    brandingPaths:
+      - public/logo.svg
+      - public/logo-dark.svg
+    mirrorRepo: https://github.com/shasun-honesty/honesty-shop.git
+    webhookUrl: https://hooks.shasuncollege.in/webhook-endpoint
+
+  - name: alpha
+    branch: alpha-college
+    brandingPaths:
+      - public/logo.svg
+      - public/logo-dark.svg
+    mirrorRepo: https://github.com/alpha-org/alpha-shop.git
+    webhookUrl: https://hooks.alphacollege.edu/notify
