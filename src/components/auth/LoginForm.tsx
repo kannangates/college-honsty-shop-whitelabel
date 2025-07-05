@@ -91,6 +91,7 @@ export function LoginForm({
                   <AlertDialogTrigger asChild>
                     <button
                       type="button"
+                      onClick={onShowPasswordReset}
                       className="ml-auto text-sm underline underline-offset-4 hover:text-primary"
                     >
                       Forgot your password?

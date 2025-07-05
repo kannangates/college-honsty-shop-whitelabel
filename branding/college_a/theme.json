@@ -1,0 +1,17 @@
+{
+  "name": "Example College A",
+  "portal_name": "College A Honesty Shop Portal",
+  "tagline": "No Cameras 📷 | No Cashiers 💳 | Just Character 🫡",
+  "subtitle": "🛡️ Honor in Every Transaction 🤝",
+  "description": "A modern, secure, and ISO-compliant honesty shop management system built with enterprise-grade security and performance optimization.",
+  "colors": {
+    "primary": "#dc2626",
+    "secondary": "#fbbf24",
+    "accent": "#fef3c7"
+  },
+  "logo": {
+    "url": "/logo.png",
+    "fallback": "https://cdn.jsdelivr.net/gh/lucide-icons/lucide@0.263.1/icons/graduation-cap.svg"
+  },
+  "favicon": "/logo.png"
+}

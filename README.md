@@ -1,252 +1,280 @@
+# White-Label College Honesty Shop 🏫
 
-# Shasun Honesty Shop Portal 🛡️
-
-A modern, secure, and ISO-compliant honesty shop management system built with enterprise-grade security and performance optimization. This system enables educational institutions to manage campus shops with honor-based transactions.
+A modern, white-labeled honesty shop management system that can be easily customized for any educational institution. Built with enterprise-grade security, performance optimization, and ISO compliance.
 
 ## 🌟 Features
 
+### 🎨 **White-Label Ready**
+- **Multi-College Support**: Easy branding configuration for different institutions
+- **Dynamic Theming**: Automatic color scheme and branding application
+- **Customizable Content**: Institution-specific messages, forms, and configurations
+- **Logo & Asset Management**: Custom logos and visual identity support
+
 ### 🔐 **Authentication & Security**
-- **Multi-factor Authentication**: Secure login/signup system with MFA support
-- **Role-based Access Control**: Student, Teacher, and Admin roles with granular permissions
-- **Session Management**: Advanced session handling with automatic renewal
-- **Security Monitoring**: Real-time vulnerability scanning and compliance checking
-- **Audit Logging**: Comprehensive activity tracking for compliance
+- Multi-factor Authentication with secure login/signup
+- Role-based Access Control (Student, Teacher, Admin)
+- Advanced session management with automatic renewal
+- Real-time security monitoring and compliance checking
+- Comprehensive audit logging for compliance
 
 ### 🏪 **Shop Management**
-- **Product Catalog**: Browse and manage product inventory
-- **Real-time Stock Tracking**: Live inventory updates and low-stock alerts
-- **Order Management**: Complete order lifecycle from placement to fulfillment
-- **Payment Processing**: Secure payment handling with multiple methods
-- **Points & Rewards System**: Gamification with badges and leaderboards
+- Product catalog with real-time inventory tracking
+- Honor-based transaction system
+- Order management with complete lifecycle tracking
+- Secure payment processing with multiple methods
+- Points & rewards system with gamification
 
 ### 📊 **Analytics & Reporting**
-- **Admin Dashboard**: Comprehensive management tools and analytics
-- **Performance Monitoring**: Real-time system performance tracking
-- **Financial Reports**: Detailed revenue and transaction reporting
-- **User Analytics**: Student engagement and behavior insights
-- **ISO Compliance Reports**: Automated compliance monitoring and reporting
+- Comprehensive admin dashboard with analytics
+- Real-time performance monitoring
+- Financial reports and transaction insights
+- User engagement analytics
+- ISO compliance automated reporting
 
-### 🎮 **Gamification**
-- **Points System**: Reward honest transactions and good behavior
-- **Badge System**: Achievement badges for milestones and excellence
-- **Leaderboards**: Department and individual rankings
-- **Celebration Animations**: Interactive rewards and recognition
+## 🚀 Quick Start for Colleges
 
-### 📱 **User Experience**
-- **Responsive Design**: Mobile-first interface optimized for all devices
-- **Real-time Updates**: Live data synchronization across all users
-- **Intuitive Navigation**: Clean, modern interface with excellent UX
-- **Accessibility**: WCAG 2.1 compliant for inclusive access
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+ and npm
-- Supabase account (for backend services)
-- Modern web browser
-
-### Installation
-
+### 1. Clone and Setup
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd shasun-honesty-shop
+git clone https://github.com/your-org/white-label-college-honesty-shop.git
+cd white-label-college-honesty-shop
 
 # Install dependencies
 npm install
 
-# Start development server
-npm run dev
+# Copy environment template
+cp .env.example .env
 
-# Build for production
-npm run build
-
-# Run tests
-npm test
-
-# Run build tests
-npm run test:build
+# Set your college code in .env
+echo "COLLEGE_CODE=your_college_name" >> .env
 ```
 
-### Environment Setup
+### 2. Configure Your College Branding
 
-This application uses Supabase's native integration in Lovable. No `.env` files are needed - all configuration is handled through the centralized config system in `src/config/`.
-
-## 🏗️ Architecture
-
-### Frontend Stack
-- **React 18**: Modern React with hooks and concurrent features
-- **TypeScript**: Type-safe development with strict typing
-- **Vite**: Fast build tool with HMR and optimized bundling
-- **Tailwind CSS**: Utility-first CSS framework
-- **shadcn/ui**: High-quality, accessible UI components
-
-### Backend & Services
-- **Supabase**: PostgreSQL database with real-time subscriptions
-- **Edge Functions**: Serverless functions for business logic
-- **Authentication**: Supabase Auth with RLS policies
-- **File Storage**: Supabase Storage for images and documents
-
-### State Management
-- **React Context**: Application-wide state management
-- **TanStack Query**: Server state management and caching
-- **React Hook Form**: Form state and validation
-
-## 📁 Project Structure
-
-```
-src/
-├── components/          # Reusable UI components
-│   ├── auth/           # Authentication components
-│   ├── dashboard/      # Dashboard-specific components
-│   ├── ui/            # shadcn/ui components
-│   └── common/        # Shared components
-├── contexts/           # React Context providers
-├── hooks/             # Custom React hooks
-├── pages/             # Route components
-├── utils/             # Utility functions and helpers
-├── config/            # Application configuration
-├── integrations/      # External service integrations
-└── types/            # TypeScript type definitions
+Create your college's branding folder:
+```bash
+mkdir -p branding/your_college_name
 ```
 
-## 🔧 Configuration
+Copy and customize the configuration files:
+```bash
+# Copy from an existing example
+cp -r branding/default/* branding/your_college_name/
 
-All application configuration is centralized in `src/config/`:
+# Or start from scratch with the templates below
+```
 
-- **`app.ts`**: Application identity and branding
-- **`branding.ts`**: Visual branding and colors
-- **`system.ts`**: System settings and security
-- **`forms.ts`**: Form configurations and validation
-- **`supabase.ts`**: Database and authentication settings
+### 3. Customize Your Configuration
 
-## 🛠️ Development
+#### `branding/your_college_name/theme.json`
+```json
+{
+  "name": "Your College Name",
+  "portal_name": "Your College Honesty Shop Portal",
+  "tagline": "Your Custom Tagline",
+  "subtitle": "Your Custom Subtitle",
+  "description": "Your college description",
+  "colors": {
+    "primary": "#your-primary-color",
+    "secondary": "#your-secondary-color", 
+    "accent": "#your-accent-color"
+  },
+  "logo": {
+    "url": "/your-logo.png",
+    "fallback": "fallback-logo-url"
+  },
+  "favicon": "/your-favicon.png"
+}
+```
 
-### Code Quality
-- **ESLint**: Code linting and formatting
-- **TypeScript**: Strict type checking
-- **Prettier**: Code formatting
-- **Husky**: Git hooks for quality gates
+#### `branding/your_college_name/config.json`
+Customize app settings, form labels, and system configurations.
 
-### Testing
-- **Jest**: Unit and integration testing
-- **React Testing Library**: Component testing
-- **Build Test Utility**: Custom build verification system
+#### `branding/your_college_name/messages.json`
+Customize all text content, error messages, and UI labels.
 
-### Performance
-- **Vite**: Fast development and optimized builds
-- **Code Splitting**: Automatic route-based splitting
-- **Tree Shaking**: Dead code elimination
-- **Image Optimization**: Automatic image processing
-
-## 🔒 Security Features
-
-### Data Protection
-- **Encryption**: Data encrypted at rest and in transit
-- **RLS Policies**: Row-level security for data access
-- **Input Validation**: Comprehensive input sanitization
-- **CSRF Protection**: Cross-site request forgery prevention
-
-### Monitoring
-- **Security Scanning**: Automated vulnerability detection
-- **Audit Logging**: Complete activity tracking
-- **Performance Monitoring**: Real-time system health
-- **Error Tracking**: Comprehensive error reporting
-
-## 🏆 ISO Compliance
-
-### Standards Adherence
-- **ISO 9001**: Quality management systems
-- **ISO 27001**: Information security management
-- **SOC 2**: Security and availability controls
-- **GDPR**: Data protection and privacy
-
-### Compliance Features
-- **Audit Trails**: Complete activity logging
-- **Data Retention**: Configurable retention policies
-- **Access Controls**: Role-based permissions
-- **Incident Response**: Automated security responses
-
-## 🚀 Deployment
-
-### Production Deployment
-The application can be deployed using Lovable's built-in deployment system:
-
-1. Click the "Publish" button in the Lovable interface
-2. Configure your custom domain (paid plans only)
-3. Your app will be automatically deployed with HTTPS
-
-### Custom Deployment
-For custom deployments:
+### 4. Deploy Your Instance
 
 ```bash
 # Build the application
 npm run build
 
-# Deploy the dist/ folder to your hosting provider
-# Ensure proper routing configuration for SPA
+# The built files will be in the 'dist' folder
+# Deploy to your preferred hosting service
 ```
 
-## 🔍 Monitoring & Analytics
+## 🎨 Branding System
 
-### Performance Monitoring
-- **Web Vitals**: Core web vitals tracking
-- **Load Times**: Page and resource loading metrics
-- **Error Rates**: Application error monitoring
-- **User Analytics**: Engagement and behavior tracking
+The white-label system supports multiple colleges through a flexible branding structure:
 
-### Business Intelligence
-- **Sales Analytics**: Revenue and transaction insights
-- **User Behavior**: Engagement patterns and preferences
-- **Inventory Analytics**: Stock levels and demand forecasting
-- **Compliance Reporting**: Automated compliance dashboards
+```
+branding/
+├── default/          # Default demo branding
+├── shasun/          # Shasun Engineering College (example)
+├── college_a/       # Example College A
+├── college_b/       # Example College B
+└── your_college/    # Your custom branding
+    ├── theme.json   # Visual branding (colors, logos, names)
+    ├── config.json  # App configuration (forms, system settings)
+    └── messages.json # All text content and messages
+```
 
-## 🤝 Contributing
+### College Detection Methods
 
-### Development Workflow
+The system automatically detects which college configuration to use:
+
+1. **Environment Variable**: Set `COLLEGE_CODE=your_college_name` in `.env`
+2. **Subdomain Detection**: `collegea.yourdomain.com` → loads `college_a` branding
+3. **Fallback**: Uses `default` branding if detection fails
+
+## 🔧 Advanced Configuration
+
+### Custom Domain Setup
+1. Configure your college's subdomain to point to your deployment
+2. Set `VITE_BASE_DOMAIN=yourdomain.com` in your environment
+3. The system will automatically detect the college from the subdomain
+
+### Color System
+The branding system uses CSS custom properties for theming:
+- Colors are automatically converted from hex to HSL
+- Supports both light and dark mode variations
+- Maintains accessibility standards with proper contrast
+
+### Form Customization
+Each college can customize:
+- Field labels (Student ID vs Roll Number)
+- Placeholder text
+- Available options (shifts, roles, departments)
+- Validation rules and messages
+
+## 🚀 Deployment Options
+
+### 1. Using Lovable (Recommended)
+- Connect to Supabase for backend functionality
+- Use the built-in deployment system
+- Configure custom domains in project settings
+
+### 2. Self-Hosted Deployment
+```bash
+# Build for production
+npm run build
+
+# Deploy the 'dist' folder to:
+# - Vercel, Netlify, or similar static hosting
+# - Your own web server
+# - CDN with proper routing for SPA
+```
+
+### 3. Automated College Mirroring
+
+The repository includes GitHub Actions for automatic code mirroring to college-specific repositories:
+
+1. Fork this repository as your white-label base
+2. Set up secrets in GitHub:
+   - `COLLEGE_REPO_TOKEN`: GitHub PAT with push access
+   - `COLLEGE_REPO_URL`: Target college repository URL
+3. Push to `main` branch triggers automatic mirroring
+
+## 🛠️ Development
+
+### Local Development
+```bash
+# Start development server
+npm run dev
+
+# Run tests
+npm test
+
+# Build and test
+npm run build
+```
+
+### Creating New College Configurations
+1. Copy an existing college folder in `branding/`
+2. Customize the three JSON files
+3. Test locally by setting `COLLEGE_CODE` in `.env`
+4. Deploy when ready
+
+### Contributing
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes with tests
 4. Submit a pull request
 
-### Code Standards
-- Follow TypeScript strict mode
-- Use ESLint and Prettier configurations
-- Write comprehensive tests
-- Document complex logic
+## 📚 Example Configurations
 
-## 📈 Roadmap
+### Engineering College
+```json
+{
+  "name": "ABC Engineering College",
+  "colors": {
+    "primary": "#1e40af",
+    "secondary": "#dc2626",
+    "accent": "#f3f4f6"
+  }
+}
+```
 
-### Upcoming Features
-- **Mobile App**: Native mobile applications
-- **Advanced Analytics**: Machine learning insights
-- **Multi-language Support**: Internationalization
-- **API Integrations**: Third-party service connections
+### Business School
+```json
+{
+  "name": "XYZ Business School",
+  "colors": {
+    "primary": "#059669",
+    "secondary": "#0891b2",
+    "accent": "#ecfdf5"
+  }
+}
+```
 
-### Performance Improvements
-- **Caching Strategy**: Enhanced caching mechanisms
-- **Database Optimization**: Query performance improvements
-- **CDN Integration**: Global content delivery
-- **Progressive Web App**: PWA capabilities
+## 🔒 Security & Compliance
 
-## 📞 Support
+- **ISO 9001/27001** compliant architecture
+- **SOC 2** security controls
+- **GDPR** data protection compliance
+- Real-time security monitoring
+- Comprehensive audit logging
+- Automated vulnerability scanning
 
-### Documentation
-- [User Guide](docs/user-guides/)
-- [Admin Guide](docs/user-guides/admin-guide.md)
-- [API Documentation](docs/api/)
+## 📞 Support & Documentation
+
+### For Colleges
+- [Setup Guide](docs/setup-guide.md)
+- [Customization Guide](docs/customization-guide.md)
+- [Deployment Guide](docs/deployment-guide.md)
+
+### For Developers
+- [Technical Documentation](docs/technical-docs.md)
+- [API Reference](docs/api-reference.md)
+- [Contributing Guide](CONTRIBUTING.md)
 
 ### Community
+- [GitHub Issues](https://github.com/your-org/white-label-college-honesty-shop/issues)
+- [Discussions](https://github.com/your-org/white-label-college-honesty-shop/discussions)
 - [Discord Community](https://discord.com/invite/lovable)
-- [GitHub Issues](https://github.com/your-repo/issues)
-- [Support Email](mailto:support@yourschool.edu)
 
 ## 📄 License
 
-This project is proprietary software developed for educational institutions. All rights reserved.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🎯 Roadmap
+
+- [ ] Mobile app versions
+- [ ] Advanced analytics dashboard
+- [ ] Multi-language support
+- [ ] Third-party integrations (payment gateways, LMS)
+- [ ] White-label admin panel
+- [ ] API marketplace for extensions
 
 ---
 
-**Built with ❤️ for Shasun Engineering College**
+**Built with ❤️ for Educational Institutions Worldwide**
 
 *No Cameras 📷 | No Cashiers 💳 | Just Character 🫡*
+
+## 🌟 Live Examples
+
+- **Shasun Engineering College**: [demo-shasun.lovable.app](https://demo-shasun.lovable.app)
+- **Example College A**: [demo-collegea.lovable.app](https://demo-collegea.lovable.app)
+- **Example College B**: [demo-collegeb.lovable.app](https://demo-collegeb.lovable.app)
+- **Default Demo**: [demo-default.lovable.app](https://demo-default.lovable.app)

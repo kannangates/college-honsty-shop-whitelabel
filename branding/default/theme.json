@@ -1,0 +1,17 @@
+{
+  "name": "Demo College",
+  "portal_name": "Demo Honesty Shop Portal",
+  "tagline": "No Cameras 📷 | No Cashiers 💳 | Just Character 🫡",
+  "subtitle": "🛡️ Honor in Every Transaction 🤝",
+  "description": "A modern, secure, and ISO-compliant honesty shop management system built with enterprise-grade security and performance optimization.",
+  "colors": {
+    "primary": "#3b82f6",
+    "secondary": "#64748b",
+    "accent": "#f1f5f9"
+  },
+  "logo": {
+    "url": "/logo.png",
+    "fallback": "https://cdn.jsdelivr.net/gh/lucide-icons/lucide@0.263.1/icons/graduation-cap.svg"
+  },
+  "favicon": "/logo.png"
+}
