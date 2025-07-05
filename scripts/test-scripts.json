@@ -1,0 +1,10 @@
+
+{
+  "scripts": {
+    "test:critical": "node -e \"const { buildTestUtility } = require('./utils/buildTestUtility'); buildTestUtility.runCriticalTests().then(console.log);\"",
+    "test:non-critical": "node -e \"const { buildTestUtility } = require('./utils/buildTestUtility'); buildTestUtility.runNonCriticalTests().then(console.log);\"",
+    "test:build": "node -e \"const { buildTestUtility } = require('./utils/buildTestUtility'); buildTestUtility.runAllTests().then(console.log);\"",
+    "type-check": "tsc --noEmit",
+    "test:e2e": "jest --testPathPattern=e2e"
+  }
+}
