@@ -9,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
+  AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrentConfig, getCurrentMessages } from '@/config/dynamic';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function LoginForm({
   className,
@@ -29,6 +31,7 @@ export function LoginForm({
 }) {
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { signIn } = useAuth();
@@ -68,17 +71,21 @@ export function LoginForm({
 
   return (
     <div className={`flex flex-col gap-6 ${className}`}>
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>
-            {messages.auth.login_description || 'Enter your Student ID and Password to continue'}
+      <Card className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-lg border border-purple-200/30 shadow-xl rounded-2xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b border-purple-100/20">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent text-center">
+            Welcome Back! ✨
+          </CardTitle>
+          <CardDescription className="text-gray-600 text-center">
+            {messages.auth.login_description || 'Sign in to continue your journey'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            <div className="grid gap-3">
-              <Label htmlFor="studentId">{config.forms.labels.student_id || 'Student ID'}</Label>
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="studentId" className="text-sm font-medium text-gray-700">
+                {config.forms?.labels?.student_id || 'Student ID'} 🎓
+              </Label>
               <Input
                 id="studentId"
                 type="text"
@@ -86,58 +93,92 @@ export function LoginForm({
                 onChange={(e) =>
                   setStudentId(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))
                 }
-                placeholder={config.forms.placeholders.student_id || 'e.g., SHA1234'}
+                placeholder={config.forms?.placeholders?.student_id || 'Enter your ID'}
+                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
                 required
               />
             </div>
-            <div className="grid gap-3">
-              <div className="flex items-center">
-                <Label htmlFor="password">{config.forms.labels.password || 'Password'}</Label>
-                {onShowPasswordReset && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button
-                        type="button"
-                        className="ml-auto text-sm underline underline-offset-4 hover:text-primary"
-                      >
-                        Forgot your password?
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Password Reset</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Please reach out to your class representative or staff coordinator to reset your password.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <Button variant="outline">Close</Button>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  {config.forms?.labels?.password || 'Password'} 🔐
+                </Label>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-xs text-purple-600 hover:text-purple-800 underline underline-offset-4 transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="sm:max-w-md">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-center">🔑 Password Reset</AlertDialogTitle>
+                      <AlertDialogDescription className="text-center text-gray-600">
+                        Need help with your password? No worries! 😊
+                        <br /><br />
+                        Please reach out to your class representative or staff coordinator to reset your password.
+                        <br /><br />
+                        They'll help you get back into your account quickly! 🚀
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="sm:justify-center">
+                      <AlertDialogAction className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl px-6">
+                        Got it! ✨
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={config.forms.placeholders.password || 'Enter your password'}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={config.forms?.placeholders?.password || 'Enter your password'}
+                  className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (messages.loading.signing_in || 'Logging in...') : (messages.auth.login_button || 'Login')}
+
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]" 
+              disabled={loading}
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  {messages.loading.signing_in || 'Signing in...'}
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  {messages.auth.login_button || 'Sign In'} 🚀
+                </span>
+              )}
             </Button>
 
-            <div className="mt-4 text-center text-sm">
-              Don't have an account?{' '}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 mb-3">
+                Don't have an account yet? 🤔
+              </p>
               <button
                 type="button"
                 onClick={onToggleSignup}
-                className="underline underline-offset-4 text-primary"
+                className="text-sm font-medium text-purple-600 hover:text-purple-800 underline underline-offset-4 transition-colors"
               >
-                Create one
+                Create your account ✨
               </button>
             </div>
           </form>

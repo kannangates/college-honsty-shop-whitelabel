@@ -4,6 +4,9 @@ colleges:
     enabled: true
     branch: shasun-college
     brandingPaths:
+      - branding/shasun/theme.json
+      - branding/shasun/config.json
+      - branding/shasun/messages.json
       - public/logo.svg
       - public/logo-dark.svg
     mirrorRepo: https://github.com/shasun-honesty/honesty-shop.git
@@ -13,7 +16,22 @@ colleges:
     enabled: true
     branch: alpha-college
     brandingPaths:
+      - branding/college_a/theme.json
+      - branding/college_a/config.json
+      - branding/college_a/messages.json
       - public/logo.svg
       - public/logo-dark.svg
     mirrorRepo: https://github.com/alpha-org/alpha-shop.git
     webhookUrl: https://hooks.alphacollege.edu/notify
+
+  - name: beta
+    enabled: false
+    branch: beta-college
+    brandingPaths:
+      - branding/college_b/theme.json
+      - branding/college_b/config.json  
+      - branding/college_b/messages.json
+      - public/logo.svg
+      - public/logo-dark.svg
+    mirrorRepo: https://github.com/beta-college/beta-shop.git
+    webhookUrl: https://hooks.betacollege.edu/notify

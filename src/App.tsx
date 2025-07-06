@@ -1,19 +1,26 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import AuthPage from "@/pages/AuthPage";
-import ResetPassword from "@/pages/ResetPassword";
 import { UserRoutes } from "@/routes/UserRoutes";
 import { AdminRoutes } from "@/routes/AdminRoutes";
 import NotFound from "@/pages/NotFound";
 import { Navigate } from "react-router-dom";
+import { getBrandingConfig } from "@/config/dynamic";
+import { useEffect } from "react";
 import "./App.css";
 
 const queryClient = new QueryClient();
 
 function App() {
+  useEffect(() => {
+    // Initialize branding configuration on app start
+    getBrandingConfig().catch(console.error);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
@@ -22,7 +29,6 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/auth" replace />} />
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
               {UserRoutes()}
               {AdminRoutes()}
               <Route path="*" element={<NotFound />} />

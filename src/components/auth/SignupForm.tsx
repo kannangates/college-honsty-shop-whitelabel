@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { CONFIG } from '@/config';
+import { getCurrentConfig, getCurrentMessages } from '@/config/dynamic';
 import { PersonalInfoFields } from './forms/PersonalInfoFields';
 import { PasswordFields } from './forms/PasswordFields';
 import { DepartmentRoleFields } from './forms/DepartmentRoleFields';
@@ -12,35 +13,57 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   const [formData, setFormData] = useState({
     studentId: '',
     name: '',
+    email: '',
     password: '',
     confirmPassword: '',
     department: '',
+    mobileNumber: '',
     role: 'student',
-    shift: 'Morning (1st Shift)',
+    shift: '1',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [studentIdError, setStudentIdError] = useState('');
-
+  
   const { signUp } = useAuth();
   const { toast } = useToast();
+  const config = getCurrentConfig();
+  const messages = getCurrentMessages();
 
   const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+
     if (field === 'studentId') {
       const alphanumericOnly = value.replace(/[^a-zA-Z0-9]/g, '');
-      setStudentIdError(value !== alphanumericOnly ? CONFIG.MESSAGES.ERRORS.STUDENT_ID_ALPHANUMERIC : '');
+      if (value !== alphanumericOnly) {
+        setStudentIdError(messages.errors?.student_id_alphanumeric || 'Only letters and numbers allowed');
+      } else {
+        setStudentIdError('');
+      }
       setFormData(prev => ({ ...prev, studentId: alphanumericOnly }));
-    } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
     }
   };
 
+  // Auto-adjust role based on department and shift
+  useEffect(() => {
+    const isDeptAll = formData.department.toLowerCase() === 'all department';
+    const isShiftFull = formData.shift === 'full';
+    const shouldForceTeacher = isDeptAll || isShiftFull;
+
+    if (shouldForceTeacher && formData.role !== 'teacher') {
+      setFormData(prev => ({ ...prev, role: 'teacher' }));
+    } else if (!shouldForceTeacher && formData.role === 'teacher') {
+      setFormData(prev => ({ ...prev, role: 'student' }));
+    }
+  }, [formData.department, formData.shift, formData.role]);
+
   const validateForm = () => {
-    if (!formData.studentId || !formData.name || !formData.password || !formData.department) {
+    if (!formData.studentId || !formData.name || !formData.email || !formData.password || 
+        !formData.department || !formData.mobileNumber) {
       toast({
-        title: CONFIG.MESSAGES.ERRORS.ALL_FIELDS_REQUIRED,
-        description: CONFIG.MESSAGES.ERRORS.FILL_ALL_FIELDS,
+        title: messages.errors?.all_fields_required || 'All fields required',
+        description: messages.errors?.fill_all_fields || 'Please fill in all required fields',
         variant: 'destructive',
       });
       return false;
@@ -76,19 +99,17 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
       return;
     }
 
-    const email = `${formData.studentId}@shasuncollege.edu.in`;
-
     try {
       await signUp(
-        email,
+        formData.email,
         formData.password,
         formData.studentId,
         formData.name,
         formData.department,
-        '', // mobileNumber removed
-        'student',
-        'Morning (1st Shift)',
-        CONFIG.SYSTEM.DEFAULT_POINTS
+        formData.mobileNumber,
+        formData.role,
+        formData.shift,
+        config.app?.welcome_points || 100
       );
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Signup failed';
@@ -103,16 +124,16 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto bg-white/95 backdrop-blur-sm border-2 border-[#202072]/20 shadow-xl">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-[#202072] to-[#e66166] bg-clip-text text-transparent">
-          Create Account
+    <Card className="w-full max-w-4xl mx-auto bg-white/90 backdrop-blur-lg border border-purple-200/30 shadow-xl rounded-2xl overflow-hidden">
+      <CardHeader className="text-center bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b border-purple-100/20">
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+          Join Us! ✨
         </CardTitle>
         <CardDescription className="text-gray-600">
-          Fill in your details to create your account
+          Create your account and start your journey with us 🚀
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <PersonalInfoFields
             formData={formData}
@@ -120,7 +141,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             loading={loading}
             onInputChange={handleInputChange}
           />
-
+          
           <PasswordFields
             formData={formData}
             showPassword={showPassword}
@@ -140,24 +161,33 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
           <div className="md:col-span-2">
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#202072] to-[#e66166] hover:from-[#1a1c60] hover:to-[#d55256] text-white"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
               disabled={loading}
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Creating Account...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  Create Account 🎉
+                </span>
+              )}
             </Button>
           </div>
 
           <div className="md:col-span-2 text-center mt-6">
             <p className="text-gray-600 mb-4">
-              Already have an account?
+              Already have an account? 😊
             </p>
             <Button
               variant="outline"
               type="button"
               onClick={onToggleLogin}
-              className="border-[#202072]/30 hover:bg-[#202072]/5"
+              className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300 rounded-xl px-6"
             >
-              Sign In
+              Sign In Instead ✨
             </Button>
           </div>
         </form>
