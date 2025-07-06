@@ -1,5 +1,7 @@
+
 colleges:
   - name: shasun
+    enabled: true
     branch: shasun-college
     brandingPaths:
       - public/logo.svg
@@ -8,6 +10,7 @@ colleges:
     webhookUrl: https://chat.googleapis.com/v1/spaces/AAQAoWicARw/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=nhH3Z6qWgPvEPuk8Jg9tDSh5XtKfFzF9YrD0qGC7ccs
 
   - name: alpha
+    enabled: true
     branch: alpha-college
     brandingPaths:
       - public/logo.svg
