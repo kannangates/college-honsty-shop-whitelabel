@@ -1,77 +1,56 @@
-// Dynamic Configuration System - Uses Branding Loader
-import { initializeBranding, type BrandingTheme, type BrandingConfig, type BrandingMessages } from '@/utils/brandingLoader';
 
-// Global branding state
-let currentBranding: {
-  theme: BrandingTheme;
-  config: BrandingConfig;
-  messages: BrandingMessages;
-} | null = null;
+import { FORMS_CONFIG } from './forms';
 
-// Initialize branding once
-let brandingPromise: Promise<any> | null = null;
+// Dynamic configuration that can be loaded from branding files
+let currentTheme = {
+  logo: {
+    url: '/logo.png',
+    fallback: '/logo.png'
+  },
+  portal_name: 'Honesty Shop',
+  tagline: 'Your trusted college marketplace',
+  subtitle: 'Shop with confidence'
+};
 
-export async function getBrandingConfig() {
-  if (currentBranding) {
-    return currentBranding;
+let currentConfig = {
+  app: {
+    welcome_points: 100
+  },
+  forms: {
+    labels: FORMS_CONFIG.LABELS,
+    placeholders: FORMS_CONFIG.PLACEHOLDERS,
+    shift_options: FORMS_CONFIG.SHIFT_OPTIONS,
+    role_options: FORMS_CONFIG.ROLE_OPTIONS
   }
+};
 
-  if (!brandingPromise) {
-    brandingPromise = initializeBranding();
+let currentMessages = {
+  auth: {
+    login_description: 'Sign in to continue your journey',
+    login_button: 'Sign In'
+  },
+  loading: {
+    signing_in: 'Signing in...'
+  },
+  errors: {
+    missing_credentials: 'Missing Fields',
+    fill_all_fields: 'Please fill in all required fields',
+    login_failed: 'Login failed',
+    all_fields_required: 'All fields required',
+    student_id_alphanumeric: 'Only letters and numbers allowed'
   }
+};
 
-  currentBranding = await brandingPromise;
-  return currentBranding;
-}
+export const getCurrentTheme = () => currentTheme;
+export const getCurrentConfig = () => currentConfig;
+export const getCurrentMessages = () => currentMessages;
 
-// Synchronous getters (with fallbacks for SSR)
-export function getCurrentTheme(): BrandingTheme {
-  return currentBranding?.theme || {
-    name: "Loading...",
-    portal_name: "Loading...",
-    tagline: "Loading...",
-    subtitle: "Loading...",
-    description: "Loading...",
-    colors: {
-      primary: "#3b82f6",
-      secondary: "#64748b", 
-      accent: "#f1f5f9"
-    },
-    logo: {
-      url: "/logo.png",
-      fallback: "https://cdn.jsdelivr.net/gh/lucide-icons/lucide@0.263.1/icons/graduation-cap.svg"
-    },
-    favicon: "/logo.png"
-  };
-}
-
-export function getCurrentConfig(): BrandingConfig {
-  return currentBranding?.config || {
-    app: {
-      name: "Loading...",
-      welcome_points: 100
-    },
-    forms: {
-      labels: {},
-      placeholders: {},
-      shift_options: [],
-      role_options: []
-    },
-    system: {
-      performance: {},
-      security: {},
-      iso_compliance: {}
-    }
-  };
-}
-
-export function getCurrentMessages(): BrandingMessages {
-  return currentBranding?.messages || {
-    auth: {},
-    navigation: {},
-    products: {},
-    errors: {},
-    loading: {},
-    success: {}
-  };
-}
+export const getBrandingConfig = async () => {
+  // For now, return the default config
+  // In the future, this would load from branding files
+  return Promise.resolve({
+    theme: currentTheme,
+    config: currentConfig,
+    messages: currentMessages
+  });
+};

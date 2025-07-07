@@ -43,6 +43,12 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
       }
       setFormData(prev => ({ ...prev, studentId: alphanumericOnly }));
     }
+
+    // Auto-generate email if studentId is provided and no custom email
+    if (field === 'studentId' && value && !formData.email.includes('@')) {
+      const email = `${value}@shasuncollege.edu.in`;
+      setFormData(prev => ({ ...prev, email }));
+    }
   };
 
   // Auto-adjust role based on department and shift
