@@ -1,486 +1,421 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Package, Search, Plus, AlertTriangle, TrendingUp, RefreshCw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { InventoryTable } from '@/components/admin/InventoryTable';
-import { RestockModal } from '@/components/admin/RestockModal';
-import { EnhancedEditProductModal } from '@/components/admin/EnhancedEditProductModal';
+import { Plus, Edit, Trash2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Product {
   id: string;
   name: string;
-  unit_price: number;
-  opening_stock: number;
-  status: string;
+  description: string;
+  price: number;
+  image_url: string;
+  category: string;
+  status: 'active' | 'inactive';
+  current_stock: number;
   created_at: string;
-  sold?: number;
-  category?: string;
+  is_archived: boolean;
 }
 
 const AdminInventory = () => {
-  const [inventory, setInventory] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [restockingProduct, setRestockingProduct] = useState<Product | null>(null);
-  const [newProduct, setNewProduct] = useState({
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newProduct, setNewProduct] = useState<Omit<Product, 'id' | 'created_at' | 'is_archived'>>({
     name: '',
-    unit_price: '',
-    opening_stock: '',
-    status: 'true'
+    description: '',
+    price: 0,
+    image_url: '',
+    category: '',
+    status: 'active',
+    current_stock: 0,
   });
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const { toast } = useToast();
 
-  const fetchProducts = async () => {
-    setLoading(true);
+  const fetchProducts = useCallback(async () => {
     try {
-      console.log('🔄 Fetching products from database...');
-      
+      setLoading(true);
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('❌ Error fetching products:', error);
-        throw error;
-      }
-
-      console.log('✅ Products fetched successfully:', {
-        count: data?.length || 0,
-        products: data?.map(p => ({ id: p.id, name: p.name, stock: p.opening_stock })),
-        timestamp: new Date().toISOString()
-      });
-      
-      const transformedData = data?.map(product => ({
-        ...product,
-        sold: 0,
-        category: 'General',
-        stock: product.opening_stock
-      })) || [];
-
-      setInventory(transformedData);
-      
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
       toast({
-        title: 'Success',
-        description: `Loaded ${transformedData.length} products`,
+        title: "Error",
+        description: "Failed to load products",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewProduct(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateProduct = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .insert([newProduct])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProducts(prev => [data, ...prev]);
+      setNewProduct({
+        name: '',
+        description: '',
+        price: 0,
+        image_url: '',
+        category: '',
+        status: 'active',
+        current_stock: 0,
+      });
+      setIsDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Product created successfully",
       });
     } catch (error) {
-      console.error('❌ Error in fetchProducts:', error);
+      console.error('Error creating product:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to fetch products',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to create product",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const handleAddProduct = async () => {
-    console.log('🔄 Add product request initiated:', {
-      productData: newProduct,
-      timestamp: new Date().toISOString()
+  const handleEditProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setIsEditMode(true);
+    setNewProduct({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      image_url: product.image_url,
+      category: product.category,
+      status: product.status,
+      current_stock: product.current_stock,
     });
+    setIsDialogOpen(true);
+  };
+
+  const handleUpdateProduct = async () => {
+    if (!selectedProduct) return;
 
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .insert([{
-          name: newProduct.name,
-          unit_price: parseFloat(newProduct.unit_price),
-          opening_stock: parseInt(newProduct.opening_stock),
-          status: newProduct.status,
-          is_archived: false
-        }])
+        .update(newProduct)
+        .eq('id', selectedProduct.id)
         .select()
         .single();
 
-      if (error) {
-        console.error('❌ Add product database error:', {
-          error: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          timestamp: new Date().toISOString()
-        });
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Product added successfully:', {
-        newProduct: data,
-        timestamp: new Date().toISOString()
-      });
-
-      setInventory(prev => [data, ...prev]);
-      setNewProduct({ name: '', unit_price: '', opening_stock: '', status: 'true' });
-      setIsAddDialogOpen(false);
-
+      setProducts(prev => prev.map(p => (p.id === selectedProduct.id ? data : p)));
+      setIsDialogOpen(false);
+      setIsEditMode(false);
+      setSelectedProduct(null);
       toast({
-        title: 'Success',
-        description: 'Product added successfully',
+        title: "Success",
+        description: "Product updated successfully",
       });
     } catch (error) {
-      console.error('❌ Error adding product:', error);
+      console.error('Error updating product:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to add product',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to update product",
+        variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEditProduct = async (updatedProduct: Product) => {
-    console.log('🔄 Edit product database request:', {
-      productId: updatedProduct.id,
-      updateData: {
-        name: updatedProduct.name,
-        unit_price: updatedProduct.unit_price,
-        opening_stock: updatedProduct.opening_stock,
-        status: updatedProduct.status
-      },
-      timestamp: new Date().toISOString()
-    });
-
+  const handleDeleteProduct = async (product: Product) => {
     try {
+      setLoading(true);
       const { error } = await supabase
         .from('products')
-        .update({
-          name: updatedProduct.name,
-          unit_price: updatedProduct.unit_price,
-          opening_stock: updatedProduct.opening_stock,
-          status: updatedProduct.status
-        })
-        .eq('id', updatedProduct.id);
+        .delete()
+        .eq('id', product.id);
 
-      if (error) {
-        console.error('❌ Edit product database error:', {
-          error: error.message,
-          code: error.code,
-          productId: updatedProduct.id,
-          timestamp: new Date().toISOString()
-        });
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Product update database response successful:', {
-        productId: updatedProduct.id,
-        timestamp: new Date().toISOString()
-      });
-
-      setInventory(prev => prev.map(p => 
-        p.id === updatedProduct.id ? updatedProduct : p
-      ));
-
+      setProducts(prev => prev.filter(p => p.id !== product.id));
       toast({
-        title: 'Success',
-        description: 'Product updated successfully',
+        title: "Success",
+        description: "Product deleted successfully",
       });
     } catch (error) {
-      console.error('❌ Error updating product:', error);
+      console.error('Error deleting product:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to update product',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
       });
-      throw error;
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleRestockProduct = async (productId: string, quantity: number) => {
-    const product = inventory.find(p => p.id === productId);
-    if (!product) return;
-
-    const newStock = product.opening_stock + quantity;
-
-    console.log('🔄 Restock database request:', {
-      productId,
-      currentStock: product.opening_stock,
-      restockQuantity: quantity,
-      newStock,
-      timestamp: new Date().toISOString()
-    });
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ opening_stock: newStock })
-        .eq('id', productId);
-
-      if (error) {
-        console.error('❌ Restock database error:', {
-          error: error.message,
-          code: error.code,
-          productId,
-          timestamp: new Date().toISOString()
-        });
-        throw error;
-      }
-
-      console.log('✅ Restock database response successful:', {
-        productId,
-        newStock,
-        timestamp: new Date().toISOString()
-      });
-
-      setInventory(prev => prev.map(p => 
-        p.id === productId ? { ...p, opening_stock: newStock } : p
-      ));
-
-      toast({
-        title: 'Success',
-        description: `Restocked ${product.name} with ${quantity} units`,
-      });
-    } catch (error) {
-      console.error('❌ Error restocking product:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to restock product',
-        variant: 'destructive',
-      });
-      throw error;
-    }
-  };
-
-  const filteredInventory = inventory.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const stats = {
-    totalItems: inventory.length,
-    lowStock: inventory.filter(p => (p.opening_stock || 0) <= 10).length,
-    totalStock: inventory.reduce((sum, p) => sum + (p.opening_stock || 0), 0),
-    itemsSold: inventory.reduce((sum, p) => sum + (p.sold || 0), 0)
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-              <Package className="h-8 w-8" />
-              Inventory Management
-            </h1>
-            <p className="text-purple-100">Manage stock levels and product availability</p>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              onClick={fetchProducts}
-              disabled={loading}
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Item
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Product</DialogTitle>
-                  <DialogDescription>Create a new product in the inventory</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Product Name</Label>
-                    <Input
-                      id="name"
-                      value={newProduct.name}
-                      onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
-                      placeholder="Enter product name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="price">Unit Price (₹)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={newProduct.unit_price}
-                      onChange={(e) => setNewProduct({...newProduct, unit_price: e.target.value})}
-                      placeholder="Enter unit price"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="stock">Opening Stock</Label>
-                    <Input
-                      id="stock"
-                      type="number"
-                      value={newProduct.opening_stock}
-                      onChange={(e) => setNewProduct({...newProduct, opening_stock: e.target.value})}
-                      placeholder="Enter opening stock"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <select
-                      id="status"
-                      value={newProduct.status}
-                      onChange={(e) => setNewProduct({...newProduct, status: e.target.value})}
-                      className="w-full p-2 border rounded-md"
-                    >
-                      <option value="true">Active</option>
-                      <option value="false">Inactive</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleAddProduct} className="flex-1">
-                      Add Product
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Items</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalItems}</p>
-              </div>
-              <div className="p-3 rounded-full bg-blue-100">
-                <Package className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Low Stock</p>
-                <p className="text-2xl font-bold text-red-600">{stats.lowStock}</p>
-              </div>
-              <div className="p-3 rounded-full bg-red-100">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Stock</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalStock}</p>
-              </div>
-              <div className="p-3 rounded-full bg-green-100">
-                <TrendingUp className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Items Sold</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.itemsSold}</p>
-              </div>
-              <div className="p-3 rounded-full bg-purple-100">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-gray-800">Search Inventory</CardTitle>
+    <div className="container mx-auto py-8">
+      <Card className="shadow-lg">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-2xl font-bold">Inventory Management</CardTitle>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input 
-                placeholder="Search by item name..." 
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+          {loading ? (
+            <div className="flex items-center justify-center">
+              Loading products...
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Stock
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {products.map(product => (
+                    <tr key={product.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {product.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {product.category}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {product.price}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {product.current_stock}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {product.status}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditProduct(product)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-red-500">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. Are you sure you want to delete {product.name}?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteProduct(product)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialog for adding/editing product */}
+      <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isEditMode ? "Edit Product" : "Add Product"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isEditMode ? "Update the product details below:" : "Enter the details for the new product:"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogContent className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                type="text"
+                id="name"
+                name="name"
+                value={newProduct.name}
+                onChange={handleInputChange}
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Inventory Table */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-gray-800">Products Inventory</CardTitle>
-          <CardDescription>
-            Manage your product inventory with modern table interface
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <InventoryTable
-            products={filteredInventory}
-            loading={loading}
-            onEdit={(product) => {
-              setEditingProduct(product);
-              setIsEditModalOpen(true);
-            }}
-            onRestock={(product) => {
-              setRestockingProduct(product);
-              setIsRestockModalOpen(true);
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Enhanced Edit Product Modal */}
-      <EnhancedEditProductModal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setEditingProduct(null);
-        }}
-        product={editingProduct}
-        onUpdate={handleEditProduct}
-      />
-
-      {/* Restock Modal */}
-      <RestockModal
-        isOpen={isRestockModalOpen}
-        onClose={() => {
-          setIsRestockModalOpen(false);
-          setRestockingProduct(null);
-        }}
-        product={restockingProduct}
-        onRestock={handleRestockProduct}
-      />
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                type="text"
+                id="description"
+                name="description"
+                value={newProduct.description}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="price">Price</Label>
+              <Input
+                type="number"
+                id="price"
+                name="price"
+                value={newProduct.price}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="image_url">Image URL</Label>
+              <Input
+                type="text"
+                id="image_url"
+                name="image_url"
+                value={newProduct.image_url}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                type="text"
+                id="category"
+                name="category"
+                value={newProduct.category}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="current_stock">Stock</Label>
+              <Input
+                type="number"
+                id="current_stock"
+                name="current_stock"
+                value={newProduct.current_stock}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status</Label>
+              <select
+                id="status"
+                name="status"
+                value={newProduct.status}
+                onChange={handleInputChange}
+                className="rounded-md border border-gray-200 px-3 py-2 text-sm shadow-sm focus:border-purple-400 focus:outline-none focus:ring-purple-400/20"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </AlertDialogContent>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setIsDialogOpen(false);
+              setIsEditMode(false);
+              setSelectedProduct(null);
+              setNewProduct({
+                name: '',
+                description: '',
+                price: 0,
+                image_url: '',
+                category: '',
+                status: 'active',
+                current_stock: 0,
+              });
+            }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (isEditMode && selectedProduct) {
+                handleUpdateProduct();
+              } else {
+                handleCreateProduct();
+              }
+            }} disabled={loading}>
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Saving...
+                </span>
+              ) : (
+                <span>{isEditMode ? "Update Product" : "Create Product"}</span>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

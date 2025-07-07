@@ -1,15 +1,13 @@
 
-import { supabase } from '@/integrations/supabase/client';
-
-export interface CaptchaConfig {
-  siteKey: string;
-  secretKey: string;
-  enabled: boolean;
+export interface CaptchaChallenge {
+  id: string;
+  question: string;
+  answer: number;
+  type: 'math' | 'text';
 }
 
 export class CaptchaManager {
   private static instance: CaptchaManager;
-  private config: CaptchaConfig | null = null;
 
   static getInstance(): CaptchaManager {
     if (!CaptchaManager.instance) {
@@ -18,82 +16,77 @@ export class CaptchaManager {
     return CaptchaManager.instance;
   }
 
-  async initialize(): Promise<void> {
-    try {
-      // For now, disable captcha as integration settings table structure needs to be updated
-      this.config = { 
-        siteKey: '', 
-        secretKey: '', 
-        enabled: false 
-      };
-    } catch (error) {
-      console.error('Failed to load captcha configuration:', error);
-      this.config = { siteKey: '', secretKey: '', enabled: false };
+  generateMathChallenge(): CaptchaChallenge {
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    const operations = ['+', '-', '*'];
+    const operation = operations[Math.floor(Math.random() * operations.length)];
+    
+    let answer: number;
+    let question: string;
+    
+    switch (operation) {
+      case '+':
+        answer = num1 + num2;
+        question = `${num1} + ${num2} = ?`;
+        break;
+      case '-':
+        answer = Math.max(num1, num2) - Math.min(num1, num2);
+        question = `${Math.max(num1, num2)} - ${Math.min(num1, num2)} = ?`;
+        break;
+      case '*':
+        answer = num1 * num2;
+        question = `${num1} × ${num2} = ?`;
+        break;
+      default:
+        answer = num1 + num2;
+        question = `${num1} + ${num2} = ?`;
     }
+
+    return {
+      id: Math.random().toString(36).substr(2, 9),
+      question,
+      answer,
+      type: 'math'
+    };
   }
 
-  loadHCaptchaScript(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (document.getElementById('hcaptcha-script')) {
-        resolve();
-        return;
+  validateChallenge(challengeId: string, userAnswer: number, correctAnswer: number): boolean {
+    return userAnswer === correctAnswer;
+  }
+
+  async verifyCaptcha(token: string, challenge: CaptchaChallenge, userAnswer: number): Promise<boolean> {
+    try {
+      // Validate the math challenge
+      const isValid = this.validateChallenge(challenge.id, userAnswer, challenge.answer);
+      
+      if (!isValid) {
+        return false;
       }
 
-      const script = document.createElement('script');
-      script.id = 'hcaptcha-script';
-      script.src = 'https://cdn.jsdelivr.net/npm/hcaptcha@1.8.1/dist/hcaptcha.min.js';
-      script.async = true;
-      script.defer = true;
+      // Additional verification logic can be added here
+      // For now, we'll just validate the math challenge
       
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load hCaptcha script'));
-      
-      document.head.appendChild(script);
-    });
-  }
-
-  async renderCaptcha(elementId: string, callback: (token: string) => void): Promise<void> {
-    if (!this.config?.enabled || !this.config.siteKey) return;
-
-    try {
-      await this.loadHCaptchaScript();
-      
-      // Wait for hcaptcha to be available
-      const hcaptcha = (window as any).hcaptcha;
-      if (!hcaptcha) throw new Error('hCaptcha not loaded');
-
-      hcaptcha.render(elementId, {
-        sitekey: this.config.siteKey,
-        callback: callback,
-        'error-callback': () => {
-          console.error('hCaptcha error');
-        }
-      });
+      return true;
     } catch (error) {
-      console.error('Failed to render captcha:', error);
-    }
-  }
-
-  async verifyCaptcha(token: string): Promise<boolean> {
-    if (!this.config?.enabled || !token) return true;
-
-    try {
-      const { data } = await supabase.functions.invoke('verify-captcha', {
-        body: { token, secretKey: this.config.secretKey }
-      });
-
-      return data?.success || false;
-    } catch (error) {
-      console.error('Captcha verification failed:', error);
+      console.error('CAPTCHA verification failed:', error);
       return false;
     }
   }
 
-  isEnabled(): boolean {
-    return this.config?.enabled || false;
-  }
-
-  getSiteKey(): string {
-    return this.config?.siteKey || '';
+  // Method to handle any type of verification data
+  async handleVerification(data: Record<string, unknown>): Promise<boolean> {
+    try {
+      // Handle different types of verification data
+      if (typeof data.answer === 'number' && typeof data.expected === 'number') {
+        return data.answer === data.expected;
+      }
+      
+      // Add more verification logic as needed
+      return false;
+    } catch (error) {
+      console.error('Verification handling failed:', error);
+      return false;
+    }
   }
 }

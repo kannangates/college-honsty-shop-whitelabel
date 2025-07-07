@@ -1,11 +1,12 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuthCleanup } from './auth/useAuthCleanup';
 import { useAuthRedirect } from './auth/useAuthRedirect';
 import { useBackdoorAuth } from './auth/useBackdoorAuth';
-import { useSupabaseAuth } from './auth/useSupabaseAuth';
 import { clearBackdoorSession } from './useAuthState';
+import { AuthService } from '@/services/authService';
 
 type UserProfile = Tables<'users'>;
 
@@ -37,13 +38,6 @@ export const useAuthActions = ({
     setLoading,
     handleSuccessfulLogin
   });
-  const { signInWithSupabase, signUpWithSupabase } = useSupabaseAuth({
-    setUser,
-    setSession,
-    setLoading,
-    fetchProfile,
-    handleSuccessfulLogin
-  });
 
   const signIn = async (studentId: string, password: string) => {
     console.log('🔑 SignIn attempt for studentId:', studentId);
@@ -61,7 +55,22 @@ export const useAuthActions = ({
       return;
     }
 
-    await signInWithSupabase(studentId, password);
+    try {
+      const result = await AuthService.login(studentId, password);
+      
+      if (result.success && result.session && result.profile) {
+        setSession(result.session);
+        setUser(result.session.user);
+        setProfile(result.profile);
+        handleSuccessfulLogin();
+      } else {
+        throw new Error(result.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('❌ Sign in error:', error);
+      setLoading(false);
+      throw error;
+    }
   };
 
   const signUp = async (
@@ -81,7 +90,7 @@ export const useAuthActions = ({
     console.log('🚀 Signup started for:', studentId);
 
     try {
-      await signUpWithSupabase(
+      const signupResult = await AuthService.signup({
         email,
         password,
         studentId,
@@ -91,7 +100,26 @@ export const useAuthActions = ({
         role,
         shift,
         points
-      );
+      });
+
+      if (!signupResult.success) {
+        throw new Error(signupResult.error);
+      }
+
+      // Auto-login after successful signup
+      const loginResult = await AuthService.autoLogin(email, password);
+      
+      if (loginResult.success && loginResult.session && loginResult.profile) {
+        setSession(loginResult.session);
+        setUser(loginResult.session.user);
+        setProfile(loginResult.profile);
+        
+        console.log('✅ Signup and auto-login successful');
+        console.log('➡️ Redirecting to /dashboard');
+        window.location.href = '/dashboard';
+      } else {
+        throw new Error(loginResult.error || 'Auto-login failed after signup');
+      }
     } catch (error: unknown) {
       setLoading(false);
       throw error;
@@ -101,6 +129,7 @@ export const useAuthActions = ({
   const signOut = async () => {
     cleanupAuthState();
     localStorage.removeItem('redirectAfterLogin');
+    
     if (typeof window !== 'undefined' && localStorage.getItem('backdoorMode') === 'true') {
       clearBackdoorSession();
       setUser(null);
@@ -110,11 +139,13 @@ export const useAuthActions = ({
       window.location.href = '/auth';
       return;
     }
+    
     try {
-      await supabase.auth.signOut();
+      await AuthService.signOut();
     } catch (err) {
       console.warn('Sign out error:', err);
     }
+    
     setUser(null);
     setProfile(null);
     setSession(null);

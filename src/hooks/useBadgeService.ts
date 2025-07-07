@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -72,72 +71,64 @@ export const useBadgeService = () => {
     }
   };
 
-  // Fetch user badges
-  const fetchUserBadges = async () => {
+  const fetchUserBadges = useCallback(async () => {
     if (!user?.id) return;
 
     try {
       const { data, error } = await supabase
         .from('user_badges')
         .select(`
-          id,
-          user_id,
-          badge_id,
-          earned_at,
-          badge:badges(*)
+          *,
+          badges (*)
         `)
-        .eq('user_id', user.id)
-        .order('earned_at', { ascending: false });
+        .eq('user_id', user.id);
 
       if (error) throw error;
-      
-      // Cast to proper UserBadge type
-      const typedUserBadges: UserBadge[] = (data || []).map(userBadge => ({
-        ...userBadge,
-        badge: {
-          ...userBadge.badge,
-          badge_type: userBadge.badge.badge_type as 'tier' | 'achievement'
-        }
-      }));
-      
-      setUserBadges(typedUserBadges);
+      setUserBadges(data || []);
     } catch (error) {
       console.error('Error fetching user badges:', error);
     }
-  };
+  }, [user?.id]);
 
-  // Calculate badge progress
-  const calculateProgress = () => {
-    if (!profile?.points || badges.length === 0) return;
+  const calculateProgress = useCallback(async () => {
+    if (!user?.id || !badges.length) return;
 
-    const tierBadges = badges
-      .filter(b => b.badge_type === 'tier')
-      .sort((a, b) => a.min_points - b.min_points);
+    const progressData: Record<string, BadgeProgress> = {};
 
-    const earnedBadgeIds = new Set(userBadges.map(ub => ub.badge_id));
-    const earnedTierBadges = tierBadges.filter(b => b.min_points <= profile.points);
-    const currentTier = earnedTierBadges[earnedTierBadges.length - 1] || null;
-    const nextTier = tierBadges.find(b => b.min_points > profile.points) || null;
+    for (const badge of badges) {
+      try {
+        let progress = 0;
+        const target = badge.min_points;
 
-    let progress = 0;
-    if (nextTier && currentTier) {
-      const pointsInCurrentTier = profile.points - currentTier.min_points;
-      const pointsNeededForNext = nextTier.min_points - currentTier.min_points;
-      progress = Math.round((pointsInCurrentTier / pointsNeededForNext) * 100);
-    } else if (nextTier && !currentTier) {
-      progress = Math.round((profile.points / nextTier.min_points) * 100);
-    } else {
-      progress = 100; // Max tier reached
+        // Calculate progress based on badge type and conditions
+        switch (badge.badge_type) {
+          case 'tier':
+            progress = user.points || 0;
+            break;
+          case 'achievement':
+            if (badge.condition) {
+              // Handle different achievement conditions
+              progress = await calculateAchievementProgress(badge.condition, user.id);
+            }
+            break;
+          default:
+            progress = user.points || 0;
+        }
+
+        progressData[badge.id] = {
+          badgeId: badge.id,
+          currentProgress: progress,
+          targetProgress: target,
+          isCompleted: progress >= target,
+          progressPercentage: Math.min((progress / target) * 100, 100)
+        };
+      } catch (error) {
+        console.error(`Error calculating progress for badge ${badge.id}:`, error);
+      }
     }
 
-    setBadgeProgress({
-      currentTier,
-      nextTier,
-      progress: Math.min(progress, 100),
-      earnedBadges: userBadges,
-      totalBadges: badges.length
-    });
-  };
+    setBadgeProgress(progressData);
+  }, [user?.id, user?.points, badges]);
 
   // Award badges for user
   const awardBadgesForUser = async (orderId?: string) => {
@@ -196,7 +187,11 @@ export const useBadgeService = () => {
   // Calculate progress when data changes
   useEffect(() => {
     calculateProgress();
-  }, [badges, userBadges, profile?.points]);
+  }, [calculateProgress]);
+
+  useEffect(() => {
+    fetchUserBadges();
+  }, [fetchUserBadges]);
 
   return {
     badges,

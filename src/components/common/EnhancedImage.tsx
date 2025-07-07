@@ -38,8 +38,8 @@ export const EnhancedImage: React.FC<EnhancedImageProps> = ({
     onLoad?.();
   }, [onLoad]);
 
-  const handleError = useCallback((error: ErrorEvent | string) => {
-    const errorObj = typeof error === 'string' ? new Error(error) : new Error(error.message);
+  const handleError = useCallback(() => {
+    const errorObj = new Error('Image failed to load');
     
     if (attempts < retryCount) {
       // Retry with delay

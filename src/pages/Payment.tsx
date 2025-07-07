@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { QrCode, Clock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -33,27 +32,23 @@ const Payment = () => {
   const [transactionId, setTransactionId] = useState('');
   const [qrUrl, setQrUrl] = useState('');
 
-  useEffect(() => {
-    if (orderId) {
-      fetchOrderDetails();
-    }
-    if (mode === 'pay_now') {
-      fetchQRUrl();
-    }
-  }, [orderId, mode]);
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     if (!orderId) return;
 
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
-          order_items(
-            quantity,
-            unit_price,
-            products(name)
+          order_items (
+            *,
+            products (*)
+          ),
+          users (
+            name,
+            student_id,
+            department
           )
         `)
         .eq('id', orderId)
@@ -65,13 +60,17 @@ const Payment = () => {
       console.error('Error fetching order:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch order details',
+        description: 'Failed to load order details',
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId, toast]);
+
+  useEffect(() => {
+    fetchOrderDetails();
+  }, [fetchOrderDetails]);
 
   const fetchQRUrl = async () => {
     try {

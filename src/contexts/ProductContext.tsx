@@ -1,43 +1,35 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
-export interface Product {
-  id: string;
-  name: string;
-  unit_price: number;
-  opening_stock: number;
-  category: string;
-  image_url?: string;
-  status: string;
-  created_at: string;
-  is_archived: boolean;
-}
+type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
 
-interface CartItem extends Product {
-  quantity: number;
-}
+export type Product = Tables<'products'>;
 
 interface ProductContextType {
   products: Product[];
   loading: boolean;
+  error: string | null;
   fetchProducts: () => Promise<void>;
-  cart: CartItem[];
-  updateQuantity: (productId: string, quantity: number, product?: Product) => void;
-  clearCart: () => void;
-  getTotalAmount: () => number;
-  addToCart: (product: Product) => void;
-  removeFromCart: (productId: string) => void;
-  getItemQuantity: (productId: string) => number;
+  addProduct: (product: Omit<Product, 'id' | 'created_at'>) => Promise<void>;
+  updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { toast } = useToast();
+export const useProductContext = () => {
+  const context = useContext(ProductContext);
+  if (!context) {
+    throw new Error('useProductContext must be used within a ProductProvider');
+  }
+  return context;
+};
+
+export const ProductProvider = ({ children }: { children: React.ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -45,89 +37,100 @@ const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('is_archived', false)
-        .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      toast({ title: 'Fetch Failed', description: 'Unable to load products', variant: 'destructive' });
+      if (error) {
+        setError(error.message);
+      } else {
+        setProducts(data || []);
+      }
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
+
+  const addProduct = useCallback(async (product: Omit<Product, 'id' | 'created_at'>) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .insert([product])
+        .select();
+
+      if (error) {
+        setError(error.message);
+      } else if (data) {
+        setProducts(prevProducts => [...prevProducts, data[0]]);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateProduct = useCallback(async (id: string, updates: Partial<Product>) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .update(updates)
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        setError(error.message);
+      } else if (data) {
+        setProducts(prevProducts =>
+          prevProducts.map(product => (product.id === id ? data[0] : product))
+        );
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deleteProduct = useCallback(async (id: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setProducts(prevProducts => prevProducts.filter(product => product.id !== id));
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  const updateQuantity = (productId: string, quantity: number, product?: Product) => {
-    if (quantity < 1) {
-      setCart(prev => prev.filter(i => i.id !== productId));
-      return;
-    }
-    setCart(prev => {
-      const index = prev.findIndex(i => i.id === productId);
-      if (index === -1 && product) {
-        return [...prev, { ...product, quantity }];
-      }
-      if (index !== -1) {
-        const newCart = [...prev];
-        newCart[index].quantity = quantity;
-        return newCart;
-      }
-      return prev;
-    });
+  const value: ProductContextType = {
+    products,
+    loading,
+    error,
+    fetchProducts,
+    addProduct,
+    updateProduct,
+    deleteProduct,
   };
-
-  const addToCart = (product: Product) => {
-    const existing = cart.find(item => item.id === product.id);
-    const quantity = existing ? existing.quantity + 1 : 1;
-    updateQuantity(product.id, quantity, product);
-  };
-
-  const removeFromCart = (productId: string) => {
-    const existing = cart.find(item => item.id === productId);
-    if (!existing) return;
-    const quantity = existing.quantity - 1;
-    updateQuantity(productId, quantity);
-  };
-
-  const getItemQuantity = (productId: string) => {
-    const item = cart.find(i => i.id === productId);
-    return item ? item.quantity : 0;
-  };
-
-  const clearCart = () => setCart([]);
-
-  const getTotalAmount = () =>
-    cart.reduce((acc, item) => acc + item.quantity * item.unit_price, 0);
 
   return (
-    <ProductContext.Provider
-      value={{
-        products,
-        loading,
-        fetchProducts,
-        cart,
-        updateQuantity,
-        clearCart,
-        getTotalAmount,
-        addToCart,
-        removeFromCart,
-        getItemQuantity
-      }}
-    >
+    <ProductContext.Provider value={value}>
       {children}
     </ProductContext.Provider>
   );
 };
-
-const useProductContext = () => {
-  const context = useContext(ProductContext);
-  if (!context) throw new Error('useProductContext must be used within a ProductProvider');
-  return context;
-};
-
-export { ProductProvider, useProductContext };

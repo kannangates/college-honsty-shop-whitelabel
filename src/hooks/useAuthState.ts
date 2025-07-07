@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { Tables } from '@/integrations/supabase/types';
+import { AuthService } from '@/services/authService';
 
 type UserProfile = Tables<'users'>;
 
@@ -34,7 +36,7 @@ export const useAuthState = () => {
     const loadingTimeout = setTimeout(() => {
       console.warn('⚠️ Auth loading timeout reached, forcing loading to false');
       setLoading(false);
-    }, 3000); // Reduced from 10 seconds to 3 seconds
+    }, 3000);
 
     return () => clearTimeout(loadingTimeout);
   }, []);
@@ -45,7 +47,7 @@ export const useAuthState = () => {
       console.log('🔍 Fetching profile for user:', userId);
       
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 2000) // Reduced from 5 seconds
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 2000)
       );
       
       const fetchPromise = supabase
@@ -84,7 +86,7 @@ export const useAuthState = () => {
     let isMounted = true;
     let currentUserId: string | null = null;
 
-    // Set up auth listener with improved error handling
+    // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
         if (!isMounted) return;
@@ -112,16 +114,28 @@ export const useAuthState = () => {
       }
     );
 
-    // Check for existing session on mount with shorter timeout
+    // Check for existing session on mount
     const initializeAuth = async () => {
       if (!isMounted) return;
       
       try {
         console.log('🚀 Initializing auth state...');
         
-        // Reduced timeout for session check
+        // Try to restore session from our custom storage first
+        const { session: restoredSession, profile: restoredProfile } = await AuthService.restoreSession();
+        
+        if (restoredSession && restoredProfile) {
+          if (!isMounted) return;
+          setSession(restoredSession);
+          setUser(restoredSession.user);
+          setProfile(restoredProfile);
+          setLoading(false);
+          return;
+        }
+
+        // Fallback to regular session check
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session check timeout')), 2000) // Reduced from 5 seconds
+          setTimeout(() => reject(new Error('Session check timeout')), 2000)
         );
         
         const sessionPromise = supabase.auth.getSession();

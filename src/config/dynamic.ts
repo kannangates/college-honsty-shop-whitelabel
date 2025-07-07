@@ -56,7 +56,8 @@ let currentConfig = {
     security: {
       SESSION_TIMEOUT: 3600000,
       SESSION_VALIDATION_INTERVAL: 300000,
-      ENABLE_SECURITY_MONITORING: true
+      ENABLE_SECURITY_MONITORING: true,
+      ENABLE_AUDIT_LOGGING: true
     },
     iso_compliance: {
       ENABLE_AUDIT_LOGGING: true,

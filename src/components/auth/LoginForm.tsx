@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -15,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrentConfig, getCurrentMessages } from '@/config/dynamic';
 import { Eye, EyeOff } from 'lucide-react';
@@ -51,11 +50,10 @@ export function LoginForm({
       return;
     }
 
-    const email = `${studentId}@shasuncollege.edu.in`;
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      await signIn(studentId, password);
       navigate('/dashboard');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : messages.errors.login_failed || 'Login failed';
@@ -71,7 +69,7 @@ export function LoginForm({
 
   return (
     <div className={`flex flex-col gap-6 ${className}`}>
-      <Card className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-lg border border-purple-200/30 shadow-xl rounded-2xl overflow-hidden">
+      <Card className="w-full max-w-2xl mx-auto bg-white/90 backdrop-blur-lg border border-purple-200/30 shadow-xl rounded-2xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b border-purple-100/20">
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent text-center">
             Welcome Back! ✨

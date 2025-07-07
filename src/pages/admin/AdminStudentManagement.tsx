@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -67,12 +67,7 @@ const AdminStudentManagement = () => {
   const { exportData, isExporting } = useDataExport();
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchStudents();
-    fetchStats();
-  }, []);
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -81,34 +76,22 @@ const AdminStudentManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      const users = Array.isArray(data) ? data as Student[] : [];
-      setStudents(users);
-      
-      // Extract unique departments with type safety
-      const uniqueDepartments = [...new Set(
-        users
-          .filter((user: Student) => user.department)
-          .map((user: Student) => user.department as string)
-      )];
-
-      setDepartments(uniqueDepartments);
-      
-      toast({
-        title: 'Success',
-        description: 'Students data loaded successfully',
-      });
+      setStudents(data || []);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch students data',
+        description: 'Failed to load students',
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
   const fetchStats = async () => {
     try {

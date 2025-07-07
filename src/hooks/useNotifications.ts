@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -27,102 +26,31 @@ export const useNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchNotifications = async () => {
-    if (!user || !profile) {
-      setLoading(false);
-      return;
-    }
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
 
     try {
       setLoading(true);
-      console.log('🔔 Fetching notifications for user:', user.id, 'department:', profile.department);
       
-      // Fetch all notifications
-      const { data: notificationsData, error: notificationsError } = await supabase
+      const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .order('is_pinned', { ascending: false })
+        .or(`target_user_id.eq.${user.id},target_user_id.is.null`)
         .order('created_at', { ascending: false });
 
-      if (notificationsError) {
-        console.error('❌ Error fetching notifications:', notificationsError);
-        throw notificationsError;
-      }
-
-      console.log('📋 All notifications fetched:', notificationsData?.length || 0);
-
-      // Filter notifications based on targeting rules
-      const filteredNotifications = notificationsData?.filter(notification => {
-        // If targeted to specific user
-        if (notification.target_user_id === user.id) {
-          console.log('✅ Notification targeted to user:', notification.title);
-          return true;
-        }
-        
-        // If no target user and no department filter (broadcast to all)
-        if (!notification.target_user_id && (!notification.department || notification.department.length === 0)) {
-          console.log('✅ Broadcast notification:', notification.title);
-          return true;
-        }
-        
-        // If department filter exists, check if user's department is included
-        if (!notification.target_user_id && notification.department && profile.department) {
-          const isIncluded = notification.department.includes(profile.department);
-          console.log('🏢 Department filter check:', notification.title, 'user dept:', profile.department, 'target depts:', notification.department, 'included:', isIncluded);
-          return isIncluded;
-        }
-        
-        console.log('❌ Notification filtered out:', notification.title);
-        return false;
-      }) || [];
-
-      console.log('📱 Filtered notifications:', filteredNotifications.length);
-
-      // Fetch read status for each notification
-      const notificationIds = filteredNotifications.map(n => n.id);
-      const { data: readData, error: readError } = await supabase
-        .from('notification_reads')
-        .select('notification_id, is_read, read_at')
-        .eq('user_id', user.id)
-        .in('notification_id', notificationIds);
-
-      if (readError) {
-        console.error('❌ Error fetching read status:', readError);
-      }
-
-      console.log('👁️ Read status data:', readData?.length || 0, 'records');
-
-      // Process notifications with read status
-      const processedNotifications = filteredNotifications.map(notification => {
-        const readRecord = readData?.find(r => r.notification_id === notification.id);
-        return {
-          ...notification,
-          is_read: readRecord?.is_read || false,
-          read_at: readRecord?.read_at || null
-        };
-      });
-
-      console.log('✅ Processed notifications:', processedNotifications.length);
-      setNotifications(processedNotifications);
+      if (error) throw error;
       
-      const unread = processedNotifications.filter(n => !n.is_read).length;
-      console.log('🔴 Unread count:', unread);
-      setUnreadCount(unread);
+      setNotifications(data || []);
     } catch (error) {
-      console.error('❌ Error in fetchNotifications:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch notifications',
-        variant: 'destructive',
-      });
+      console.error('Error fetching notifications:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchNotifications();
-  }, [user, profile]);
+  }, [fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     if (!user) return;

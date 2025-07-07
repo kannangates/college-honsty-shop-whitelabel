@@ -40,7 +40,7 @@ export const useEnhancedAuth = () => {
   const enhancedSignOut = useMemo(() => async () => {
     await sessionManager.cleanup();
     await auth.signOut();
-  }, [sessionManager, auth.signOut]);
+  }, [sessionManager, auth]);
 
   const forceRefreshToken = useMemo(() => async () => {
     return await sessionManager.refreshToken();

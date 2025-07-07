@@ -11,26 +11,28 @@ export const useISOCompliance = (componentName: string) => {
   const mountTime = useRef(Date.now());
 
   useEffect(() => {
-    // Track component mount with performance marking
-    performanceMonitor.current.markStart(`component-${componentName}`);
-    console.log(`📊 Component ${componentName} mounted at: ${new Date().toISOString()}`);
+    const monitor = performanceMonitor.current;
+    const mount = mountTime.current;
+    const logger = auditLogger.current;
 
-    // Log component initialization
-    auditLogger.current.logUserAction('component_mounted', {
-      component: componentName,
-      timestamp: new Date().toISOString()
-    });
-
-    // Cleanup on unmount
-    return () => {
-      performanceMonitor.current.markEnd(`component-${componentName}`);
-      
-      const sessionDuration = Date.now() - mountTime.current;
-      auditLogger.current.logUserAction('component_unmounted', {
+    if (mount && logger) {
+      logger.logSystemEvent('component_mounted', {
         component: componentName,
-        sessionDuration,
-        timestamp: new Date().toISOString()
+        timestamp: mount,
+        session_id: Date.now().toString()
       });
+    }
+
+    return () => {
+      if (monitor && mount && logger) {
+        const unmountTime = Date.now();
+        logger.logSystemEvent('component_unmounted', {
+          component: componentName,
+          mount_time: mount,
+          unmount_time: unmountTime,
+          duration: unmountTime - mount
+        });
+      }
     };
   }, [componentName]);
 

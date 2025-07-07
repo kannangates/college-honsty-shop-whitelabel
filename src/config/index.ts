@@ -152,6 +152,8 @@ export const WHITELABEL_CONFIG = {
   // System - dynamic
   get SYSTEM_CONFIG() { return CONFIG.SYSTEM; },
   get DEFAULT_POINTS() { return CONFIG.SYSTEM.DEFAULT_POINTS; },
+  get PERFORMANCE() { return CONFIG.SYSTEM.PERFORMANCE; },
+  get SECURITY() { return CONFIG.SYSTEM.SECURITY; },
   
   // Admin
   get ADMIN_CONFIG() { return CONFIG.ADMIN; },
