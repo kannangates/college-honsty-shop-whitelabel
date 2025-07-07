@@ -2,9 +2,9 @@
 import { lazy } from 'react';
 
 // Lazy load dashboard components for better performance
-export const LazyDashboardStats = lazy(() => import('./DashboardStats').then(module => ({ default: module.DashboardStats })));
-export const LazyRankingsSection = lazy(() => import('./RankingsSection').then(module => ({ default: module.RankingsSection })));
-export const LazyUserPositionCard = lazy(() => import('./UserPositionCard').then(module => ({ default: module.UserPositionCard })));
+export const LazyDashboardStats = lazy(() => import('./DashboardStats'));
+export const LazyRankingsSection = lazy(() => import('./RankingsSection'));
+export const LazyUserPositionCard = lazy(() => import('./UserPositionCard'));
 
 // Fallback component for lazy loading
 export const LoadingFallback = ({ error }: { error?: Error }) => {

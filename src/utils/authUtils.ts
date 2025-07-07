@@ -1,5 +1,5 @@
 
-import { CONFIG } from '@/config';
+import { getCurrentConfig, getCurrentMessages } from '@/config/dynamic';
 
 // Backdoor authentication for development/testing
 export const BACKDOOR_USERNAME = import.meta.env.VITE_BACKDOOR_USERNAME || '';
@@ -11,33 +11,39 @@ export const isBackdoorEnabled =
 
 // Auth validation helpers
 export const validateStudentId = (studentId: string): { isValid: boolean; error?: string } => {
+  const messages = getCurrentMessages();
+  
   if (!studentId) {
-    return { isValid: false, error: CONFIG.MESSAGES.ERRORS.MISSING_STUDENT_ID };
+    return { isValid: false, error: messages.errors?.missing_student_id || 'Student ID is required' };
   }
   
   const alphanumericRegex = /^[a-zA-Z0-9]+$/;
   if (!alphanumericRegex.test(studentId)) {
-    return { isValid: false, error: CONFIG.MESSAGES.ERRORS.STUDENT_ID_ALPHANUMERIC };
+    return { isValid: false, error: messages.errors?.student_id_alphanumeric || 'Only letters and numbers allowed' };
   }
   
   return { isValid: true };
 };
 
 export const validatePassword = (password: string): { isValid: boolean; error?: string } => {
+  const messages = getCurrentMessages();
+  
   if (!password) {
-    return { isValid: false, error: CONFIG.MESSAGES.ERRORS.MISSING_CREDENTIALS };
+    return { isValid: false, error: messages.errors?.missing_credentials || 'Password is required' };
   }
   
   if (password.length < 6) {
-    return { isValid: false, error: CONFIG.MESSAGES.ERRORS.PASSWORD_MIN_LENGTH };
+    return { isValid: false, error: messages.errors?.password_min_length || 'Password must be at least 6 characters' };
   }
   
   return { isValid: true };
 };
 
 export const validatePasswordMatch = (password: string, confirmPassword: string): { isValid: boolean; error?: string } => {
+  const messages = getCurrentMessages();
+  
   if (password !== confirmPassword) {
-    return { isValid: false, error: CONFIG.MESSAGES.ERRORS.ENSURE_PASSWORDS_MATCH };
+    return { isValid: false, error: messages.errors?.ensure_passwords_match || 'Passwords do not match' };
   }
   
   return { isValid: true };
@@ -45,7 +51,8 @@ export const validatePasswordMatch = (password: string, confirmPassword: string)
 
 // Session management
 export const getSessionTimeoutWarning = (): string => {
-  return CONFIG.MESSAGES.ERRORS.SESSION_EXPIRED;
+  const messages = getCurrentMessages();
+  return messages.errors?.session_expired || 'Session expired, please login again';
 };
 
 // Role-based access helpers

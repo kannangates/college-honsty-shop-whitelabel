@@ -1,16 +1,18 @@
+
 import React from 'react';
 import { useProductContext, Product } from '@/contexts/ProductContext';
 import { useCart } from '@/hooks/useCart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package } from 'lucide-react';
 import { CartSummary } from '@/components/product/CartSummary';
-import { WHITELABEL_CONFIG } from '@/config';
+import { getCurrentMessages } from '@/config/dynamic';
 import { DataTable } from '@/components/ui/data-table';
 import { createProductColumns } from './product-table-columns';
 
 const ProductTable = () => {
   const { products, loading } = useProductContext();
   const { items, updateQuantity, totalPrice, addItem, removeItem, getItemQuantity, checkout } = useCart();
+  const messages = getCurrentMessages();
 
   // Filter active and non-archived products
   const filteredProducts = products.filter(product =>
@@ -35,7 +37,7 @@ const ProductTable = () => {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <span className="ml-2">{WHITELABEL_CONFIG.LOADING_STATES.LOADING_PRODUCTS}</span>
+        <span className="ml-2">{messages.loading?.loading_products || 'Loading products...'}</span>
       </div>
     );
   }
@@ -55,8 +57,8 @@ const ProductTable = () => {
               {filteredProducts.length === 0 ? (
                 <div className="text-center py-8">
                   <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">{WHITELABEL_CONFIG.PRODUCT_MESSAGES.NO_PRODUCTS}</h3>
-                  <p className="text-gray-500">{WHITELABEL_CONFIG.PRODUCT_MESSAGES.CHECK_BACK}</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{messages.products?.no_products || 'No products available'}</h3>
+                  <p className="text-gray-500">{messages.products?.check_back || 'Check back later for new products'}</p>
                 </div>
               ) : (
                 <DataTable

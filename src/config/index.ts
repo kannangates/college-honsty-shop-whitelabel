@@ -138,30 +138,21 @@ export const WHITELABEL_CONFIG = {
   get BADGE_IMAGES() { return CONFIG.IMAGES.BADGE_IMAGES; },
   
   // Forms - flattened for easier access and dynamic
-  get FORM_LABELS() { return CONFIG.FORMS.labels; },
-  get FORM_PLACEHOLDERS() { return CONFIG.FORMS.placeholders; },
-  get LABELS() { return CONFIG.FORMS.labels; },
-  get PLACEHOLDERS() { return CONFIG.FORMS.placeholders; },
-  get SHIFT_OPTIONS() { return CONFIG.FORMS.shift_options; },
-  get ROLE_OPTIONS() { return CONFIG.FORMS.role_options; },
+  get FORM_LABELS() { return CONFIG.FORMS.LABELS; },
+  get FORM_PLACEHOLDERS() { return CONFIG.FORMS.PLACEHOLDERS; },
   
-  // Messages - flattened structure and dynamic
-  get AUTH_MESSAGES() { return CONFIG.MESSAGES.auth; },
-  get NAVIGATION() { return CONFIG.MESSAGES.navigation; },
-  get PRODUCT_MESSAGES() { return CONFIG.MESSAGES.products; },
-  get ERROR_MESSAGES() { return CONFIG.MESSAGES.errors; },
-  get LOADING_STATES() { return CONFIG.MESSAGES.loading; },
-  get SUCCESS_MESSAGES() { return CONFIG.MESSAGES.success; },
+  // Messages - flattened for easier access and dynamic
+  get AUTH_MESSAGES() { return CONFIG.MESSAGES.AUTH; },
+  get NAVIGATION_MESSAGES() { return CONFIG.MESSAGES.NAVIGATION; },
+  get PRODUCT_MESSAGES() { return CONFIG.MESSAGES.PRODUCTS; },
+  get ERROR_MESSAGES() { return CONFIG.MESSAGES.ERRORS; },
+  get LOADING_STATES() { return CONFIG.MESSAGES.LOADING; },
+  get SUCCESS_MESSAGES() { return CONFIG.MESSAGES.SUCCESS; },
   
   // System - dynamic
+  get SYSTEM_CONFIG() { return CONFIG.SYSTEM; },
   get DEFAULT_POINTS() { return CONFIG.SYSTEM.DEFAULT_POINTS; },
-  get PERFORMANCE() { return CONFIG.SYSTEM.PERFORMANCE; },
-  get SECURITY() { return CONFIG.SYSTEM.SECURITY; },
-  get ISO_COMPLIANCE() { return CONFIG.SYSTEM.ISO_COMPLIANCE; },
   
-  // Admin - static
-  ADMIN_ACCESS_NOTE: CONFIG.ADMIN.ACCESS_NOTE,
-  
-  // Supabase - static
-  SUPABASE: CONFIG.SUPABASE,
+  // Admin
+  get ADMIN_CONFIG() { return CONFIG.ADMIN; },
 };

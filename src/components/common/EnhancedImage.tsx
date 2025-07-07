@@ -1,14 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
-import { loadImageWithRetry, CONFIG } from '@/config';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { getCurrentMessages } from '@/config/dynamic';
 
 interface EnhancedImageProps {
   src: string;
   alt: string;
   className?: string;
   fallbackSrc?: string;
-  onLoad?: () => void;
   onError?: (error: Error) => void;
+  onLoad?: () => void;
+  lazy?: boolean;
+  retryCount?: number;
+  retryDelay?: number;
 }
 
 export const EnhancedImage: React.FC<EnhancedImageProps> = ({
@@ -16,80 +19,79 @@ export const EnhancedImage: React.FC<EnhancedImageProps> = ({
   alt,
   className = '',
   fallbackSrc,
+  onError,
   onLoad,
-  onError
+  lazy = true,
+  retryCount = 3,
+  retryDelay = 1000,
 }) => {
-  const [imageSrc, setImageSrc] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [currentSrc, setCurrentSrc] = useState<string>(src);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [hasError, setHasError] = useState<boolean>(false);
+  const [attempts, setAttempts] = useState<number>(0);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const messages = getCurrentMessages();
+
+  const handleLoad = useCallback(() => {
+    setIsLoading(false);
+    setHasError(false);
+    onLoad?.();
+  }, [onLoad]);
+
+  const handleError = useCallback((error: ErrorEvent | string) => {
+    const errorObj = typeof error === 'string' ? new Error(error) : new Error(error.message);
+    
+    if (attempts < retryCount) {
+      // Retry with delay
+      setTimeout(() => {
+        setAttempts(prev => prev + 1);
+        setCurrentSrc(`${src}?retry=${attempts + 1}`);
+      }, retryDelay);
+    } else if (fallbackSrc && currentSrc !== fallbackSrc) {
+      // Try fallback image
+      setCurrentSrc(fallbackSrc);
+      setAttempts(0);
+    } else {
+      // Give up
+      setIsLoading(false);
+      setHasError(true);
+      onError?.(errorObj);
+    }
+  }, [attempts, retryCount, retryDelay, src, fallbackSrc, currentSrc, onError]);
 
   useEffect(() => {
-    let mounted = true;
-    
-    const loadImage = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const loadedSrc = await loadImageWithRetry(src);
-        
-        if (mounted) {
-          setImageSrc(loadedSrc);
-          setLoading(false);
-          onLoad?.();
-        }
-      } catch (err) {
-        if (mounted) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to load image';
-          setError(errorMessage);
-          setLoading(false);
-          
-          // Try fallback image
-          if (fallbackSrc) {
-            setImageSrc(fallbackSrc);
-          }
-          
-          onError?.(err instanceof Error ? err : new Error(errorMessage));
-        }
-      }
-    };
+    if (src !== currentSrc) {
+      setCurrentSrc(src);
+      setAttempts(0);
+      setHasError(false);
+      setIsLoading(true);
+    }
+  }, [src, currentSrc]);
 
-    loadImage();
-
-    return () => {
-      mounted = false;
-    };
-  }, [src, fallbackSrc, onLoad, onError]);
-
-  if (loading) {
+  if (hasError) {
     return (
-      <div className={`${className} bg-gray-200 animate-pulse flex items-center justify-center`}>
-        <span className="text-gray-500 text-sm">{CONFIG.MESSAGES.LOADING.LOADING_IMAGE}</span>
-      </div>
-    );
-  }
-
-  if (error && !imageSrc) {
-    return (
-      <div className={`${className} bg-gray-100 flex items-center justify-center border border-gray-300`}>
-        <span className="text-gray-500 text-xs text-center p-2">
-          Image failed to load
-        </span>
+      <div className={`flex items-center justify-center bg-gray-100 text-gray-500 ${className}`}>
+        <span className="text-sm">Failed to load image</span>
       </div>
     );
   }
 
   return (
-    <img
-      src={imageSrc}
-      alt={alt}
-      className={className}
-      onError={(e) => {
-        // Final fallback
-        if (fallbackSrc && imageSrc !== fallbackSrc) {
-          setImageSrc(fallbackSrc);
-        }
-      }}
-    />
+    <div className={`relative ${className}`}>
+      <img
+        ref={imgRef}
+        src={currentSrc}
+        alt={alt}
+        loading={lazy ? 'lazy' : 'eager'}
+        onLoad={handleLoad}
+        onError={handleError}
+        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+      />
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <span className="text-sm text-gray-500">{messages.loading?.loading_image || 'Loading image...'}</span>
+        </div>
+      )}
+    </div>
   );
 };

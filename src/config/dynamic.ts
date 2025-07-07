@@ -49,9 +49,19 @@ let currentConfig = {
     role_options: FORMS_CONFIG.ROLE_OPTIONS
   },
   system: {
-    performance: {},
-    security: {},
-    iso_compliance: {}
+    performance: {
+      CACHE_TIMEOUT: 30000,
+      ENABLE_CACHING: true
+    },
+    security: {
+      SESSION_TIMEOUT: 3600000,
+      SESSION_VALIDATION_INTERVAL: 300000,
+      ENABLE_SECURITY_MONITORING: true
+    },
+    iso_compliance: {
+      ENABLE_AUDIT_LOGGING: true,
+      ENABLE_PERFORMANCE_MONITORING: true
+    }
   }
 };
 
@@ -66,7 +76,10 @@ let currentMessages = {
   },
   products: {
     no_products: 'No products available',
-    loading_products: 'Loading products...'
+    loading_products: 'Loading products...',
+    out_of_stock: 'Out of Stock',
+    add_to_cart: 'Add to Cart',
+    check_back: 'Check back later for new products'
   },
   loading: {
     signing_in: 'Signing in...',
@@ -78,7 +91,11 @@ let currentMessages = {
     fill_all_fields: 'Please fill in all required fields',
     login_failed: 'Login failed',
     all_fields_required: 'All fields required',
-    student_id_alphanumeric: 'Only letters and numbers allowed'
+    student_id_alphanumeric: 'Only letters and numbers allowed',
+    missing_student_id: 'Student ID is required',
+    password_min_length: 'Password must be at least 6 characters',
+    ensure_passwords_match: 'Please ensure passwords match',
+    session_expired: 'Session expired, please login again'
   },
   success: {
     password_reset_sent: 'Password reset link sent'
