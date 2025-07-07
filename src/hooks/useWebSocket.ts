@@ -1,85 +1,88 @@
 
-import { useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useRef, useCallback } from 'react';
 
 interface WebSocketMessage {
   type: string;
-  payload: any;
-  timestamp: number;
+  data: unknown;
 }
 
-export const useWebSocket = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+export const useWebSocket = (url: string, onMessage?: (message: WebSocketMessage) => void) => {
+  const ws = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttempts = useRef(0);
 
-  const connect = () => {
-    // Use Supabase real-time for WebSocket functionality
-    const channel = supabase.channel('realtime-updates');
-    
-    channel
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'orders' 
-      }, (payload) => {
-        setLastMessage({
-          type: 'order_update',
-          payload,
-          timestamp: Date.now()
-        });
-      })
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'products' 
-      }, (payload) => {
-        setLastMessage({
-          type: 'inventory_update',
-          payload,
-          timestamp: Date.now()
-        });
-      })
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'users' 
-      }, (payload) => {
-        setLastMessage({
-          type: 'user_update',
-          payload,
-          timestamp: Date.now()
-        });
-      })
-      .subscribe((status) => {
-        setIsConnected(status === 'SUBSCRIBED');
-      });
+  const connect = useCallback(() => {
+    try {
+      ws.current = new WebSocket(url);
+      
+      ws.current.onopen = () => {
+        console.log('WebSocket connected');
+        reconnectAttempts.current = 0;
+      };
 
-    return channel;
-  };
+      ws.current.onmessage = (event) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data);
+          onMessage?.(message);
+        } catch (error) {
+          console.error('Failed to parse WebSocket message:', error);
+        }
+      };
 
-  useEffect(() => {
-    const channel = connect();
+      ws.current.onclose = () => {
+        console.log('WebSocket disconnected');
+        // Auto-reconnect with exponential backoff
+        if (reconnectAttempts.current < 5) {
+          const timeout = Math.pow(2, reconnectAttempts.current) * 1000;
+          reconnectTimeoutRef.current = setTimeout(() => {
+            reconnectAttempts.current++;
+            connect();
+          }, timeout);
+        }
+      };
 
-    return () => {
-      channel.unsubscribe();
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-    };
+      ws.current.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error);
+    }
+  }, [url, onMessage]);
+
+  const sendMessage = useCallback((message: WebSocketMessage) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify(message));
+    }
   }, []);
 
-  const sendMessage = (message: Omit<WebSocketMessage, 'timestamp'>) => {
-    // For sending custom messages, we can use Supabase functions
-    supabase.functions.invoke('broadcast-message', {
-      body: { ...message, timestamp: Date.now() }
-    });
-  };
+  const disconnect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    if (ws.current) {
+      ws.current.close();
+      ws.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    connect();
+    
+    return () => {
+      const currentReconnectTimeout = reconnectTimeoutRef.current;
+      if (currentReconnectTimeout) {
+        clearTimeout(currentReconnectTimeout);
+      }
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, [connect]);
 
   return {
-    isConnected,
-    lastMessage,
-    sendMessage
+    sendMessage,
+    disconnect,
+    isConnected: ws.current?.readyState === WebSocket.OPEN
   };
 };

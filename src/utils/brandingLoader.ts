@@ -1,3 +1,4 @@
+
 // Dynamic Branding Configuration Loader
 export interface BrandingTheme {
   name: string;
@@ -29,9 +30,9 @@ export interface BrandingConfig {
     role_options: Array<{ value: string; label: string }>;
   };
   system: {
-    performance: Record<string, any>;
-    security: Record<string, any>;
-    iso_compliance: Record<string, any>;
+    performance: Record<string, unknown>;
+    security: Record<string, unknown>;
+    iso_compliance: Record<string, unknown>;
   };
 }
 
@@ -132,7 +133,8 @@ export function applyThemeColors(colors: BrandingTheme['colors']) {
 
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
+    const l = (max + min) / 2;
+    let h: number, s: number;
 
     if (max === min) {
       h = s = 0;

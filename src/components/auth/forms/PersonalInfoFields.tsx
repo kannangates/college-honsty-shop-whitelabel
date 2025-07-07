@@ -27,7 +27,7 @@ export const PersonalInfoFields = ({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="studentId" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="studentId" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.student_id || 'Student ID'} *
         </Label>
         <Input
@@ -46,7 +46,7 @@ export const PersonalInfoFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="name" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.full_name || 'Full Name'} *
         </Label>
         <Input
@@ -62,7 +62,7 @@ export const PersonalInfoFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="email" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.email || 'Email'} *
         </Label>
         <Input
@@ -78,7 +78,7 @@ export const PersonalInfoFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="mobileNumber" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="mobileNumber" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.mobile_number || 'Mobile Number'} *
         </Label>
         <Input

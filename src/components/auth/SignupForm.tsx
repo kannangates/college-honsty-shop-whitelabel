@@ -130,7 +130,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto bg-white/90 backdrop-blur-lg border border-purple-200/30 shadow-xl rounded-2xl overflow-hidden">
+    <Card className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-lg border border-purple-200/30 shadow-xl rounded-2xl overflow-hidden">
       <CardHeader className="text-center bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b border-purple-100/20">
         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
           Join Us! ✨
@@ -140,7 +140,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <PersonalInfoFields
             formData={formData}
             studentIdError={studentIdError}
@@ -164,26 +164,24 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             onInputChange={handleInputChange}
           />
 
-          <div className="md:col-span-2">
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Creating Account...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  Create Account 🎉
-                </span>
-              )}
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Creating Account...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                Create Account 🎉
+              </span>
+            )}
+          </Button>
 
-          <div className="md:col-span-2 text-center mt-6">
+          <div className="text-center mt-6">
             <p className="text-gray-600 mb-4">
               Already have an account? 😊
             </p>

@@ -3,24 +3,55 @@ import { FORMS_CONFIG } from './forms';
 
 // Dynamic configuration that can be loaded from branding files
 let currentTheme = {
+  name: 'Shasun Engineering College',
   logo: {
     url: '/logo.png',
     fallback: '/logo.png'
   },
   portal_name: 'Honesty Shop',
   tagline: 'Your trusted college marketplace',
-  subtitle: 'Shop with confidence'
+  subtitle: 'Shop with confidence',
+  description: 'A secure marketplace for college students',
+  colors: {
+    primary: '#202072',
+    secondary: '#e66166',
+    accent: '#f5f1f4'
+  },
+  favicon: '/logo.png'
 };
 
 let currentConfig = {
   app: {
+    name: 'Honesty Shop',
     welcome_points: 100
   },
   forms: {
-    labels: FORMS_CONFIG.LABELS,
-    placeholders: FORMS_CONFIG.PLACEHOLDERS,
+    labels: {
+      student_id: 'Student ID',
+      full_name: 'Full Name',
+      email: 'Email',
+      password: 'Password',
+      confirm_password: 'Confirm Password',
+      mobile_number: 'Mobile Number',
+      department: 'Department',
+      shift: 'Shift',
+      role: 'Role'
+    },
+    placeholders: {
+      student_id: 'Enter your Student ID',
+      full_name: 'Enter your full name',
+      email: 'Enter your email',
+      password: 'Enter your password',
+      confirm_password: 'Confirm your password',
+      mobile_number: 'Enter your mobile number'
+    },
     shift_options: FORMS_CONFIG.SHIFT_OPTIONS,
     role_options: FORMS_CONFIG.ROLE_OPTIONS
+  },
+  system: {
+    performance: {},
+    security: {},
+    iso_compliance: {}
   }
 };
 
@@ -29,8 +60,18 @@ let currentMessages = {
     login_description: 'Sign in to continue your journey',
     login_button: 'Sign In'
   },
+  navigation: {
+    header_title: 'Honesty Shop',
+    notifications: 'Notifications'
+  },
+  products: {
+    no_products: 'No products available',
+    loading_products: 'Loading products...'
+  },
   loading: {
-    signing_in: 'Signing in...'
+    signing_in: 'Signing in...',
+    loading_image: 'Loading image...',
+    loading_products: 'Loading products...'
   },
   errors: {
     missing_credentials: 'Missing Fields',
@@ -38,6 +79,9 @@ let currentMessages = {
     login_failed: 'Login failed',
     all_fields_required: 'All fields required',
     student_id_alphanumeric: 'Only letters and numbers allowed'
+  },
+  success: {
+    password_reset_sent: 'Password reset link sent'
   }
 };
 
@@ -46,8 +90,6 @@ export const getCurrentConfig = () => currentConfig;
 export const getCurrentMessages = () => currentMessages;
 
 export const getBrandingConfig = async () => {
-  // For now, return the default config
-  // In the future, this would load from branding files
   return Promise.resolve({
     theme: currentTheme,
     config: currentConfig,

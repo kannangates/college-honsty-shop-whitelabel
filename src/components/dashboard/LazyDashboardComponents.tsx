@@ -1,48 +1,25 @@
 
-import React, { Suspense, lazy } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { lazy } from 'react';
 
-// Lazy load dashboard components
-const DashboardStats = lazy(() => import('./DashboardStats'));
-const RankingsSection = lazy(() => import('./RankingsSection'));
-const GameStyleUserCard = lazy(() => import('../ui/GameStyleUserCard'));
-const TodaysSoldProductsTable = lazy(() => import('../ui/TodaysSoldProductsTable'));
+// Lazy load dashboard components for better performance
+export const LazyDashboardStats = lazy(() => import('./DashboardStats').then(module => ({ default: module.DashboardStats })));
+export const LazyRankingsSection = lazy(() => import('./RankingsSection').then(module => ({ default: module.RankingsSection })));
+export const LazyUserPositionCard = lazy(() => import('./UserPositionCard').then(module => ({ default: module.UserPositionCard })));
 
-interface LazyComponentProps {
-  component: 'stats' | 'rankings' | 'userCard' | 'productsTable';
-  props?: any;
-}
-
-const LazyComponentWrapper: React.FC<LazyComponentProps> = ({ component, props }) => {
-  const LoadingFallback = () => (
-    <Card className="min-h-[200px]">
-      <CardContent className="flex items-center justify-center h-full p-6">
-        <LoadingSpinner />
-      </CardContent>
-    </Card>
-  );
-
-  const renderComponent = () => {
-    switch (component) {
-      case 'stats':
-        return <DashboardStats {...props} />;
-      case 'rankings':
-        return <RankingsSection {...props} />;
-      case 'userCard':
-        return <GameStyleUserCard {...props} />;
-      case 'productsTable':
-        return <TodaysSoldProductsTable {...props} />;
-      default:
-        return null;
-    }
-  };
-
+// Fallback component for lazy loading
+export const LoadingFallback = ({ error }: { error?: Error }) => {
+  if (error) {
+    return (
+      <div className="p-4 text-center text-red-500">
+        <p>Failed to load component</p>
+        <p className="text-sm opacity-75">{error.message}</p>
+      </div>
+    );
+  }
+  
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      {renderComponent()}
-    </Suspense>
+    <div className="flex items-center justify-center p-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+    </div>
   );
 };
-
-export default LazyComponentWrapper;

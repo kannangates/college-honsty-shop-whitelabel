@@ -49,7 +49,7 @@ export const DepartmentRoleFields = ({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="department" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="department" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.department || 'Department'} *
         </Label>
         <Select
@@ -71,7 +71,7 @@ export const DepartmentRoleFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="shift" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="shift" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.shift || 'Shift'} *
         </Label>
         <Select
@@ -93,7 +93,7 @@ export const DepartmentRoleFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="role" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="role" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.role || 'Role'} *
         </Label>
         <Select

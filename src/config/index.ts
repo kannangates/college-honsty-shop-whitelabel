@@ -49,8 +49,26 @@ export const CONFIG = {
     const config = getCurrentConfig();
     return {
       ...config.forms,
-      LABELS: config.forms.labels,
-      PLACEHOLDERS: config.forms.placeholders,
+      LABELS: {
+        STUDENT_ID: config.forms.labels.student_id,
+        FULL_NAME: config.forms.labels.full_name,
+        EMAIL: config.forms.labels.email,
+        PASSWORD: config.forms.labels.password,
+        CONFIRM_PASSWORD: config.forms.labels.confirm_password,
+        MOBILE_NUMBER: config.forms.labels.mobile_number,
+        DEPARTMENT: config.forms.labels.department,
+        SHIFT: config.forms.labels.shift,
+        ROLE: config.forms.labels.role,
+        WELCOME_POINTS: 'Welcome Points'
+      },
+      PLACEHOLDERS: {
+        STUDENT_ID: config.forms.placeholders.student_id,
+        FULL_NAME: config.forms.placeholders.full_name,
+        EMAIL: config.forms.placeholders.email,
+        PASSWORD: config.forms.placeholders.password,
+        CONFIRM_PASSWORD: config.forms.placeholders.confirm_password,
+        MOBILE_NUMBER: config.forms.placeholders.mobile_number
+      },
       SHIFT_OPTIONS: config.forms.shift_options,
       ROLE_OPTIONS: config.forms.role_options,
     };

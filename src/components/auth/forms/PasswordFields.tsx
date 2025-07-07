@@ -32,7 +32,7 @@ export const PasswordFields = ({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="password" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.password || 'Password'} *
         </Label>
         <div className="relative">
@@ -58,7 +58,7 @@ export const PasswordFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+        <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.confirm_password || 'Confirm Password'} *
         </Label>
         <div className="relative">
