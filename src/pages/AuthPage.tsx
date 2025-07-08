@@ -87,36 +87,36 @@ export const AuthPage = () => {
         />
       </div>
 
-      <section className="w-full max-w-2xl mx-auto relative z-10 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20">
-        {/* Header Section */}
-        <div className="flex h-32 md:h-40 w-full border-b border-gray-100/50 bg-gradient-to-r from-purple-50/50 to-pink-50/50">
-          {/* Logo Box */}
-          <div className="flex items-center justify-center w-24 md:w-32 h-full">
+      <section className="w-full max-w-2xl mx-auto relative z-10">
+        {/* Header Section - No white background */}
+        <div className="flex h-24 md:h-28 w-full mb-4">
+          {/* Logo Box - Reduced height and spacing */}
+          <div className="flex items-center justify-center w-20 md:w-24 h-full">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur opacity-30"></div>
               <EnhancedImage
-                src={theme.logo.url}
+                src="/college-logo.jpg"
                 alt="College Logo"
-                className="relative w-16 h-16 md:w-20 md:h-20 object-contain rounded-2xl shadow-lg bg-white/80 p-2"
+                className="relative w-14 h-14 md:w-16 md:h-16 object-cover rounded-2xl shadow-lg border-2 border-white/50"
                 fallbackSrc={theme.logo.fallback}
                 onError={handleImageError}
               />
             </div>
           </div>
-          {/* College Details */}
-          <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
-            <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-1">
+          {/* College Details - Reduced spacing */}
+          <div className="flex-1 flex flex-col items-center justify-center px-3 text-center">
+            <h1 className="text-xl md:text-2xl font-bold text-white mb-1 drop-shadow-lg">
               {theme.portal_name} ✨
             </h1>
-            <p className="text-gray-600 text-xs md:text-sm leading-relaxed">
+            <p className="text-white/90 text-sm md:text-base leading-relaxed drop-shadow-md">
               {theme.tagline}
               <br />
-              <span className="text-purple-600 font-medium">{theme.subtitle}</span>
+              <span className="text-white/80 font-medium">{theme.subtitle}</span>
             </p>
           </div>
         </div>
-        {/* Form Section */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
+        {/* Form Section - No background wrapper */}
+        <div className="flex-1 flex flex-col items-center justify-center">
           {renderAuthForm()}
         </div>
       </section>

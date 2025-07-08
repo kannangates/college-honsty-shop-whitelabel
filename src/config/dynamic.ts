@@ -5,7 +5,7 @@ import { FORMS_CONFIG } from './forms';
 let currentTheme = {
   name: 'Shasun Engineering College',
   logo: {
-    url: '/logo.png',
+    url: '/college-logo.jpg',
     fallback: '/logo.png'
   },
   portal_name: 'Honesty Shop',

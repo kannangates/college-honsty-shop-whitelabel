@@ -129,7 +129,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-lg border border-purple-200/30 shadow-xl rounded-2xl overflow-hidden">
+    <Card className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-lg border border-white/20 shadow-xl rounded-2xl overflow-hidden animate-fade-in">
       <CardHeader className="text-center bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b border-purple-100/20">
         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
           Join Us! ✨
