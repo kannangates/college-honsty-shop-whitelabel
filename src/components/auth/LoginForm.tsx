@@ -54,7 +54,7 @@ export function LoginForm({
 
     try {
       await signIn(studentId, password);
-      navigate('/dashboard');
+      // Don't navigate immediately - let auth context handle it
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : messages.errors.login_failed || 'Login failed';
       toast({
@@ -62,7 +62,6 @@ export function LoginForm({
         description: errorMessage,
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
     }
   };

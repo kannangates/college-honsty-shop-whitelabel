@@ -88,31 +88,28 @@ export const AuthPage = () => {
       </div>
 
       <section className="w-full max-w-2xl mx-auto relative z-10">
-        {/* Header Section - No white background */}
-        <div className="flex h-24 md:h-28 w-full mb-4">
-          {/* Logo Box - Reduced height and spacing */}
-          <div className="flex items-center justify-center w-20 md:w-24 h-full">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur opacity-30"></div>
-              <EnhancedImage
-                src="/college-logo.jpg"
-                alt="College Logo"
-                className="relative w-14 h-14 md:w-16 md:h-16 object-cover rounded-2xl shadow-lg border-2 border-white/50"
-                fallbackSrc={theme.logo.fallback}
-                onError={handleImageError}
-              />
-            </div>
+        {/* Header Section - Improved styling */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          {/* Logo */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur opacity-30"></div>
+            <EnhancedImage
+              src="/college-logo.jpg"
+              alt="College Logo"
+              className="relative w-16 h-16 md:w-20 md:h-20 object-cover rounded-2xl shadow-xl border-2 border-white/30 backdrop-blur-sm"
+              fallbackSrc={theme.logo.fallback}
+              onError={handleImageError}
+            />
           </div>
-          {/* College Details - Reduced spacing */}
-          <div className="flex-1 flex flex-col items-center justify-center px-3 text-center">
-            <h1 className="text-xl md:text-2xl font-bold text-white mb-1 drop-shadow-lg">
+          {/* College Details */}
+          <div className="text-center">
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 drop-shadow-lg">
               {theme.portal_name} ✨
             </h1>
-            <p className="text-white/90 text-sm md:text-base leading-relaxed drop-shadow-md">
-              {theme.tagline}
-              <br />
-              <span className="text-white/80 font-medium">{theme.subtitle}</span>
-            </p>
+            <div className="text-white/90 text-sm md:text-base leading-relaxed drop-shadow-md space-y-1">
+              <p>{theme.tagline}</p>
+              <p className="text-white/80 font-medium">{theme.subtitle}</p>
+            </div>
           </div>
         </div>
         {/* Form Section - No background wrapper */}

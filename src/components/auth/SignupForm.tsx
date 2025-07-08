@@ -31,8 +31,6 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   const messages = getCurrentMessages();
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-
     if (field === 'studentId') {
       const alphanumericOnly = value.replace(/[^a-zA-Z0-9]/g, '');
       if (value !== alphanumericOnly) {
@@ -40,13 +38,16 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
       } else {
         setStudentIdError('');
       }
-      setFormData(prev => ({ ...prev, studentId: alphanumericOnly }));
-    }
-
-    // Auto-generate email if studentId is provided and no custom email
-    if (field === 'studentId' && value && !formData.email.includes('@')) {
-      const email = `${value}@shasuncollege.edu.in`;
-      setFormData(prev => ({ ...prev, email }));
+      
+      // Auto-generate email with the cleaned student ID
+      const email = alphanumericOnly ? `${alphanumericOnly}@shasuncollege.edu.in` : '';
+      setFormData(prev => ({ 
+        ...prev, 
+        studentId: alphanumericOnly,
+        email 
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
     }
   };
 
@@ -116,6 +117,19 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         formData.shift,
         config.app?.welcome_points || 100
       );
+      
+      // Clear form only on success
+      setFormData({
+        studentId: '',
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        department: '',
+        mobileNumber: '',
+        role: 'student',
+        shift: '1',
+      });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Signup failed';
       toast({
@@ -123,6 +137,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         description: errorMessage,
         variant: 'destructive',
       });
+      // Keep form data on error - don't clear
     } finally {
       setLoading(false);
     }

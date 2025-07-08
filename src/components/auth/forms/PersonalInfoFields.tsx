@@ -61,21 +61,12 @@ export const PersonalInfoFields = ({
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm font-medium text-gray-700 text-left block">
-          {config.forms?.labels?.email || 'Email'} *
-        </Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder={config.forms?.placeholders?.email || 'Enter your email'}
-          value={formData.email}
-          onChange={(e) => onInputChange('email', e.target.value)}
-          required
-          disabled={loading}
-          className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
-        />
-      </div>
+      {/* Email field hidden - auto-generated from Student ID */}
+      <input
+        type="hidden"
+        value={formData.email}
+        onChange={(e) => onInputChange('email', e.target.value)}
+      />
 
       <div className="space-y-2">
         <Label htmlFor="mobileNumber" className="text-sm font-medium text-gray-700 text-left block">
