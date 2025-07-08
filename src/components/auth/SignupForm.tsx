@@ -180,6 +180,14 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             onInputChange={handleInputChange}
           />
 
+          {/* hCaptcha */}
+          <div className="mt-4 flex w-full justify-center">
+            <HCaptcha
+              ref={captchaRef}
+              sitekey="ad901dde-946e-4c0e-bc78-d0fc4bb08868"
+              onVerify={token => setCaptchaToken(token)}
+            />
+          </div>
           <Button
             type="submit"
             className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
@@ -210,15 +218,6 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
               Sign In Instead ✨
             </Button>
           </div>
-
-      {/* hCaptcha */}
-      <div className="mt-4 flex w-full justify-center">
-        <HCaptcha
-          ref={captchaRef}
-          sitekey="ad901dde-946e-4c0e-bc78-d0fc4bb08868"
-          onVerify={token => setCaptchaToken(token)}
-        />
-      </div>
         </form>
       </CardContent>
     </Card>
