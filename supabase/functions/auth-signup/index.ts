@@ -13,7 +13,7 @@ interface SignupRequest {
   department: string;
   email: string;
   password: string;
-  mobileNumber?: string;
+
   role?: string;
   shift?: string;
   points?: number;
@@ -40,17 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    const {
-      studentId,
-      name,
-      department,
-      email,
-      password,
-      mobileNumber,
-      role,
-      shift,
-      points,
-    } = (await req.json()) as SignupRequest;
+    const { studentId, name, department, email, password, role, shift, points } = (await req.json()) as SignupRequest;
 
     console.log("📝 Signup attempt:", { studentId, name, department, email, shift });
 
@@ -178,7 +168,7 @@ const emailExists = existingAuthUsers?.users?.some((user: AuthUser) => user.emai
           name: name,
           department: department,
           email: email,
-          mobile_number: mobileNumber ?? null,
+          
           role: role ?? "student",
           shift: shift ?? "1",
           points: points ?? 100,

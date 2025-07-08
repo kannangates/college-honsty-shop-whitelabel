@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { validateStudentId, validatePassword, validatePasswordMatch } from '@/utils/authUtils';
 import { getCurrentConfig, getCurrentMessages } from '@/config';
 import type { SignupResult, LoginResult, AuthSession, UserProfile } from '@/types/auth';
@@ -10,34 +11,22 @@ interface SignupData {
   studentId: string;
   name: string;
   department: string;
-  mobileNumber: string;
-  role: 'student' | 'admin' | 'teacher' | 'developer';
+  role: Database["public"]["Enums"]["user_role"] | null;
   shift: string;
   points: number;
+  captchaToken?: string;
 }
 
 export class AuthService {
-  static async checkStudentIdExists(studentId: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id')
-      .eq('student_id', studentId)
-      .single();
-    
-    return !error && !!data;
+  /* uniqueness checks now handled by edge function */
+  static async checkStudentIdExists(_studentId: string): Promise<boolean> {
+    // Client-side uniqueness check disabled; handled by edge function
+    return false;
   }
 
-  static async checkEmailExists(email: string): Promise<boolean> {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) return false;
-
-    const { data: authUsers } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .single();
-    
-    return !!authUsers;
+  static async checkEmailExists(_email: string): Promise<boolean> {
+    // Client-side uniqueness check disabled; handled by edge function
+    return false;
   }
 
   static validateSignupData(data: SignupData): { isValid: boolean; errors: string[] } {
@@ -57,7 +46,7 @@ export class AuthService {
     }
 
     // Validate required fields
-    if (!data.name || !data.email || !data.department || !data.mobileNumber) {
+    if (!data.name || !data.email || !data.department) {
       errors.push(messages.errors?.fill_all_fields || 'Please fill in all required fields');
     }
 
@@ -80,18 +69,6 @@ export class AuthService {
         return { success: false, error: validation.errors.join(', ') };
       }
 
-      // Check if student ID already exists
-      const studentIdExists = await this.checkStudentIdExists(data.studentId);
-      if (studentIdExists) {
-        return { success: false, error: 'Student ID already exists' };
-      }
-
-      // Check if email already exists
-      const emailExists = await this.checkEmailExists(data.email);
-      if (emailExists) {
-        return { success: false, error: 'Email already exists' };
-      }
-
       // Create user in Supabase Auth with email confirmation disabled
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
@@ -102,11 +79,12 @@ export class AuthService {
             name: data.name,
             student_id: data.studentId,
             department: data.department,
-            mobile_number: data.mobileNumber,
-            role: data.role,
+            
+            role: data.role  as Database["public"]["Enums"]["user_role"],
             shift: data.shift,
             points: data.points
-          }
+          },
+          captchaToken: data.captchaToken
         }
       });
 
@@ -127,8 +105,8 @@ export class AuthService {
           name: data.name,
           email: data.email,
           department: data.department,
-          mobile_number: data.mobileNumber,
-          role: data.role,
+          
+          role: data.role  as Database["public"]["Enums"]["user_role"],
           shift: data.shift,
           points: data.points,
           status: 'active'

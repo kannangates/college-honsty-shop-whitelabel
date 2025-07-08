@@ -9,7 +9,6 @@ interface PersonalInfoFieldsProps {
     studentId: string;
     name: string;
     email: string;
-    mobileNumber: string;
   };
   studentIdError: string;
   loading: boolean;
@@ -68,21 +67,6 @@ export const PersonalInfoFields = ({
         onChange={(e) => onInputChange('email', e.target.value)}
       />
 
-      <div className="space-y-2">
-        <Label htmlFor="mobileNumber" className="text-sm font-medium text-gray-700 text-left block">
-          {config.forms?.labels?.mobile_number || 'Mobile Number'} *
-        </Label>
-        <Input
-          id="mobileNumber"
-          type="tel"
-          placeholder={config.forms?.placeholders?.mobile_number || 'Enter your mobile number'}
-          value={formData.mobileNumber}
-          onChange={(e) => onInputChange('mobileNumber', e.target.value)}
-          required
-          disabled={loading}
-          className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
-        />
-      </div>
     </>
   );
 };

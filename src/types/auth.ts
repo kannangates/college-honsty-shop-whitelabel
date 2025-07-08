@@ -1,17 +1,8 @@
 import type { Session, User } from '@supabase/supabase-js';
 
-export interface UserProfile {
-  id: string;
-  student_id: string;
-  name: string;
-  email: string;
-  department: string;
-  mobile_number: string;
-  role: string;
-  shift?: string;
-  points?: number;
-  status: string;
-}
+import type { Tables } from '@/integrations/supabase/types';
+
+export type UserProfile = Tables<'users'>;
 
 export type AuthSession = Session;
 export type AuthUser = User;

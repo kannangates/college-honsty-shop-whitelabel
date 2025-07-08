@@ -7,6 +7,7 @@ import { useAuthRedirect } from './auth/useAuthRedirect';
 import { useBackdoorAuth } from './auth/useBackdoorAuth';
 import { clearBackdoorSession } from './useAuthState';
 import { AuthService } from '@/services/authService';
+import type { Database } from '@/integrations/supabase/types';
 
 type UserProfile = Tables<'users'>;
 
@@ -79,10 +80,10 @@ export const useAuthActions = ({
     studentId: string,
     name: string,
     department: string,
-    mobileNumber: string,
     role: string,
     shift: string,
-    points: number
+    points: number,
+    captchaToken?: string
   ) => {
     cleanupAuthState();
     setLoading(true);
@@ -96,10 +97,10 @@ export const useAuthActions = ({
         studentId,
         name,
         department,
-        mobileNumber,
-        role,
+        role: role as Database["public"]["Enums"]["user_role"],
         shift,
-        points
+        points,
+        captchaToken
       });
 
       if (!signupResult.success) {

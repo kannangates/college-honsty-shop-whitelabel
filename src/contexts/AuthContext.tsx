@@ -20,10 +20,10 @@ interface AuthContextType {
     studentId: string,
     name: string,
     department: string,
-    mobileNumber: string,
     role: string,
     shift: string,
-    points: number
+    points: number,
+    captchaToken?: string
   ) => Promise<void>;
   signOut: () => Promise<void>;
   isAdmin: boolean;

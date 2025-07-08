@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,12 +17,13 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
     password: '',
     confirmPassword: '',
     department: '',
-    mobileNumber: '',
     role: 'student',
     shift: '1',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
   const [loading, setLoading] = useState(false);
   const [studentIdError, setStudentIdError] = useState('');
   
@@ -111,10 +113,11 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         formData.password,
         formData.studentId,
         formData.name,
-        !formData.department,
+        formData.department,
         formData.role,
         formData.shift,
-        config.app?.welcome_points || 100
+        config.app?.welcome_points || 100,
+        captchaToken || undefined
       );
       
       // Clear form only on success
@@ -127,6 +130,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         department: '',
         role: 'student',
         shift: '1',
+     // captchaToken not persisted in formData
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Signup failed';
@@ -206,6 +210,15 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
               Sign In Instead ✨
             </Button>
           </div>
+
+      {/* hCaptcha */}
+      <div className="mt-4 flex w-full justify-center">
+        <HCaptcha
+          ref={captchaRef}
+          sitekey="ad901dde-946e-4c0e-bc78-d0fc4bb08868"
+          onVerify={token => setCaptchaToken(token)}
+        />
+      </div>
         </form>
       </CardContent>
     </Card>
