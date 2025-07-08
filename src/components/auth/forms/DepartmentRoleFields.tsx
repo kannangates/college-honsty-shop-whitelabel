@@ -1,5 +1,6 @@
 
 import React from 'react';
+import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getCurrentConfig } from '@/config';
@@ -21,23 +22,17 @@ export const DepartmentRoleFields = ({
 }: DepartmentRoleFieldsProps) => {
   const config = getCurrentConfig();
 
-  const departments = [
-    'Computer Science',
-    'Electronics',
-    'Mechanical',
-    'Civil',
-    'Electrical',
-    'Information Technology',
-    'All Department'
-  ];
 
-  const shifts = config.forms?.shift_options || [
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const shifts = (config as any).forms?.shift_options || [
     { value: '1', label: 'Morning (1st Shift)' },
     { value: '2', label: 'Evening (2nd Shift)' },
     { value: 'full', label: 'Full Day' }
   ];
 
-  const roles = config.forms?.role_options || [
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const roles = (config as any).forms?.role_options || [
     { value: 'student', label: 'Student' },
     { value: 'teacher', label: 'Teacher' }
   ];
@@ -52,22 +47,11 @@ export const DepartmentRoleFields = ({
         <Label htmlFor="department" className="text-sm font-medium text-gray-700 text-left block">
           {config.forms?.labels?.department || 'Department'} *
         </Label>
-        <Select
+        <DepartmentCombobox
           value={formData.department}
-          onValueChange={(value) => onInputChange('department', value)}
+          onChange={(value) => onInputChange('department', value)}
           disabled={loading}
-        >
-          <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl">
-            <SelectValue placeholder="Select your department" />
-          </SelectTrigger>
-          <SelectContent>
-            {departments.map((dept) => (
-              <SelectItem key={dept} value={dept}>
-                {dept}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        />
       </div>
 
       <div className="space-y-2">

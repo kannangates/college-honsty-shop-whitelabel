@@ -6,15 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
 import { Shield, Users, Package, Settings, Mail, CreditCard, Award, University, Megaphone, ReceiptIndianRupee, ReceiptText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { BulkUserCreation } from '@/components/admin/BulkUserCreation';
 
 const AdminPanel = () => {
@@ -30,15 +28,8 @@ const AdminPanel = () => {
     studentId: ''
   });
   const [announcementSent, setAnnouncementSent] = useState(false);
-  const [departmentPopoverOpen, setDepartmentPopoverOpen] = useState(false);
 
-  const DEPARTMENTS = [
-    { value: 'all', label: 'All Departments' },
-    { value: 'computer_science', label: 'Computer Science' },
-    { value: 'information_technology', label: 'Information Technology' },
-    { value: 'electronics', label: 'Electronics & Communication' },
-    { value: 'mechanical', label: 'Mechanical Engineering' },
-  ];
+
 
   const adminSections = [
     {
@@ -116,6 +107,8 @@ const AdminPanel = () => {
   ];
 
   const handleSendAnnouncement = async () => {
+    // Map label to code once here
+
     // Validation: if Student ID is filled, pinTill must be selected
     if (announcement.studentId.trim() && !announcement.pinTill.trim()) {
       alert("Please select 'Pin notification till date' when targeting a specific student.");
@@ -125,14 +118,18 @@ const AdminPanel = () => {
     console.log('Sending announcement:', announcement);
 
     try {
+      const deptCode = deptCodeFromLabel[announcement.department] || announcement.department;
       // Create notification record with proper typing
       const notificationData = {
         title: announcement.title,
         body: announcement.description,
         type: 'announcement' as const, // Explicitly type as 'announcement'
+        
+
         target_user_id: announcement.studentId.trim() || null,
-        department: announcement.department === 'all' ? null : [announcement.department],
+
         is_pinned: announcement.pinTill ? true : false,
+        department: deptCode === 'all' ? null : [deptCode],
         pin_till: announcement.pinTill || null
       };
 
@@ -181,6 +178,18 @@ const AdminPanel = () => {
   // Fix the role filtering - use profile.role instead of user.role
   console.log("Profile role:", profile?.role);
   console.log("Profile object:", profile);
+
+  // map label (combobox value) -> code used in DB
+  const deptCodeFromLabel: Record<string,string> = {
+    'All Department': 'all',
+    'All Departments': 'all',
+    'Computer Science': 'computer_science',
+    'Information Technology': 'information_technology',
+    'Electronics': 'electronics',
+    'Electronics & Communication': 'electronics',
+    'Mechanical': 'mechanical',
+    'Mechanical Engineering': 'mechanical',
+  };
 
   return (
     <div className="space-y-4 text-sm text-left">
@@ -306,46 +315,13 @@ const AdminPanel = () => {
                   </div>
                   <div>
                     <Label htmlFor="department" className="text-xs">Target Department</Label>
-                    <Popover open={departmentPopoverOpen} onOpenChange={setDepartmentPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          className={cn(
-                            "w-full h-8 border border-input bg-background rounded-md px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                            !announcement.department && "text-muted-foreground"
-                          )}
-                          disabled={announcement.studentId.trim() !== ''}
-                        >
-                          {DEPARTMENTS.find(d => d.value === announcement.department)?.label || "Select department (All if none selected)"}
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search department..." />
-                          <CommandList>
-                            <CommandEmpty>No department found.</CommandEmpty>
-                            {DEPARTMENTS.map((dept) => (
-                              <CommandItem
-                                key={dept.value}
-                                value={dept.label}
-                                onSelect={() => {
-                                  setAnnouncement({ ...announcement, department: dept.value });
-                                  setDepartmentPopoverOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    announcement.department === dept.value ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {dept.label}
-                              </CommandItem>
-                            ))}
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <DepartmentCombobox
+                      value={announcement.department}
+                      onChange={(label) => {
+                        setAnnouncement({ ...announcement, department: label });
+                      }}
+                      disabled={announcement.studentId.trim() !== ''}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="pinTill" className="text-xs">Pin notification till date</Label>
