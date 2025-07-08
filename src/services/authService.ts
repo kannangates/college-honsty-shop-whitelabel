@@ -63,11 +63,24 @@ export class AuthService {
 
   static async signup(data: SignupData): Promise<SignupResult> {
     try {
+      console.log('📦 Payload to Supabase Auth:', {
+        email: data.email,
+        passwordLength: data.password.length,
+        studentId: data.studentId,
+        name: data.name,
+        department: data.department,
+        role: data.role,
+        shift: data.shift,
+        points: data.points,
+        captcha: !!data.captchaToken
+      });
       // Validate input data
       const validation = this.validateSignupData(data);
       if (!validation.isValid) {
         return { success: false, error: validation.errors.join(', ') };
       }
+
+      
 
       // Create user in Supabase Auth with email confirmation disabled
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -86,6 +99,11 @@ export class AuthService {
           },
           captchaToken: data.captchaToken
         }
+      });
+      
+      console.log('📨 Supabase auth.signUp response:', {
+        authData,
+        authError
       });
 
       if (authError) {
@@ -111,6 +129,10 @@ export class AuthService {
           points: data.points,
           status: 'active'
         });
+
+      console.log('🗂️ Supabase user insert response:', {
+        profileError
+      });
 
       if (profileError) {
         // If profile creation fails, we should clean up the auth user
