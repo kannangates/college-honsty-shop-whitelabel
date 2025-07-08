@@ -1,5 +1,5 @@
 
-import { getCurrentConfig, getCurrentMessages } from '@/config/dynamic';
+import { getCurrentConfig, getCurrentMessages } from '@/config';
 
 // Backdoor authentication for development/testing
 export const BACKDOOR_USERNAME = import.meta.env.VITE_BACKDOOR_USERNAME || '';

@@ -2,8 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Settings, CheckCircle, Activity, Shield, Star } from 'lucide-react';
-import { BRANDING_CONFIG } from '@/config/branding';
-import { APP_CONFIG } from '@/config/app';
+import { CONFIG } from '@/config';
+const APP_CONFIG = CONFIG.APP;
 
 interface SystemMetrics {
   performance: { score: number };

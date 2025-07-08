@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useISOCompliance } from '@/hooks/useISOCompliance';
-import { getCurrentTheme, getBrandingConfig } from '@/config/dynamic';
+import { getCurrentTheme, getBrandingConfig } from '@/config';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { SignupForm } from '@/components/auth/SignupForm';
 import { PasswordRecoveryForm } from '@/components/auth/PasswordRecoveryForm';

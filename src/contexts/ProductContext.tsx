@@ -52,8 +52,8 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         }));
         setProducts(transformedProducts);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -77,8 +77,8 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         };
         setProducts(prevProducts => [...prevProducts, transformedProduct]);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -105,8 +105,8 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
           prevProducts.map(product => (product.id === id ? transformedProduct : product))
         );
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -125,8 +125,8 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       } else {
         setProducts(prevProducts => prevProducts.filter(product => product.id !== id));
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { getCurrentMessages } from '@/config/dynamic';
+import { getCurrentMessages } from '@/config';
 import { Package } from 'lucide-react';
 
 interface Product {

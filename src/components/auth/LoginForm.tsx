@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { getCurrentConfig, getCurrentMessages } from '@/config/dynamic';
+import { getCurrentConfig, getCurrentMessages } from '@/config';
 import { Eye, EyeOff } from 'lucide-react';
 
 export function LoginForm({
@@ -43,7 +43,7 @@ export function LoginForm({
 
     if (!studentId || !password) {
       toast({
-        title: messages.errors.missing_credentials || 'Missing Fields',
+        title: messages.errors?.missing_credentials || 'Missing Fields',
         description: messages.errors.fill_all_fields || 'Please enter both Student ID and Password.',
         variant: 'destructive',
       });
@@ -56,9 +56,9 @@ export function LoginForm({
       await signIn(studentId, password);
       // Don't navigate immediately - let auth context handle it
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : messages.errors.login_failed || 'Login failed';
+      const errorMessage = err instanceof Error ? err.message : messages.errors?.login_failed || 'Login failed';
       toast({
-        title: messages.errors.login_failed || 'Login Failed',
+        title: messages.errors?.login_failed || 'Login Failed',
         description: errorMessage,
         variant: 'destructive',
       });
@@ -157,7 +157,7 @@ export function LoginForm({
               {loading ? (
                 <span className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  {messages.loading.signing_in || 'Signing in...'}
+                  {messages.auth?.signing_in || 'Signing in...'}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">

@@ -1,4 +1,11 @@
 module.exports = {
+  // Use the same compiler settings as Vite (ESNext modules) so that
+  // constructs like `import.meta` compile correctly during tests
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.app.json',
+    },
+  },
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],

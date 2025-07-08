@@ -62,10 +62,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Validate shift value
-    const validShifts = ['1', '2', 'full'];
+    const validShifts = ['Morning (1st Shift)', 'Evening (2nd Shift)', 'Full Shift'];
     if (shift && !validShifts.includes(shift)) {
       return new Response(
-        JSON.stringify({ error: "Invalid shift value. Must be '1', '2', or 'full'." }),
+        JSON.stringify({ error: "Invalid shift value. Must be 'Morning (1st Shift)', 'Evening (2nd Shift)', or 'Full Shift'." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -103,7 +103,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const emailExists = existingAuthUsers?.users?.some(user => user.email === email);
+    type AuthUser = { email: string };
+const emailExists = existingAuthUsers?.users?.some((user: AuthUser) => user.email === email);
+
     if (emailExists) {
       console.log("❌ Email already exists in auth.users");
       return new Response(
@@ -113,6 +115,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create the auth user using admin API with email confirmation disabled
+    console.log("📤 Creating auth user with:", {
+      email,
+      passwordLength: password?.length,
+      studentId,
+      name,
+      department,
+      role: role ?? "student",
+    });    
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -125,13 +135,18 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-    if (authError || !authData.user || !authData.user.id) {
-      console.error("❌ Auth error:", authError);
-      return new Response(
-        JSON.stringify({ error: authError?.message || "Auth user creation failed" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    if (authError || !authData?.user?.id) {
+  console.error("❌ Auth creation failed:", {
+    message: authError?.message,
+    status: authError?.status,
+    userData: authData,
+  });
+
+  return new Response(
+    JSON.stringify({ error: authError?.message || "Auth user creation failed" }),
+    { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+  );
+}
 
     console.log("✅ Auth user created:", authData.user.id);
 

@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { getCurrentMessages } from '@/config/dynamic';
+import { getCurrentMessages } from '@/config';
 
 interface EnhancedImageProps {
   src: string;

@@ -5,9 +5,24 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminDeveloper = () => {
-  const [tableInfo, setTableInfo] = useState<any[]>([]);
-  const [functionInfo, setFunctionInfo] = useState<any[]>([]);
-  const [policyInfo, setPolicyInfo] = useState<any[]>([]);
+  interface TableInfo {
+  table_name: string;
+  row_count: number;
+  table_size: string;
+}
+  const [tableInfo, setTableInfo] = useState<TableInfo[]>([]);
+  interface FunctionInfo {
+  function_name: string;
+  function_language: string;
+  function_definition: string;
+}
+  const [functionInfo, setFunctionInfo] = useState<FunctionInfo[]>([]);
+  interface PolicyInfo {
+  policy_name?: string;
+  table_name?: string;
+  policy_definition?: string;
+}
+  const [policyInfo, setPolicyInfo] = useState<PolicyInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

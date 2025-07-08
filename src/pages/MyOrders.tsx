@@ -8,7 +8,12 @@ import { useToast } from '@/hooks/use-toast';
 
 const MyOrders = () => {
   const { user } = useAuth();
-  const [orders, setOrders] = useState<any[]>([]);
+  interface Order {
+  id: string;
+  created_at: string;
+  [key: string]: unknown;
+}
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

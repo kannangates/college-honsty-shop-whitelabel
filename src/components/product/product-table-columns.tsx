@@ -6,7 +6,7 @@ import { ArrowUpDown, Plus, Minus, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Product } from "@/contexts/ProductContext"
-import { getCurrentMessages } from "@/config/dynamic"
+import { getCurrentMessages } from "@/config"
 
 interface ProductTableColumnsProps {
   getItemQuantity: (productId: string) => number

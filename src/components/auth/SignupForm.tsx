@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { getCurrentConfig, getCurrentMessages } from '@/config/dynamic';
+import { getCurrentConfig, getCurrentMessages } from '@/config';
 import { PersonalInfoFields } from './forms/PersonalInfoFields';
 import { PasswordFields } from './forms/PasswordFields';
 import { DepartmentRoleFields } from './forms/DepartmentRoleFields';
@@ -66,7 +66,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
 
   const validateForm = () => {
     if (!formData.studentId || !formData.name || !formData.email || !formData.password || 
-        !formData.department || !formData.mobileNumber) {
+        !formData.department) {
       toast({
         title: messages.errors?.all_fields_required || 'All fields required',
         description: messages.errors?.fill_all_fields || 'Please fill in all required fields',
@@ -111,8 +111,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         formData.password,
         formData.studentId,
         formData.name,
-        formData.department,
-        formData.mobileNumber,
+        !formData.department,
         formData.role,
         formData.shift,
         config.app?.welcome_points || 100
@@ -126,7 +125,6 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         password: '',
         confirmPassword: '',
         department: '',
-        mobileNumber: '',
         role: 'student',
         shift: '1',
       });

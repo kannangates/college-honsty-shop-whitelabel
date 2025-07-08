@@ -5,7 +5,7 @@ import { useCart } from '@/hooks/useCart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package } from 'lucide-react';
 import { CartSummary } from '@/components/product/CartSummary';
-import { getCurrentMessages } from '@/config/dynamic';
+import { getCurrentMessages } from '@/config';
 import { DataTable } from '@/components/ui/data-table';
 import { createProductColumns } from './product-table-columns';
 

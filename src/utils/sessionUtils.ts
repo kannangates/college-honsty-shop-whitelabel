@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SYSTEM_CONFIG } from '@/config/system';
+import { SYSTEM_CONFIG } from '@/config';
 
 export class SessionUtils {
   static async getCurrentSession() {

@@ -9,7 +9,7 @@ import { UserRoutes } from "@/routes/UserRoutes";
 import { AdminRoutes } from "@/routes/AdminRoutes";
 import NotFound from "@/pages/NotFound";
 import { Navigate } from "react-router-dom";
-import { getBrandingConfig } from "@/config/dynamic";
+import { getBrandingConfig } from "@/config";
 import { useEffect } from "react";
 import "./App.css";
 

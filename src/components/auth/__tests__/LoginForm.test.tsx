@@ -1,5 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { LoginForm } from '../LoginForm';
 
 // Mock the auth context
@@ -27,7 +28,9 @@ describe('LoginForm', () => {
 
   it('renders login form correctly', () => {
     const { getByLabelText, getByRole, getByText } = render(
-      <LoginForm onToggleSignup={mockToggleSignup} />
+      <MemoryRouter>
+        <LoginForm onToggleSignup={mockToggleSignup} />
+      </MemoryRouter>
     );
     
     expect(getByLabelText(/student id/i)).toBeInTheDocument();
@@ -37,7 +40,11 @@ describe('LoginForm', () => {
   });
 
   it('calls toggle function when create account link is clicked', () => {
-    const { getByRole } = render(<LoginForm onToggleSignup={mockToggleSignup} />);
+    const { getByRole } = render(
+      <MemoryRouter>
+        <LoginForm onToggleSignup={mockToggleSignup} />
+      </MemoryRouter>
+    );
     
     const createAccountButton = getByRole('button', { name: /create account/i });
     createAccountButton.click();
@@ -46,7 +53,11 @@ describe('LoginForm', () => {
   });
 
   it('renders form fields with correct attributes', () => {
-    const { getByLabelText } = render(<LoginForm onToggleSignup={mockToggleSignup} />);
+    const { getByLabelText } = render(
+      <MemoryRouter>
+        <LoginForm onToggleSignup={mockToggleSignup} />
+      </MemoryRouter>
+    );
     
     const studentIdInput = getByLabelText(/student id/i);
     const passwordInput = getByLabelText(/password/i);
@@ -58,7 +69,11 @@ describe('LoginForm', () => {
   });
 
   it('renders submit button with correct text', () => {
-    const { getByRole } = render(<LoginForm onToggleSignup={mockToggleSignup} />);
+    const { getByRole } = render(
+      <MemoryRouter>
+        <LoginForm onToggleSignup={mockToggleSignup} />
+      </MemoryRouter>
+    );
     
     const submitButton = getByRole('button', { name: /sign in/i });
     expect(submitButton).toHaveTextContent('Sign In');

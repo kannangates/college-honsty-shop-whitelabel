@@ -1,7 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { validateStudentId, validatePassword, validatePasswordMatch } from '@/utils/authUtils';
-import { getCurrentConfig, getCurrentMessages } from '@/config/dynamic';
+import { getCurrentConfig, getCurrentMessages } from '@/config';
+import type { SignupResult, LoginResult, AuthSession, UserProfile } from '@/types/auth';
 
 interface SignupData {
   email: string;
@@ -10,7 +11,7 @@ interface SignupData {
   name: string;
   department: string;
   mobileNumber: string;
-  role: string;
+  role: 'student' | 'admin' | 'teacher' | 'developer';
   shift: string;
   points: number;
 }
@@ -71,7 +72,7 @@ export class AuthService {
     };
   }
 
-  static async signup(data: SignupData): Promise<{ success: boolean; error?: string; user?: any }> {
+  static async signup(data: SignupData): Promise<SignupResult> {
     try {
       // Validate input data
       const validation = this.validateSignupData(data);
@@ -127,7 +128,7 @@ export class AuthService {
           email: data.email,
           department: data.department,
           mobile_number: data.mobileNumber,
-          role: data.role as any,
+          role: data.role,
           shift: data.shift,
           points: data.points,
           status: 'active'
@@ -145,7 +146,7 @@ export class AuthService {
     }
   }
 
-  static async autoLogin(email: string, password: string): Promise<{ success: boolean; error?: string; session?: any; profile?: any }> {
+  static async autoLogin(email: string, password: string): Promise<LoginResult> {
     try {
       // Sign in the user
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -182,7 +183,7 @@ export class AuthService {
     }
   }
 
-  static async login(studentId: string, password: string): Promise<{ success: boolean; error?: string; session?: any; profile?: any }> {
+  static async login(studentId: string, password: string): Promise<LoginResult> {
     try {
       // Validate input
       const studentIdValidation = validateStudentId(studentId);
@@ -250,7 +251,7 @@ export class AuthService {
     }
   }
 
-  static async restoreSession(): Promise<{ session?: any; profile?: any }> {
+  static async restoreSession(): Promise<{ session?: AuthSession; profile?: UserProfile }> {
     try {
       // Try to restore from sessionStorage first
       const storedSession = sessionStorage.getItem('supabase_session');

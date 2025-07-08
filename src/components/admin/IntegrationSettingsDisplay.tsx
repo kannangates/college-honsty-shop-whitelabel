@@ -8,7 +8,14 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 export const IntegrationSettingsDisplay = () => {
-  const [settings, setSettings] = useState<any | null>(null);
+  interface IntegrationSettings {
+  id: string;
+  enable_security_monitoring: boolean;
+  enable_performance_monitoring: boolean;
+  enable_audit_logging: boolean;
+}
+
+  const [settings, setSettings] = useState<IntegrationSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
