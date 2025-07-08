@@ -63,7 +63,13 @@ const AdminInventory = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+      const transformedProducts = (data || []).map(item => ({
+        ...item,
+        description: '',
+        price: item.unit_price,
+        status: (item.status === 'active' || item.status === 'true') ? 'active' as const : 'inactive' as const
+      }));
+      setProducts(transformedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
@@ -80,7 +86,7 @@ const AdminInventory = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewProduct(prev => ({ ...prev, [name]: value }));
   };
@@ -90,13 +96,28 @@ const AdminInventory = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .insert([newProduct])
+        .insert([{
+          name: newProduct.name,
+          unit_price: newProduct.price,
+          category: newProduct.category,
+          current_stock: newProduct.current_stock,
+          opening_stock: 0,
+          status: newProduct.status,
+          image_url: newProduct.image_url || null,
+          created_by: null
+        }])
         .select()
         .single();
 
       if (error) throw error;
 
-      setProducts(prev => [data, ...prev]);
+      const transformedProduct = {
+        ...data,
+        description: '',
+        price: data.unit_price,
+        status: (data.status === 'active' || data.status === 'true') ? 'active' as const : 'inactive' as const
+      };
+      setProducts(prev => [transformedProduct, ...prev]);
       setNewProduct({
         name: '',
         description: '',
@@ -145,14 +166,27 @@ const AdminInventory = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .update(newProduct)
+        .update({
+          name: newProduct.name,
+          unit_price: newProduct.price,
+          category: newProduct.category,
+          current_stock: newProduct.current_stock,
+          status: newProduct.status,
+          image_url: newProduct.image_url || null
+        })
         .eq('id', selectedProduct.id)
         .select()
         .single();
 
       if (error) throw error;
 
-      setProducts(prev => prev.map(p => (p.id === selectedProduct.id ? data : p)));
+      const transformedProduct = {
+        ...data,
+        description: '',
+        price: data.unit_price,
+        status: (data.status === 'active' || data.status === 'true') ? 'active' as const : 'inactive' as const
+      };
+      setProducts(prev => prev.map(p => (p.id === selectedProduct.id ? transformedProduct : p)));
       setIsDialogOpen(false);
       setIsEditMode(false);
       setSelectedProduct(null);

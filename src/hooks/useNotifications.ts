@@ -40,7 +40,10 @@ export const useNotifications = () => {
 
       if (error) throw error;
       
-      setNotifications(data || []);
+      setNotifications((data || []).map(notification => ({
+        ...notification,
+        read_at: null // Default value since read_at is not in the notifications table
+      })));
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {

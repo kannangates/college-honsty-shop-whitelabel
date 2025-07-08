@@ -62,7 +62,7 @@ export const AdminInventoryManagement = () => {
           ...item,
           description: '',
           price: item.unit_price,
-          status: (item.status === 'true' || item.status === true) ? 'active' : 'inactive'
+          status: (item.status === 'active' || item.status === 'true') ? 'active' as const : 'inactive' as const
         }));
         setProducts(transformedProducts);
     } catch (error) {

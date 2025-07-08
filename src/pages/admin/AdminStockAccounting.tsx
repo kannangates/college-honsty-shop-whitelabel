@@ -48,7 +48,13 @@ const AdminStockAccounting = () => {
         .order('name');
 
       if (error) throw error;
-      setProducts(data || []);
+      const transformedProducts = (data || []).map(item => ({
+        ...item,
+        description: '',
+        price: item.unit_price,
+        status: (item.status === 'active' || item.status === 'true') ? 'active' as const : 'inactive' as const
+      }));
+      setProducts(transformedProducts);
     } catch (error) {
       console.error('Error loading products:', error);
       toast({

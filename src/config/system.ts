@@ -8,6 +8,7 @@ export const SYSTEM_CONFIG = {
     SESSION_TIMEOUT: 24 * 60 * 60 * 1000, // 24 hours
     IMAGE_RETRY_ATTEMPTS: 3,
     IMAGE_RETRY_DELAY: 1000, // 1 second
+    ENABLE_CACHING: true,
   },
   SECURITY: {
     ENABLE_CSRF_PROTECTION: true,

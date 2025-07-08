@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useISOCompliance } from '@/hooks/useISOCompliance';
 import { getCurrentTheme, getBrandingConfig } from '@/config/dynamic';
 import { LoginForm } from '@/components/auth/LoginForm';

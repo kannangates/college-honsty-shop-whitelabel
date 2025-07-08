@@ -61,7 +61,8 @@ let currentConfig = {
     },
     iso_compliance: {
       ENABLE_AUDIT_LOGGING: true,
-      ENABLE_PERFORMANCE_MONITORING: true
+      ENABLE_PERFORMANCE_MONITORING: true,
+      ENABLE_SECURITY_MONITORING: true
     }
   }
 };
