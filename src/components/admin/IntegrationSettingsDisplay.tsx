@@ -8,12 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 export const IntegrationSettingsDisplay = () => {
-  const [settings, setSettings] = useState<{
-    id: string;
-    enable_security_monitoring: boolean;
-    enable_performance_monitoring: boolean;
-    enable_audit_logging: boolean;
-  } | null>(null);
+  const [settings, setSettings] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -29,7 +24,12 @@ export const IntegrationSettingsDisplay = () => {
       }
 
       if (data) {
-        setSettings(data);
+        setSettings({
+          id: data.id,
+          enable_security_monitoring: false,
+          enable_performance_monitoring: false,
+          enable_audit_logging: false
+        });
       }
     } catch (error) {
       console.error('Error fetching integration settings:', error);

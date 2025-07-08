@@ -58,7 +58,13 @@ export const AdminInventoryManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+        const transformedProducts = (data || []).map(item => ({
+          ...item,
+          description: '',
+          price: item.unit_price,
+          status: (item.status === 'true' || item.status === true) ? 'active' : 'inactive'
+        }));
+        setProducts(transformedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
@@ -85,7 +91,16 @@ export const AdminInventoryManagement = () => {
       setLoading(true);
       const { error } = await supabase
         .from('products')
-        .insert([newProduct]);
+        .insert([{
+          name: newProduct.name,
+          unit_price: newProduct.price,
+          category: newProduct.category,
+          current_stock: newProduct.current_stock,
+          opening_stock: 0,
+          status: newProduct.status,
+          image_url: newProduct.image_url || null,
+          created_by: null
+        }]);
 
       if (error) throw error;
       toast({

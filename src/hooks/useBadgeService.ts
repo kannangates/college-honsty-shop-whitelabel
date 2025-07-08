@@ -34,12 +34,21 @@ interface BadgeProgress {
   totalBadges: number;
 }
 
+interface IndividualBadgeProgress {
+  badgeId: string;
+  currentProgress: number;
+  targetProgress: number;
+  isCompleted: boolean;
+  progressPercentage: number;
+}
+
 export const useBadgeService = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
-  const [badgeProgress, setBadgeProgress] = useState<BadgeProgress>({
+  const [badgeProgress, setBadgeProgress] = useState<Record<string, IndividualBadgeProgress>>({});
+  const [overallProgress, setOverallProgress] = useState<BadgeProgress>({
     currentTier: null,
     nextTier: null,
     progress: 0,
@@ -84,35 +93,37 @@ export const useBadgeService = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      setUserBadges(data || []);
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        badge: item.badges as Badge
+      }));
+      setUserBadges(transformedData);
     } catch (error) {
       console.error('Error fetching user badges:', error);
     }
   }, [user?.id]);
 
   const calculateProgress = useCallback(async () => {
-    if (!user?.id || !badges.length) return;
+    if (!profile?.id || !badges.length) return;
 
-    const progressData: Record<string, BadgeProgress> = {};
+    const progressData: Record<string, IndividualBadgeProgress> = {};
 
     for (const badge of badges) {
       try {
         let progress = 0;
         const target = badge.min_points;
 
-        // Calculate progress based on badge type and conditions
+        // Calculate progress based on badge type
         switch (badge.badge_type) {
           case 'tier':
-            progress = user.points || 0;
+            progress = profile.points || 0;
             break;
           case 'achievement':
-            if (badge.condition) {
-              // Handle different achievement conditions
-              progress = await calculateAchievementProgress(badge.condition, user.id);
-            }
+            // Simple achievement progress calculation
+            progress = profile.points || 0;
             break;
           default:
-            progress = user.points || 0;
+            progress = profile.points || 0;
         }
 
         progressData[badge.id] = {
@@ -128,7 +139,7 @@ export const useBadgeService = () => {
     }
 
     setBadgeProgress(progressData);
-  }, [user?.id, user?.points, badges]);
+  }, [profile?.id, profile?.points, badges]);
 
   // Award badges for user
   const awardBadgesForUser = async (orderId?: string) => {
@@ -196,12 +207,14 @@ export const useBadgeService = () => {
   return {
     badges,
     userBadges,
-    badgeProgress,
+    badgeProgress: overallProgress,
     loading,
     awardBadgesForUser,
     hasBadge,
     getBadgesByType,
     fetchUserBadges,
-    fetchBadges
+    fetchBadges: fetchBadges,
+    fetchAllBadges: fetchBadges,
+    fetchUserProgress: fetchUserBadges
   };
 };

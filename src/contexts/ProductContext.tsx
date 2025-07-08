@@ -4,7 +4,10 @@ import type { Database } from '@/integrations/supabase/types';
 
 type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
 
-export type Product = Tables<'products'>;
+export type Product = Tables<'products'> & {
+  description?: string;
+  price: number;
+};
 
 interface ProductContextType {
   products: Product[];
@@ -42,7 +45,12 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       if (error) {
         setError(error.message);
       } else {
-        setProducts(data || []);
+        const transformedProducts = (data || []).map(item => ({
+          ...item,
+          description: '',
+          price: item.unit_price
+        }));
+        setProducts(transformedProducts);
       }
     } catch (err: any) {
       setError(err.message);
@@ -62,7 +70,12 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       if (error) {
         setError(error.message);
       } else if (data) {
-        setProducts(prevProducts => [...prevProducts, data[0]]);
+        const transformedProduct = {
+          ...data[0],
+          description: '',
+          price: data[0].unit_price
+        };
+        setProducts(prevProducts => [...prevProducts, transformedProduct]);
       }
     } catch (err: any) {
       setError(err.message);
@@ -83,8 +96,13 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       if (error) {
         setError(error.message);
       } else if (data) {
+        const transformedProduct = {
+          ...data[0],
+          description: '',
+          price: data[0].unit_price
+        };
         setProducts(prevProducts =>
-          prevProducts.map(product => (product.id === id ? data[0] : product))
+          prevProducts.map(product => (product.id === id ? transformedProduct : product))
         );
       }
     } catch (err: any) {
