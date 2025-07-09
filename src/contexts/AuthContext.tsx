@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext } from 'react';
+// eslint-disable react-refresh/only-export-components
 import type { User, Session } from '@supabase/supabase-js';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuthState } from '@/hooks/useAuthState';
@@ -31,6 +32,7 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {

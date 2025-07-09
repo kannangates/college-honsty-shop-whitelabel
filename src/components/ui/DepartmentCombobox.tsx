@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 
-// Centralised list. Update once here and it propagates everywhere.
+// Centralised list inside component file for fast-refresh compatibility
 export const DEPARTMENT_OPTIONS: readonly string[] = [
   'All Department',
   'Computer Science',
@@ -25,6 +25,8 @@ export const DEPARTMENT_OPTIONS: readonly string[] = [
   'Civil',
   'Electrical',
 ];
+
+
 
 interface DepartmentComboboxProps {
   /** Currently selected department string (empty if none) */

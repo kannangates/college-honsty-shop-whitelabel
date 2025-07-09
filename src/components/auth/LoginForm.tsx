@@ -34,11 +34,17 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const config = getCurrentConfig();
+  // Determine hCaptcha site key with sensible fallbacks for development
+  // Use env var first, then config, finally public test key
+  // https://docs.hcaptcha.com/#localdev
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const siteKey: string = (import.meta.env.VITE_HCAPTCHA_SITE_KEY as string) || (config as any).security?.hcaptcha_site_key || '10000000-ffff-ffff-ffff-000000000001';
   const captchaRef = useRef<HCaptcha>(null);
   const { toast } = useToast();
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const config = getCurrentConfig();
+
   const messages = getCurrentMessages();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,6 +156,15 @@ export function LoginForm({
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+            </div>
+
+            {/* Captcha - centered */}
+            <div className="flex justify-center">
+              <HCaptcha
+                sitekey={siteKey}
+                onVerify={(token) => setCaptchaToken(token)}
+                ref={captchaRef}
+              />
             </div>
 
             <Button 

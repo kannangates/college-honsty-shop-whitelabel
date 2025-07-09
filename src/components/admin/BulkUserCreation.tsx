@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 import { AuthService } from '@/services/authService';
 
 interface StudentData {
@@ -67,7 +68,8 @@ export const BulkUserCreation = () => {
           name: student.name,
           department: student.department,
           mobileNumber: student.mobileNumber,
-          role: student.role,
+          // Cast to allowed enum type
+          role: student.role as Database['public']['Enums']['user_role'],
           shift: student.shift,
           points: student.points,
         };

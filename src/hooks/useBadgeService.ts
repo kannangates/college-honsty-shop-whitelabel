@@ -193,7 +193,7 @@ export const useBadgeService = () => {
     };
 
     initializeBadgeData();
-  }, [user?.id]);
+  }, [user?.id, fetchUserBadges]);
 
   // Calculate progress when data changes
   useEffect(() => {

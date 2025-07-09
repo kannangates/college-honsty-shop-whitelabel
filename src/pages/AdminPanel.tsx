@@ -69,6 +69,15 @@ const AdminPanel = () => {
       roles: ['admin', 'developer'],
     },
     {
+      title: "n8n Automation",
+      description: "Manage n8n workflows and credentials",
+      icon: Settings,
+      color: "from-gray-500 to-gray-600",
+      bgColor: "bg-gray-200",
+      path: "/admin/n8n",
+      roles: ['admin', 'developer'],
+    },
+    {
       title: "Points & Badges",
       description: "Configure point allocation and badge management",
       icon: Award,
