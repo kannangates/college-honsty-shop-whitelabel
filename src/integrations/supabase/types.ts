@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_stock_operations: {
+        Row: {
+          id: string
+          product_id: string
+          opening_stock: number
+          additional_stock: number
+          actual_closing_stock: number
+          estimated_closing_stock: number
+          stolen_stock: number
+          wastage_stock: number
+          sales: number
+          order_count: number
+          created_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          opening_stock: number
+          additional_stock?: number
+          actual_closing_stock: number
+          estimated_closing_stock: number
+          stolen_stock?: number
+          wastage_stock?: number
+          sales?: number
+          order_count?: number
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          opening_stock?: number
+          additional_stock?: number
+          actual_closing_stock?: number
+          estimated_closing_stock?: number
+          stolen_stock?: number
+          wastage_stock?: number
+          sales?: number
+          order_count?: number
+          created_at?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_stock_operations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      
       badge_progress: {
         Row: {
           badge_id: string | null

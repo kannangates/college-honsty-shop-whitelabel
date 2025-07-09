@@ -173,7 +173,7 @@ const Settings = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
           {/* Profile Information */}
           <Card className="border-0 shadow-2xl bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-yellow-300 to-pink-300 rounded-full opacity-20 -translate-y-16 translate-x-16"></div>

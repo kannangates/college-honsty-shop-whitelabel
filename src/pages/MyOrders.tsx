@@ -100,7 +100,7 @@ const MyOrders = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {/* Unpaid Orders Section */}
         <Card className="border-0 shadow-lg">
           <CardHeader>

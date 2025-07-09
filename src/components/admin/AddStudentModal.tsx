@@ -3,14 +3,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DepartmentCombobox } from '@/components/ui/DepartmentCombobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
+
+
+
 
 interface AddStudentModalProps {
   open: boolean;
@@ -52,7 +53,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
       email: cleanValue ? `${cleanValue}@shasuncollege.edu.in` : ''
     }));
   };
-  const [departmentPopoverOpen, setDepartmentPopoverOpen] = useState(false);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,17 +106,6 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
       setLoading(false);
     }
   };
-
-  const DEPARTMENTS = [
-    "Computer Science",
-    "Electronics",
-    "Mechanical",
-    "Civil",
-    "Electrical",
-    "Chemical",
-    "Biotechnology",
-    "Information Technology"
-  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -173,46 +163,8 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
           </div>
           
           <div>
-            <Label htmlFor="department">Department</Label>
-            <Popover open={departmentPopoverOpen} onOpenChange={setDepartmentPopoverOpen}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    "w-full h-10 border border-input bg-background rounded-md px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                    !formData.department && "text-muted-foreground"
-                  )}
-                >
-                  {formData.department || "Select Department"}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                <Command>
-                  <CommandInput placeholder="Search department..." />
-                  <CommandList>
-                    <CommandEmpty>No department found.</CommandEmpty>
-                    {DEPARTMENTS.map((dept) => (
-                      <CommandItem
-                        key={dept}
-                        value={dept}
-                        onSelect={() => {
-                          setFormData({ ...formData, department: dept });
-                          setDepartmentPopoverOpen(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            formData.department === dept ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {dept}
-                      </CommandItem>
-                    ))}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <Label>Department</Label>
+            <DepartmentCombobox value={formData.department} onChange={(val) => setFormData({ ...formData, department: val })} />
           </div>
           
           <div>
