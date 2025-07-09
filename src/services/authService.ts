@@ -201,9 +201,12 @@ export class AuthService {
         .from('users')
         .select('email, id')
         .eq('student_id', studentId)
-        .single();
+        .maybeSingle();
 
-      if (userError || !userData) {
+      if (userError) {
+        return { success: false, error: userError.message };
+      }
+      if (!userData) {
         return { success: false, error: 'Student ID not found' };
       }
 
