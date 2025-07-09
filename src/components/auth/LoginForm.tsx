@@ -34,6 +34,8 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   const config = getCurrentConfig();
   // Determine hCaptcha site key with sensible fallbacks for development
   // Use env var first, then config, finally public test key
@@ -62,7 +64,7 @@ export function LoginForm({
     setLoading(true);
 
     try {
-      await signIn(studentId, password, captchaToken || undefined);
+      await signIn(studentId, password, isLocalhost ? undefined : captchaToken || undefined);
       // Don't navigate immediately - let auth context handle it
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : messages.errors?.login_failed || 'Login failed';
@@ -159,6 +161,7 @@ export function LoginForm({
             </div>
 
             {/* Captcha - centered */}
+            {!isLocalhost && (
             <div className="flex justify-center">
               <HCaptcha
                 sitekey={siteKey}
@@ -166,8 +169,9 @@ export function LoginForm({
                 ref={captchaRef}
               />
             </div>
-
-            <Button 
+            )}
+ 
+             <Button 
               type="submit" 
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]" 
               disabled={loading}

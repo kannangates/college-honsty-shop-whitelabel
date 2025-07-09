@@ -4,8 +4,8 @@ import type { User, Session } from '@supabase/supabase-js';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuthCleanup } from './auth/useAuthCleanup';
 import { useAuthRedirect } from './auth/useAuthRedirect';
-import { useBackdoorAuth } from './auth/useBackdoorAuth';
-import { clearBackdoorSession } from './useAuthState';
+
+
 import { AuthService } from '@/services/authService';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -31,14 +31,7 @@ export const useAuthActions = ({
   
   const { cleanupAuthState } = useAuthCleanup();
   const { handleSuccessfulLogin } = useAuthRedirect();
-  const { attemptBackdoorLogin } = useBackdoorAuth({
-    setUser,
-    setProfile,
-    setSession,
-    setBackdoorMode,
-    setLoading,
-    handleSuccessfulLogin
-  });
+  
 
   const signIn = async (studentId: string, password: string, captchaToken?: string) => {
     console.log('🔑 SignIn attempt for studentId:', studentId);
@@ -52,9 +45,7 @@ export const useAuthActions = ({
       console.warn('Sign out error:', err);
     }
 
-    if (attemptBackdoorLogin(studentId, password)) {
-      return;
-    }
+    
 
     try {
       const result = await AuthService.login(studentId, password, captchaToken);
@@ -130,16 +121,6 @@ export const useAuthActions = ({
   const signOut = async () => {
     cleanupAuthState();
     localStorage.removeItem('redirectAfterLogin');
-    
-    if (typeof window !== 'undefined' && localStorage.getItem('backdoorMode') === 'true') {
-      clearBackdoorSession();
-      setUser(null);
-      setProfile(null);
-      setSession(null);
-      setBackdoorMode(false);
-      window.location.href = '/auth';
-      return;
-    }
     
     try {
       await AuthService.signOut();
