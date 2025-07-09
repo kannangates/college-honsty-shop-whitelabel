@@ -5,6 +5,22 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  build: {
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) return 'vendor-react'
+            if (id.includes('lucide-react') || id.includes('shadcn')) return 'vendor-ui'
+            if (id.includes('@tanstack')) return 'vendor-react-query'
+            if (id.includes('@supabase')) return 'vendor-supabase'
+            return 'vendor'
+          }
+        },
+      },
+    },
+  },
   server: {
     host: "::",
     port: 8080,
@@ -13,7 +29,8 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' &&
     componentTagger(),
-  ].filter(Boolean),
+  ].filter(Boolean) as []
+,
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

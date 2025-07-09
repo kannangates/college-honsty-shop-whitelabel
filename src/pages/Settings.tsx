@@ -22,6 +22,10 @@ const Settings = () => {
     mobile_number: '',
     department: ''
   });
+  const [pwdData, setPwdData] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
 
   useEffect(() => {
     if (profile) {
@@ -82,6 +86,31 @@ const Settings = () => {
         description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!profile) return;
+    if (pwdData.newPassword.length < 6) {
+      toast({ title: 'Weak Password', description: 'Password must be at least 6 characters', variant: 'destructive' });
+      return;
+    }
+    if (pwdData.newPassword !== pwdData.confirmPassword) {
+      toast({ title: 'Mismatch', description: 'Passwords do not match', variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pwdData.newPassword });
+      if (error) throw error;
+      // clear metadata flag
+      await supabase.auth.updateUser({ data: { must_change_password: false } });
+      toast({ title: 'Password Updated', description: 'Your password has been changed successfully.' });
+      setPwdData({ newPassword: '', confirmPassword: '' });
+    } catch (error: unknown) {
+      toast({ title: 'Error', description: (error as Error).message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -224,6 +253,31 @@ const Settings = () => {
                 className="w-full bg-gradient-to-r from-[#202072] to-[#e66166] text-white rounded-xl py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {loading ? 'Updating...' : 'Update Profile ✨'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Password Change */}
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-orange-50 via-rose-50 to-purple-50 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-300 to-pink-300 rounded-full opacity-20 -translate-y-16 translate-x-16"></div>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Change Password
+              </CardTitle>
+              <CardDescription>Update your account password</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input id="newPassword" type="password" value={pwdData.newPassword} onChange={(e)=>setPwdData({...pwdData,newPassword:e.target.value})}/>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Input id="confirmPassword" type="password" value={pwdData.confirmPassword} onChange={(e)=>setPwdData({...pwdData,confirmPassword:e.target.value})}/>
+              </div>
+              <Button onClick={handleChangePassword} disabled={loading} className="rounded-xl">
+                {loading? 'Updating...' : 'Submit'}
               </Button>
             </CardContent>
           </Card>

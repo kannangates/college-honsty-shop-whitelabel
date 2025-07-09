@@ -10,12 +10,11 @@ import { AuthService } from '@/services/authService';
 interface StudentData {
   studentId: string;
   name: string;
-  email: string;
   department: string;
-  mobileNumber: string;
   shift: string;
   role: string;
   points: number;
+  password: string;
   rowIndex: number;
 }
 
@@ -43,13 +42,12 @@ export const BulkUserCreation = () => {
       return {
         studentId: student.student_id as string || student.id as string || '',
         name: student.name as string || student.full_name as string || '',
-        email: student.email as string || '',
         department: student.department as string || '',
-        mobileNumber: student.mobile_number as string || student.phone as string || '',
         shift: student.shift as string || '1',
         role: student.role as string || 'student',
-        points: parseInt(student.points as string || '100'),
-        rowIndex: index + 2 // +2 because we skip header and arrays are 0-indexed
+        points: parseInt(student.initial_points as string || student.points as string || '100'),
+        password: student.password as string || 'Temp@123',
+        rowIndex: index + 2
       };
     });
   };
@@ -62,16 +60,16 @@ export const BulkUserCreation = () => {
 
       for (const student of students) {
         const signupData = {
-          email: student.email,
-          password: 'defaultPassword', // You might want to generate a random password
+          email: `${student.studentId}@shasuncollege.edu.in`,
+          password: student.password,
           studentId: student.studentId,
           name: student.name,
           department: student.department,
-          mobileNumber: student.mobileNumber,
           // Cast to allowed enum type
           role: student.role as Database['public']['Enums']['user_role'],
           shift: student.shift,
           points: student.points,
+          userMetadata: { must_change_password: true }
         };
 
         const signupResult = await AuthService.signup(signupData);
@@ -109,6 +107,17 @@ export const BulkUserCreation = () => {
     }
   };
 
+  function downloadTemplate() {
+    const header = 'student_id,name,department,shift,role,initial_points,password';
+    const blob = new Blob([header + '\n'], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'bulk_users_template.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -122,12 +131,15 @@ export const BulkUserCreation = () => {
             id="csvData"
             value={csvData}
             onChange={handleCsvDataChange}
-            placeholder="student_id,name,email,department,mobile_number,shift,role,points"
+            placeholder="student_id,name,department,shift,role,initial_points,password"
             className="resize-none"
           />
         </div>
         <Button onClick={handleCreateUsers} disabled={processing}>
           {processing ? 'Creating Users...' : 'Create Users'}
+        </Button>
+        <Button variant="outline" onClick={() => downloadTemplate()}>
+          Download CSV template
         </Button>
       </CardContent>
     </Card>

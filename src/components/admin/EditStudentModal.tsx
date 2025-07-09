@@ -36,6 +36,7 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
     email: '',
     department: '',
     mobile_number: '',
+    password: '' ,
     role: '',
     points: '',
     status: ''
@@ -50,6 +51,7 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
         mobile_number: student.mobile_number || '',
         role: student.role || 'student',
         points: (student.points || 0).toString(),
+         password: '' ,
         status: student.status || 'active'
       });
     }
@@ -62,15 +64,26 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
     setLoading(true);
 
     try {
-          const { error } = await supabase
+      const updates: Record<string, unknown> = {
+        name: formData.name,
+        email: formData.email,
+        department: formData.department,
+        mobile_number: formData.mobile_number,
+        role: formData.role as 'admin' | 'student' | 'teacher' | 'developer',
+        points: parseInt(formData.points) || 0,
+        status: formData.status,
+        updated_at: new Date().toISOString()
+      };
+      if (formData.password.trim()) {
+        await supabase.auth.admin.updateUserById(student.id, {
+          password: formData.password,
+          user_metadata: { must_change_password: true }
+        });
+      }
+      const { error } = await supabase
         .from('users')
         .update({
-          name: formData.name,
-          email: formData.email,
-          department: formData.department,
-          mobile_number: formData.mobile_number,
-          role: formData.role as 'admin' | 'student' | 'teacher' | 'developer',
-          points: parseInt(formData.points) || 0,
+          ...updates,
           status: formData.status,
           updated_at: new Date().toISOString()
         })
@@ -197,7 +210,12 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
             </Select>
           </div>
           
-          <div className="flex gap-2 pt-4">
+          <div>
+              <Label htmlFor="password">Reset Password</Label>
+              <Input id="password" type="password" value={formData.password} onChange={(e)=>setFormData({...formData,password:e.target.value})}/>
+            </div>
+
+           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={loading} className="flex-1">
               {loading ? 'Updating...' : 'Update Profile'}
             </Button>

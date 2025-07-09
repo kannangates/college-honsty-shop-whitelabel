@@ -15,6 +15,7 @@ interface SignupData {
   shift: string;
   points: number;
   captchaToken?: string;
+  userMetadata?: Record<string, unknown>;
 }
 
 export class AuthService {
@@ -95,7 +96,8 @@ export class AuthService {
             
             role: data.role  as Database["public"]["Enums"]["user_role"],
             shift: data.shift,
-            points: data.points
+            points: data.points,
+            ...(data.userMetadata || {})
           },
           captchaToken: data.captchaToken
         }
