@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrentMessages } from '@/config';
-import { Loader2, Package, Save } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+// Product as stored in DB
 interface Product {
   id: string;
   name: string;
@@ -24,13 +25,13 @@ interface Product {
   opening_stock?: number;
   status?: string;
   unit_price?: number;
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined;
 }
 
-interface StockOperation {
+// Stock operation as stored in DB (no product field)
+interface StockOperationRow {
   id?: string;
   product_id: string;
-  product: Product;
   opening_stock: number;
   additional_stock: number;
   actual_closing_stock: number;
@@ -41,6 +42,11 @@ interface StockOperation {
   order_count: number;
   created_at: string;
   updated_at: string | null;
+}
+
+// Stock operation as used in UI (with product field)
+interface StockOperation extends StockOperationRow {
+  product: Product;
 }
 
 interface Filters {
@@ -76,7 +82,7 @@ const AdminStockAccounting = () => {
 
       // Format today's date to match the database format
       const todayFormatted = new Date().toISOString().split('T')[0];
-      
+
       // Load today's operations
       const { data: operationsData, error: operationsError } = await supabase
         .from('daily_stock_operations')
@@ -85,15 +91,18 @@ const AdminStockAccounting = () => {
 
       if (operationsError) throw operationsError;
 
+      // Type assertion for operationsData
+      const opsData: StockOperationRow[] = (operationsData ?? []) as StockOperationRow[];
+
       // Transform products and merge with operations
-      const transformedProducts = (productsData || []).map(item => ({
+      const transformedProducts = (productsData ?? []).map(item => ({
         ...item,
         current_stock: item.current_stock || 0,
       }));
 
       // Create or update operations for each product
-      const mergedOperations = transformedProducts.map(product => {
-        const existingOp = operationsData?.find((op: any) => op.product_id === product.id);
+      const mergedOperations: StockOperation[] = transformedProducts.map(product => {
+        const existingOp = opsData.find(op => op.product_id === product.id);
         return {
           id: existingOp?.id,
           product_id: product.id,
@@ -107,8 +116,8 @@ const AdminStockAccounting = () => {
           sales: existingOp?.sales ?? 0,
           order_count: existingOp?.order_count ?? 0,
           created_at: existingOp?.created_at ?? today,
-          updated_at: existingOp?.updated_at,
-        } as StockOperation;
+          updated_at: existingOp?.updated_at ?? null,
+        };
       });
 
       setProducts(transformedProducts);
@@ -127,15 +136,15 @@ const AdminStockAccounting = () => {
 
   const applyFilters = useCallback(() => {
     let filtered = [...stockOperations];
-    
+
     if (filters.category && filters.category !== 'all') {
       filtered = filtered.filter(op => op.product?.category === filters.category);
     }
-    
+
     if (filters.status && filters.status !== 'all') {
       filtered = filtered.filter(op => op.product?.status === filters.status);
     }
-    
+
     if (filters.stockStatus && filters.stockStatus !== 'all') {
       if (filters.stockStatus === 'low') {
         filtered = filtered.filter(op => (op.opening_stock || 0) < 10);
@@ -143,7 +152,7 @@ const AdminStockAccounting = () => {
         filtered = filtered.filter(op => (op.opening_stock || 0) === 0);
       }
     }
-    
+
     return filtered;
   }, [stockOperations, filters]);
 
@@ -157,7 +166,7 @@ const AdminStockAccounting = () => {
     setFilters(prev => ({ ...prev, [filterType]: value }));
   };
 
-  const updateOperation = useCallback((id: string, updates: Partial<StockOperation>) => {
+  const updateOperation = useCallback((id: string | undefined, updates: Partial<StockOperation>) => {
     setStockOperations(prev =>
       prev.map(op => (op.id === id ? { ...op, ...updates } : op))
     );
@@ -167,24 +176,24 @@ const AdminStockAccounting = () => {
     const op = stockOperations.find(op => op.product_id === productId);
     if (!op) return;
 
-    const updatedOp = { ...op, [field]: value };
-          
+    const updatedOp: StockOperation = { ...op, [field]: value };
+
     // Recalculate estimated closing stock
     if (['additional_stock', 'sales', 'stolen_stock', 'wastage_stock'].includes(field)) {
-      updatedOp.estimated_closing_stock = 
-        updatedOp.opening_stock + 
-        updatedOp.additional_stock - 
-        updatedOp.sales - 
-        updatedOp.stolen_stock - 
+      updatedOp.estimated_closing_stock =
+        updatedOp.opening_stock +
+        updatedOp.additional_stock -
+        updatedOp.sales -
+        updatedOp.stolen_stock -
         updatedOp.wastage_stock;
-              
+
       // Auto-update actual closing stock if it matches the previous estimated value
       if (op.actual_closing_stock === op.estimated_closing_stock) {
         updatedOp.actual_closing_stock = updatedOp.estimated_closing_stock;
       }
     }
-          
-    updateOperation(op.id!, updatedOp);
+
+    updateOperation(op.id, updatedOp);
   };
 
   const handleSave = useCallback(async () => {
@@ -192,9 +201,8 @@ const AdminStockAccounting = () => {
 
     setSaving(true);
     try {
-      const operationsToSave = stockOperations.map(op => ({
-        id: op.id,
-        product_id: op.product_id,
+      const operationsToSave: StockOperationRow[] = stockOperations.map(({ product, ...op }) => ({
+        ...op,
         opening_stock: Number(op.opening_stock) || 0,
         additional_stock: Number(op.additional_stock) || 0,
         actual_closing_stock: Number(op.actual_closing_stock) || 0,
@@ -213,6 +221,16 @@ const AdminStockAccounting = () => {
 
       if (error) throw error;
 
+      // Update product stocks with actual closing stock
+      const updates = stockOperations.map(op =>
+        supabase
+          .from('products')
+          .update({ current_stock: op.actual_closing_stock })
+          .eq('id', op.product_id)
+      );
+
+      await Promise.all(updates);
+
       toast({
         title: 'Success',
         description: 'Stock operations saved successfully',
@@ -230,7 +248,7 @@ const AdminStockAccounting = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [stockOperations, toast, loadStockOperations]);
 
   if (loading) {
     return (
@@ -244,188 +262,165 @@ const AdminStockAccounting = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <Package className="h-8 w-8" />
-            Stock Accounting
-          </h1>
-          <p className="text-purple-100">Manage and monitor product stock levels and daily operations</p>
-        </div>
+      <div className="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-white p-6 rounded-lg">
+        <h1 className="text-2xl font-semibold">Admin Stock Accounting</h1>
+        <p className="text-sm">Manage the stock operations for today</p>
       </div>
 
-      <Card className="border-0 shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Daily Stock Operations - {new Date(today).toLocaleDateString()}
-            </CardTitle>
-            <CardDescription>Monitor and update daily stock movements</CardDescription>
-          </div>
-          <Button 
-            onClick={handleSave}
-            disabled={saving || !stockOperations.length}
-            className="w-full sm:w-auto"
-          >
-            {saving ? 'Saving...' : 'Save All Changes'}
-          </Button>
+      {/* Filters Section */}
+      <div className="grid grid-cols-3 gap-4">
+        <Select
+          value={filters.category}
+          onValueChange={(value) => handleFilterChange('category', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="electronics">Electronics</SelectItem>
+            <SelectItem value="fashion">Fashion</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.status}
+          onValueChange={(value) => handleFilterChange('status', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.stockStatus}
+          onValueChange={(value) => handleFilterChange('stockStatus', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Stock Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="out">Out of Stock</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Stock Operations</CardTitle>
+          <CardDescription>Today's stock accounting overview</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select 
-                value={filters.category}
-                onValueChange={(value) => handleFilterChange('category', value)}
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {[...new Set(products.map(p => p.category))].map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                value={filters.status}
-                onValueChange={(value) => handleFilterChange('status', value)}
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="stockStatus">Stock Status</Label>
-              <Select 
-                value={filters.stockStatus}
-                onValueChange={(value) => handleFilterChange('stockStatus', value)}
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="All Stock Levels" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Stock Levels</SelectItem>
-                  <SelectItem value="low">Low Stock (Less than 10)</SelectItem>
-                  <SelectItem value="out">Out of Stock</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="text-right">Opening</TableHead>
-                  <TableHead className="text-right">Added</TableHead>
-                  <TableHead className="text-right">Sold</TableHead>
-                  <TableHead className="text-right">Stolen</TableHead>
-                  <TableHead className="text-right">Wastage</TableHead>
-                  <TableHead className="text-right font-medium">Est. Closing</TableHead>
-                  <TableHead className="text-right font-medium">Actual Closing</TableHead>
-                  <TableHead className="text-right font-medium">Variance</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableCell>Product</TableCell>
+                <TableCell>Opening Stock</TableCell>
+                <TableCell>Additional Stock</TableCell>
+                <TableCell>Sales</TableCell>
+                <TableCell>Stolen Stock</TableCell>
+                <TableCell>Wastage</TableCell>
+                <TableCell>Estimated Closing Stock</TableCell>
+                <TableCell>Actual Closing Stock</TableCell>
+                <TableCell>Difference</TableCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOperations.map((operation) => (
+                <TableRow key={`${operation.product_id}-${operation.created_at}`}>
+                  <TableCell className="font-medium">
+                    {operation.product?.name || 'Unknown Product'}
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={operation.opening_stock}
+                      onChange={(e) => handleOperationChange(operation.product_id, 'opening_stock', Number(e.target.value))}
+                      className="text-right"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={operation.additional_stock}
+                      onChange={(e) => handleOperationChange(operation.product_id, 'additional_stock', Number(e.target.value))}
+                      className="text-right"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={operation.sales}
+                      onChange={(e) => handleOperationChange(operation.product_id, 'sales', Number(e.target.value))}
+                      className="text-right"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={operation.stolen_stock}
+                      onChange={(e) => handleOperationChange(operation.product_id, 'stolen_stock', Number(e.target.value))}
+                      className="text-right"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={operation.wastage_stock}
+                      onChange={(e) => handleOperationChange(operation.product_id, 'wastage_stock', Number(e.target.value))}
+                      className="text-right"
+                    />
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {operation.estimated_closing_stock}
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={operation.actual_closing_stock}
+                      onChange={(e) => handleOperationChange(operation.product_id, 'actual_closing_stock', Number(e.target.value))}
+                      className="text-right"
+                    />
+                  </TableCell>
+                  <TableCell className={`text-right font-medium ${
+                    operation.estimated_closing_stock !== operation.actual_closing_stock 
+                      ? 'text-red-500 font-bold' 
+                      : ''
+                  }`}>
+                    {operation.estimated_closing_stock - operation.actual_closing_stock}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOperations.map((operation) => (
-                  <TableRow key={`${operation.product_id}-${operation.created_at}`}>
-                    <TableCell className="font-medium">
-                      {operation.product?.name || 'Unknown Product'}
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={operation.opening_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'opening_stock', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={operation.additional_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'additional_stock', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={operation.sales}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'sales', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={operation.stolen_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'stolen_stock', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={operation.wastage_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'wastage_stock', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {operation.estimated_closing_stock}
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={operation.actual_closing_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'actual_closing_stock', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell className={`text-right font-medium ${
-                      operation.estimated_closing_stock !== operation.actual_closing_stock 
-                        ? 'text-red-500 font-bold' 
-                        : ''
-                    }`}>
-                      {operation.estimated_closing_stock - operation.actual_closing_stock}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          {filteredOperations.length === 0 && (
-            <div className="text-center py-4">
-              <Package className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500">No products match the selected filters.</p>
-            </div>
-          )}
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <Button
+          variant="default"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? <Loader2 className="animate-spin" /> : <Save />}
+          {saving ? 'Saving...' : 'Save Operations'}
+        </Button>
+      </div>
     </div>
   );
 };

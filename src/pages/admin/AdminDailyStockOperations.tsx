@@ -7,15 +7,42 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Save } from 'lucide-react';
 
-interface Product {
+// --- Supabase Table Types ---
+type ProductDB = {
   id: string;
   name: string;
-  current_stock: number;
+  description?: string | null;
+  price?: number | null;
   category: string;
-}
+  current_stock: number;
+  created_at: string;
+  created_by?: string | null;
+  image_url?: string | null;
+  is_archived?: boolean | null;
+  opening_stock?: number | null;
+  status?: string | null;
+  unit_price?: number | null;
+  updated_at?: string | null;
+};
 
-interface StockOperation {
+type StockOperationDB = {
   id?: string;
+  product_id: string;
+  opening_stock?: number | null;
+  additional_stock?: number | null;
+  actual_closing_stock?: number | null;
+  estimated_closing_stock?: number | null;
+  stolen_stock?: number | null;
+  wastage_stock?: number | null;
+  sales?: number | null;
+  order_count?: number | null;
+  created_at?: string;
+  updated_at?: string | null;
+};
+
+// --- UI Types ---
+type Product = ProductDB;
+type StockOperationUI = Omit<StockOperationDB, 'product_id'> & {
   product_id: string;
   opening_stock: number;
   additional_stock: number;
@@ -27,58 +54,69 @@ interface StockOperation {
   order_count: number;
   created_at: string;
   updated_at: string | null;
-  product?: Product;
-}
+  product: Product;
+};
 
-const AdminDailyStockOperations = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [operations, setOperations] = useState<StockOperation[]>([]);
+const AdminDailyStockOperations: React.FC = () => {
+  const [operations, setOperations] = useState<StockOperationUI[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
   const today = new Date().toISOString().split('T')[0];
 
-  const loadProducts = useCallback(async () => {
+  // Load products and today's operations, then merge them
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: productsData, error: productsError } = await supabase
+      // Fetch products
+      const { data: products, error: productsError } = await supabase
         .from('products')
         .select('*')
         .order('name');
 
       if (productsError) throw productsError;
+      if (!products) throw new Error('No products found');
 
-      const { data: existingOperations, error: operationsError } = await supabase
+      // Fetch today's stock operations
+      const { data: ops, error: opsError } = await supabase
         .from('daily_stock_operations')
         .select('*')
-        .eq('date', today);
+        .eq('created_at', today);
 
-      if (operationsError) throw operationsError;
+      if (opsError) throw opsError;
 
-      // Merge products with existing operations or create new operations
-      const mergedOperations = productsData.map(product => {
-        const existingOp = existingOperations?.find(op => op.product_id === product.id);
+      // Merge into UI operations
+      const merged: StockOperationUI[] = products.map((product) => {
+        const op = ops?.find((o) => o.product_id === product.id);
+
+        const opening = op?.opening_stock ?? product.current_stock ?? 0;
+        const additional = op?.additional_stock ?? 0;
+        const sales = op?.sales ?? 0;
+        const stolen = op?.stolen_stock ?? 0;
+        const wastage = op?.wastage_stock ?? 0;
+        const estimated = opening + additional - sales - stolen - wastage;
+        const actual = op?.actual_closing_stock ?? product.current_stock ?? 0;
+
         return {
-          id: existingOp?.id,
+          id: op?.id,
           product_id: product.id,
-          opening_stock: existingOp?.opening_stock ?? product.current_stock,
-          additional_stock: existingOp?.additional_stock ?? 0,
-          actual_closing_stock: existingOp?.actual_closing_stock ?? product.current_stock,
-          estimated_closing_stock: existingOp?.estimated_closing_stock ?? product.current_stock,
-          stolen_stock: existingOp?.stolen_stock ?? 0,
-          wastage_stock: existingOp?.wastage_stock ?? 0,
-          sales: existingOp?.sales ?? 0,
-          order_count: existingOp?.order_count ?? 0,
-          created_at: existingOp?.created_at ?? today,
-          updated_at: existingOp?.updated_at ?? null,
-          product: product
+          opening_stock: opening,
+          additional_stock: additional,
+          sales: sales,
+          stolen_stock: stolen,
+          wastage_stock: wastage,
+          estimated_closing_stock: estimated,
+          actual_closing_stock: actual,
+          order_count: op?.order_count ?? 0,
+          created_at: op?.created_at ?? today,
+          updated_at: op?.updated_at ?? null,
+          product,
         };
       });
 
-      setProducts(productsData);
-      setOperations(mergedOperations);
+      setOperations(merged);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading operations:', error);
       toast({
         title: 'Error',
         description: 'Failed to load products and stock data',
@@ -90,70 +128,83 @@ const AdminDailyStockOperations = () => {
   }, [today, toast]);
 
   useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+    loadData();
+  }, [loadData]);
 
-  const handleOperationChange = (productId: string, field: keyof StockOperation, value: number) => {
-    if (value < 0) return; // Prevent negative values
+  // Handle input changes
+  const handleOperationChange = (
+    productId: string,
+    field: keyof StockOperationUI,
+    value: number
+  ) => {
+    if (value < 0) return;
 
-    setOperations(prev => 
-      prev.map(op => {
-        if (op.product_id === productId) {
-          const updatedOp = { ...op, [field]: value };
-          
-          // Recalculate estimated closing stock
-          if (['additional_stock', 'sales', 'stolen_stock', 'wastage_stock'].includes(field)) {
-            updatedOp.estimated_closing_stock = 
-              updatedOp.opening_stock + 
-              updatedOp.additional_stock - 
-              updatedOp.sales - 
-              updatedOp.stolen_stock - 
-              updatedOp.wastage_stock;
-              
-            // Auto-update actual closing stock if it matches the previous estimated value
-            if (op.actual_closing_stock === op.estimated_closing_stock) {
-              updatedOp.actual_closing_stock = updatedOp.estimated_closing_stock;
-            }
+    setOperations((prev) =>
+      prev.map((op) => {
+        if (op.product_id !== productId) return op;
+        const updated: StockOperationUI = { ...op, [field]: value };
+
+        // Recalculate estimated closing stock if relevant
+        if (
+          field === 'additional_stock' ||
+          field === 'sales' ||
+          field === 'stolen_stock' ||
+          field === 'wastage_stock'
+        ) {
+          updated.estimated_closing_stock =
+            updated.opening_stock +
+            updated.additional_stock -
+            updated.sales -
+            updated.stolen_stock -
+            updated.wastage_stock;
+
+          // If actual closing matches previous estimated, auto-update it
+          if (op.actual_closing_stock === op.estimated_closing_stock) {
+            updated.actual_closing_stock = updated.estimated_closing_stock;
           }
-          
-          return updatedOp;
         }
-        return op;
+        return updated;
       })
     );
   };
 
+  // Save all operations
   const handleSaveAll = async () => {
     setSaving(true);
     try {
-      // Validate all operations
-      const hasNegativeValues = operations.some(op => 
-        op.additional_stock < 0 || op.sales < 0 || op.stolen_stock < 0 || op.wastage_stock < 0
-      );
+      const now = new Date().toISOString();
 
-      if (hasNegativeValues) {
-        throw new Error('Negative values are not allowed');
-      }
-
-      const operationsToSave = operations.map(({ product, ...op }) => ({
-        ...op,
-        updated_at: new Date().toISOString()
+      const toSave = operations.map((op) => ({
+        id: op.id,
+        product_id: op.product_id,
+        opening_stock: op.opening_stock,
+        additional_stock: op.additional_stock,
+        actual_closing_stock: op.actual_closing_stock,
+        estimated_closing_stock: op.estimated_closing_stock,
+        stolen_stock: op.stolen_stock,
+        wastage_stock: op.wastage_stock,
+        sales: op.sales,
+        order_count: op.order_count,
+        created_at: op.created_at || today,
+        updated_at: now,
       }));
 
       const { error } = await supabase
         .from('daily_stock_operations')
-        .upsert(operationsToSave, { onConflict: 'id' });
+        .upsert(toSave, { onConflict: 'id', ignoreDuplicates: false });
 
       if (error) throw error;
 
-      // Update product stocks with actual closing stock
-      const updates = operations.map(op => 
+      // Update product stocks
+      const updates = operations.map((op) =>
         supabase
           .from('products')
-          .update({ current_stock: op.actual_closing_stock })
+          .update({
+            current_stock: op.actual_closing_stock,
+            updated_at: now,
+          })
           .eq('id', op.product_id)
       );
-
       await Promise.all(updates);
 
       toast({
@@ -162,12 +213,15 @@ const AdminDailyStockOperations = () => {
       });
 
       // Reload to get fresh data
-      loadProducts();
+      loadData();
     } catch (error) {
       console.error('Error saving operations:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to save stock operations',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to save stock operations',
         variant: 'destructive',
       });
     } finally {
@@ -175,6 +229,7 @@ const AdminDailyStockOperations = () => {
     }
   };
 
+  // UI
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -210,14 +265,15 @@ const AdminDailyStockOperations = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Stock Operations - {new Date(today).toLocaleDateString()}</CardTitle>
+          <CardTitle>
+            Stock Operations - {new Date(today).toLocaleDateString()}
+          </CardTitle>
           <CardDescription>
             Update stock movements for the day. Closing stock and variance are calculated automatically.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border
-           overflow-x-auto">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -233,17 +289,23 @@ const AdminDailyStockOperations = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {operations.map((operation) => (
-                  <TableRow key={operation.product_id}>
+                {operations.map((op) => (
+                  <TableRow key={op.product_id}>
                     <TableCell className="font-medium">
-                      {operation.product?.name || 'Unknown Product'}
+                      {op.product?.name || 'Unknown Product'}
                     </TableCell>
                     <TableCell>
                       <Input
                         type="number"
                         min="0"
-                        value={operation.opening_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'opening_stock', Number(e.target.value))}
+                        value={op.opening_stock}
+                        onChange={(e) =>
+                          handleOperationChange(
+                            op.product_id,
+                            'opening_stock',
+                            Number(e.target.value)
+                          )
+                        }
                         className="text-right"
                         disabled
                       />
@@ -252,8 +314,14 @@ const AdminDailyStockOperations = () => {
                       <Input
                         type="number"
                         min="0"
-                        value={operation.additional_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'additional_stock', Number(e.target.value))}
+                        value={op.additional_stock}
+                        onChange={(e) =>
+                          handleOperationChange(
+                            op.product_id,
+                            'additional_stock',
+                            Number(e.target.value)
+                          )
+                        }
                         className="text-right"
                       />
                     </TableCell>
@@ -261,8 +329,14 @@ const AdminDailyStockOperations = () => {
                       <Input
                         type="number"
                         min="0"
-                        value={operation.sales}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'sales', Number(e.target.value))}
+                        value={op.sales}
+                        onChange={(e) =>
+                          handleOperationChange(
+                            op.product_id,
+                            'sales',
+                            Number(e.target.value)
+                          )
+                        }
                         className="text-right"
                       />
                     </TableCell>
@@ -270,8 +344,14 @@ const AdminDailyStockOperations = () => {
                       <Input
                         type="number"
                         min="0"
-                        value={operation.stolen_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'stolen_stock', Number(e.target.value))}
+                        value={op.stolen_stock}
+                        onChange={(e) =>
+                          handleOperationChange(
+                            op.product_id,
+                            'stolen_stock',
+                            Number(e.target.value)
+                          )
+                        }
                         className="text-right"
                       />
                     </TableCell>
@@ -279,27 +359,43 @@ const AdminDailyStockOperations = () => {
                       <Input
                         type="number"
                         min="0"
-                        value={operation.wastage_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'wastage_stock', Number(e.target.value))}
+                        value={op.wastage_stock}
+                        onChange={(e) =>
+                          handleOperationChange(
+                            op.product_id,
+                            'wastage_stock',
+                            Number(e.target.value)
+                          )
+                        }
                         className="text-right"
                       />
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {operation.estimated_closing_stock}
+                      {op.estimated_closing_stock}
                     </TableCell>
                     <TableCell>
                       <Input
                         type="number"
                         min="0"
-                        value={operation.actual_closing_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'actual_closing_stock', Number(e.target.value))}
+                        value={op.actual_closing_stock}
+                        onChange={(e) =>
+                          handleOperationChange(
+                            op.product_id,
+                            'actual_closing_stock',
+                            Number(e.target.value)
+                          )
+                        }
                         className="text-right"
                       />
                     </TableCell>
-                    <TableCell className={`text-right font-medium ${
-                      operation.actual_closing_stock !== operation.estimated_closing_stock ? 'text-red-500' : ''
-                    }`}>
-                      {operation.estimated_closing_stock - operation.actual_closing_stock}
+                    <TableCell
+                      className={`text-right font-medium ${
+                        op.estimated_closing_stock !== op.actual_closing_stock
+                          ? 'text-red-500'
+                          : ''
+                      }`}
+                    >
+                      {op.estimated_closing_stock - op.actual_closing_stock}
                     </TableCell>
                   </TableRow>
                 ))}
