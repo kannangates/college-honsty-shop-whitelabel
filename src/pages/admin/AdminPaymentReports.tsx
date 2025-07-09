@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, CreditCard } from 'lucide-react';
 
 const AdminPaymentReports = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -140,10 +140,22 @@ const AdminPaymentReports = () => {
   }, [paymentRecords, searchTerm, statusFilter, dateFilter]);
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+            <CreditCard className="h-8 w-8" />
+            Payment Reports
+          </h1>
+          <p className="text-purple-100">View payment analytics, transaction history and financial reports</p>
+        </div>
+      </div>
+
       <Card className="shadow-lg rounded-lg">
         <CardHeader className="p-6">
-          <CardTitle className="text-2xl font-semibold">Payment Reports</CardTitle>
+          <CardTitle className="text-2xl font-semibold">Transaction History</CardTitle>
+          <CardDescription>Filter and search through payment records</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

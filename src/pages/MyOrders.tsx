@@ -3,25 +3,31 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { ShoppingCart, Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+interface Order {
+  id: string;
+  created_at: string;
+  payment_status: 'paid' | 'unpaid';
+  total_amount: number;
+  order_items?: {
+    id: string;
+    quantity: number;
+    products?: {
+      name: string;
+      unit_price: number;
+    };
+  }[];
+}
 
 const MyOrders = () => {
   const { user } = useAuth();
-  interface Order {
-    id: string;
-    created_at: string;
-    payment_status: 'paid' | 'unpaid';
-    total_amount: number;
-    order_items?: {
-      id: string;
-      quantity: number;
-      products?: {
-        name: string;
-        unit_price: number;
-      };
-    }[];
-  }
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -70,51 +76,131 @@ const MyOrders = () => {
     );
   }
 
+  const unpaidOrders = orders.filter(order => order.payment_status === 'unpaid');
+  const allOrders = orders;
+
   return (
-    <div className="container mx-auto py-10">
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>My Orders</CardTitle>
-          <CardDescription>View your order history</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {orders.length === 0 ? (
-            <div className="text-center py-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-              <p className="text-gray-500">Start shopping now!</p>
-            </div>
-          ) : (
-            <ScrollArea className="h-[400px] w-full">
-              <div className="divide-y divide-gray-200">
-                {orders.map((order) => (
-                  <div key={order.id} className="py-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-md font-semibold">Order ID: {order.id}</h4>
-                      <Badge variant="secondary">{order.payment_status}</Badge>
-                    </div>
-                    <p className="text-gray-500">
-                      Order Date: {new Date(order.created_at).toLocaleDateString()}
-                    </p>
-                    <ul className="mt-2">
-                      {order.order_items?.map((item) => (
-                        <li key={item.id} className="flex justify-between items-center py-1">
-                          <span>{item.products?.name}</span>
-                          <span>
-                            {item.quantity} x ${item.products?.unit_price} = ${item.quantity * (item.products?.unit_price || 0)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="flex justify-end mt-2">
-                      <p className="font-medium">Total: ${order.total_amount}</p>
-                    </div>
-                  </div>
-                ))}
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <ShoppingCart className="h-8 w-8" />
+            My Orders
+          </h1>
+          <p className="text-purple-100">Track your order history and payment status</p>
+        </div>
+        <Button
+          onClick={() => navigate('/dashboard')}
+          variant="outline"
+          className="flex items-center gap-2 rounded-xl border-white/50 text-white hover:border-white transition-all duration-200 backdrop-blur-md bg-white/20 hover:bg-white/30"
+        >
+          <Package className="h-4 w-4" />
+          Shop More
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Unpaid Orders Section */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <ShoppingCart className="h-5 w-5" />
+              Pending Payments ({unpaidOrders.length})
+            </CardTitle>
+            <CardDescription>Orders awaiting payment</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                <span className="ml-2">Loading...</span>
               </div>
-            </ScrollArea>
-          )}
-        </CardContent>
-      </Card>
+            ) : unpaidOrders.length === 0 ? (
+              <div className="text-center py-8">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No pending payments</h3>
+                <p className="text-gray-500">All your orders are paid!</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[300px] w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order ID</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {unpaidOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
+                        <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>${order.total_amount}</TableCell>
+                        <TableCell>
+                          <Badge variant="destructive">{order.payment_status}</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* All Orders Section */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-600">
+              <Package className="h-5 w-5" />
+              Order History ({allOrders.length})
+            </CardTitle>
+            <CardDescription>Complete order history</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                <span className="ml-2">Loading...</span>
+              </div>
+            ) : allOrders.length === 0 ? (
+              <div className="text-center py-8">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+                <p className="text-gray-500">Start shopping now!</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[300px] w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order ID</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
+                        <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>${order.total_amount}</TableCell>
+                        <TableCell>
+                          <Badge variant={order.payment_status === 'paid' ? 'default' : 'destructive'}>
+                            {order.payment_status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

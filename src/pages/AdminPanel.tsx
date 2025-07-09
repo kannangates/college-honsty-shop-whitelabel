@@ -243,20 +243,7 @@ const AdminPanel = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Bulk User Creation */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="h-5 w-5" />  
-              Bulk User Management
-            </CardTitle>
-            <CardDescription className="text-sm">Create multiple user accounts at once</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BulkUserCreation />
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* Quick Announcements */}
         <Card className="border-0 shadow-lg">

@@ -111,14 +111,25 @@ const AdminStockAccounting = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+            <Package className="h-8 w-8" />
+            Stock Accounting
+          </h1>
+          <p className="text-purple-100">Manage and monitor product stock levels and daily operations</p>
+        </div>
+      </div>
+
       <Card className="border-0 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Stock Accounting
+            Daily Stock Operations
           </CardTitle>
-          <CardDescription>Manage and monitor product stock levels</CardDescription>
+          <CardDescription>Monitor wasted, closing stock and stolen stock</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

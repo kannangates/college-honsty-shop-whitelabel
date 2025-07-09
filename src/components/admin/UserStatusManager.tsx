@@ -6,15 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { UserCheck, UserX, AlertTriangle } from 'lucide-react';
+import { UserCheck, UserX, AlertTriangle, Edit } from 'lucide-react';
+import { EditStudentModal } from './EditStudentModal';
 
 interface User {
   id: string;
   name: string;
   student_id: string;
-  email: string;
+  email: string | null;
+  department: string | null;
+  mobile_number: string | null;
   status: 'active' | 'inactive';
   role: string;
+  points: number | null;
 }
 
 interface UserStatusManagerProps {
@@ -25,6 +29,7 @@ interface UserStatusManagerProps {
 export const UserStatusManager = ({ user, onStatusChange }: UserStatusManagerProps) => {
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<string>(user.status);
   const { toast } = useToast();
 
@@ -94,16 +99,18 @@ export const UserStatusManager = ({ user, onStatusChange }: UserStatusManagerPro
   };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Badge 
-          className={`cursor-pointer hover:opacity-80 ${getStatusColor(user.status)}`}
-          variant="secondary"
-        >
-          {getStatusIcon(user.status)}
-          <span className="ml-1 capitalize">{user.status}</span>
-        </Badge>
-      </DialogTrigger>
+    <>
+      <div className="flex gap-2">
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Badge 
+              className={`cursor-pointer hover:opacity-80 ${getStatusColor(user.status)}`}
+              variant="secondary"
+            >
+              {getStatusIcon(user.status)}
+              <span className="ml-1 capitalize">{user.status}</span>
+            </Badge>
+          </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Manage User Status</DialogTitle>
@@ -182,5 +189,23 @@ export const UserStatusManager = ({ user, onStatusChange }: UserStatusManagerPro
         </div>
       </DialogContent>
     </Dialog>
+
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => setEditModalOpen(true)}
+      className="text-blue-600 hover:text-blue-800"
+    >
+      <Edit className="h-4 w-4" />
+    </Button>
+  </div>
+
+  <EditStudentModal
+    open={editModalOpen}
+    onOpenChange={setEditModalOpen}
+    student={user}
+    onStudentUpdated={onStatusChange}
+  />
+</>
   );
 };

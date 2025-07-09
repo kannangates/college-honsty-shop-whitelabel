@@ -42,6 +42,16 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
     role: 'student',
     points: '0'
   });
+
+  // Auto-generate email when student ID changes
+  const handleStudentIdChange = (value: string) => {
+    const cleanValue = value.trim();
+    setFormData(prev => ({
+      ...prev,
+      student_id: cleanValue,
+      email: cleanValue ? `${cleanValue}@shasuncollege.edu.in` : ''
+    }));
+  };
   const [departmentPopoverOpen, setDepartmentPopoverOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,7 +134,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
             <Input
               id="student_id"
               value={formData.student_id}
-              onChange={(e) => setFormData({...formData, student_id: e.target.value})}
+              onChange={(e) => handleStudentIdChange(e.target.value)}
               required
             />
           </div>
@@ -140,12 +150,13 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
           </div>
           
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email (Auto-generated)</Label>
             <Input
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              disabled
+              className="bg-gray-100"
               required
             />
           </div>
@@ -221,7 +232,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="student">Student</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="teacher">Teacher</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { MFASetup } from '@/components/auth/MFASetup';
+import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
 
 const Settings = () => {
   const { profile, updateProfile } = useAuth();
@@ -208,12 +209,11 @@ const Settings = () => {
                 </div>
                 <div>
                   <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department</Label>
-                  <Input
-                    id="department"
+                  <DepartmentCombobox
                     value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    placeholder="Enter your department"
+                    onChange={(value) => setFormData({ ...formData, department: value })}
                     className="border-0 rounded-xl bg-white/70 backdrop-blur-sm"
+                    placeholder="Select your department"
                   />
                 </div>
               </div>
