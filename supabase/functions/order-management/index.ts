@@ -51,7 +51,7 @@ interface Database {
   }
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -103,7 +103,8 @@ serve(async (req) => {
           .lt('created_at', `${today}T23:59:59`)
           .eq('payment_status', 'paid')
 
-        const revenue = revenueData?.reduce((sum, order) => sum + order.total_amount, 0) || 0
+        interface RevenueRow { total_amount: number }
+        const revenue = (revenueData as RevenueRow[] | null)?.reduce((sum: number, order: RevenueRow) => sum + order.total_amount, 0) || 0
 
         // Pending orders
         const { count: pendingOrders } = await supabase
@@ -116,8 +117,8 @@ serve(async (req) => {
           .from('orders')
           .select('total_amount')
 
-        const avgOrder = avgData?.length 
-          ? avgData.reduce((sum, order) => sum + order.total_amount, 0) / avgData.length 
+        const avgOrder = (avgData as RevenueRow[] | null)?.length
+          ? (avgData as RevenueRow[]).reduce((sum: number, order: RevenueRow) => sum + order.total_amount, 0) / (avgData as RevenueRow[]).length
           : 0
 
         return new Response(
