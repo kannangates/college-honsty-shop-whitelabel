@@ -183,7 +183,7 @@ export class AuthService {
     }
   }
 
-  static async login(studentId: string, password: string): Promise<LoginResult> {
+  static async login(studentId: string, password: string, captchaToken?: string): Promise<LoginResult> {
     try {
       // Validate input
       const studentIdValidation = validateStudentId(studentId);

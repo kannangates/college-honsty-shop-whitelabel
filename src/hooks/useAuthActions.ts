@@ -40,7 +40,7 @@ export const useAuthActions = ({
     handleSuccessfulLogin
   });
 
-  const signIn = async (studentId: string, password: string) => {
+  const signIn = async (studentId: string, password: string, captchaToken?: string) => {
     console.log('🔑 SignIn attempt for studentId:', studentId);
     
     cleanupAuthState();
@@ -57,7 +57,7 @@ export const useAuthActions = ({
     }
 
     try {
-      const result = await AuthService.login(studentId, password);
+      const result = await AuthService.login(studentId, password, captchaToken);
       
       if (result.success && result.session && result.profile) {
         setSession(result.session);

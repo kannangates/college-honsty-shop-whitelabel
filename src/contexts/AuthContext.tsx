@@ -13,7 +13,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   session: Session | null;
   loading: boolean;
-  signIn: (studentId: string, password: string) => Promise<void>;
+  signIn: (studentId: string, password: string, captchaToken?: string) => Promise<void>;
   signUp: (
     email: string,
     password: string,

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
@@ -32,6 +33,8 @@ export function LoginForm({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
   const { toast } = useToast();
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -53,7 +56,7 @@ export function LoginForm({
     setLoading(true);
 
     try {
-      await signIn(studentId, password);
+      await signIn(studentId, password, captchaToken || undefined);
       // Don't navigate immediately - let auth context handle it
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : messages.errors?.login_failed || 'Login failed';
