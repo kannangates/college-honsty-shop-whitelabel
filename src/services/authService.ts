@@ -196,22 +196,8 @@ export class AuthService {
         return { success: false, error: passwordValidation.error };
       }
 
-      // Find user by student ID to get email
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('email, id')
-        .eq('student_id', studentId)
-        .maybeSingle();
-
-      if (userError) {
-        return { success: false, error: userError.message };
-      }
-      if (!userData) {
-        return { success: false, error: 'Student ID not found' };
-      }
-
-      // Construct email if needed
-      const email = userData.email || `${studentId}@shasuncollege.edu.in`;
+      // Construct email directly from student ID
+      const email = `${studentId}@shasuncollege.edu.in`;
 
       // Attempt authentication
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
