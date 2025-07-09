@@ -17,7 +17,7 @@ import {
 import { PerformanceMonitor } from '@/utils/performanceMonitoring';
 import { DatabaseOptimizer } from '@/utils/databaseOptimizer';
 import { CDNManager } from '@/utils/cdnManager';
-import { WHITELABEL_CONFIG } from '@/config';
+import config from '@/config';
 
 interface PerformanceData {
   overallScore: number;

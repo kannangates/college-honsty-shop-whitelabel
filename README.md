@@ -147,33 +147,9 @@ Each college can customize:
 - Available options (shifts, roles, departments)
 - Validation rules and messages
 
-## 🚀 Deployment Options
+## 🚀 Deployment
 
-### 1. Using Lovable (Recommended)
-- Connect to Supabase for backend functionality
-- Use the built-in deployment system
-- Configure custom domains in project settings
-
-### 2. Self-Hosted Deployment
-```bash
-# Build for production
-npm run build
-
-# Deploy the 'dist' folder to:
-# - Vercel, Netlify, or similar static hosting
-# - Your own web server
-# - CDN with proper routing for SPA
-```
-
-### 3. Automated College Mirroring
-
-The repository includes GitHub Actions for automatic code mirroring to college-specific repositories:
-
-1. Fork this repository as your white-label base
-2. Set up secrets in GitHub:
-   - `COLLEGE_REPO_TOKEN`: GitHub PAT with push access
-   - `COLLEGE_REPO_URL`: Target college repository URL
-3. Push to `main` branch triggers automatic mirroring
+For detailed deployment instructions, please refer to our [Deployment Guide](docs/deployment/deployment-guide.md).
 
 ## 🛠️ Development
 
@@ -239,9 +215,9 @@ npm run build
 ## 📞 Support & Documentation
 
 ### For Colleges
-- [Setup Guide](docs/setup-guide.md)
-- [Customization Guide](docs/customization-guide.md)
-- [Deployment Guide](docs/deployment-guide.md)
+- [Setup Guide](docs/guides/setup-guide.md)
+- [Customization Guide](docs/guides/customization-guide.md)
+- [Deployment Guide](docs/deployment/deployment-guide.md)
 
 ### For Developers
 - [Technical Documentation](docs/technical-docs.md)

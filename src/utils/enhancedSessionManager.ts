@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuditLogger } from './auditLogger';
 import { SessionUtils } from './sessionUtils';
 import { SessionValidation } from './sessionValidation';
-import { WHITELABEL_CONFIG } from '@/config';
+import config from '@/config';
 
 export class EnhancedSessionManager {
   private static instance: EnhancedSessionManager;
@@ -64,7 +64,7 @@ export class EnhancedSessionManager {
 
     this.validationTimer = setInterval(() => {
       this.validateSessionSecurity();
-    }, WHITELABEL_CONFIG.SECURITY.session_validation_interval);
+    }, 30000); // Default to 30 seconds if not set
   }
 
   async refreshToken(): Promise<boolean> {

@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { validateStudentId, validatePassword, validatePasswordMatch } from '@/utils/authUtils';
-import { getCurrentConfig, getCurrentMessages } from '@/config';
+import config from '@/config';
 import type { SignupResult, LoginResult, AuthSession, UserProfile } from '@/types/auth';
 
 interface SignupData {
@@ -32,23 +32,22 @@ export class AuthService {
 
   static validateSignupData(data: SignupData): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    const messages = getCurrentMessages();
 
     // Validate student ID
     const studentIdValidation = validateStudentId(data.studentId);
-    if (!studentIdValidation.isValid) {
-      errors.push(studentIdValidation.error!);
+    if (!studentIdValidation.isValid && studentIdValidation.error) {
+      errors.push(studentIdValidation.error);
     }
 
     // Validate password
     const passwordValidation = validatePassword(data.password);
-    if (!passwordValidation.isValid) {
-      errors.push(passwordValidation.error!);
+    if (!passwordValidation.isValid && passwordValidation.error) {
+      errors.push(passwordValidation.error);
     }
 
     // Validate required fields
     if (!data.name || !data.email || !data.department) {
-      errors.push(messages.errors?.fill_all_fields || 'Please fill in all required fields');
+      errors.push('Please fill in all required fields');
     }
 
     // Validate shift
