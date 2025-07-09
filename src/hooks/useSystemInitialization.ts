@@ -72,15 +72,15 @@ export const useSystemInitialization = () => {
       });
 
       // Set up ISO compliance monitoring
-      if (CONFIG.SYSTEM.ISO_COMPLIANCE.ENABLE_AUDIT_LOGGING) {
+      if (CONFIG.SYSTEM.ISO_COMPLIANCE.enable_audit_logging) {
         console.log('📋 ISO 27001 audit logging enabled');
       }
       
-      if (CONFIG.SYSTEM.ISO_COMPLIANCE.ENABLE_PERFORMANCE_MONITORING) {
+      if (CONFIG.SYSTEM.ISO_COMPLIANCE.enable_performance_monitoring) {
         console.log('⚡ ISO 25010 performance monitoring enabled');
       }
       
-      if (CONFIG.SYSTEM.ISO_COMPLIANCE.ENABLE_SECURITY_MONITORING) {
+      if (CONFIG.SYSTEM.ISO_COMPLIANCE.enable_security_monitoring) {
         console.log('🛡️ ISO 27001 security monitoring enabled');
       }
 

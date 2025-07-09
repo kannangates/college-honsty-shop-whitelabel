@@ -91,9 +91,8 @@ describe('useAuthActions', () => {
         'STU123',
         'Test User',
         'Computer Science',
-        '1234567890',
         'student',
-        'morning',
+        '1',
         100
       );
     });

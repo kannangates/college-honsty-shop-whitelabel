@@ -64,7 +64,7 @@ export class EnhancedSessionManager {
 
     this.validationTimer = setInterval(() => {
       this.validateSessionSecurity();
-    }, WHITELABEL_CONFIG.SECURITY.SESSION_VALIDATION_INTERVAL);
+    }, WHITELABEL_CONFIG.SECURITY.session_validation_interval);
   }
 
   async refreshToken(): Promise<boolean> {

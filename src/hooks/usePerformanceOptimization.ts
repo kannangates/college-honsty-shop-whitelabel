@@ -31,7 +31,7 @@ export const usePerformanceOptimization = () => {
   }, [cache]);
 
   const setCachedData = useCallback(<T = unknown>(key: string, data: T, customTTL?: number) => {
-    const ttl = customTTL || WHITELABEL_CONFIG.PERFORMANCE.CACHE_TIMEOUT;
+    const ttl = customTTL || WHITELABEL_CONFIG.PERFORMANCE.cache_timeout;
     const now = Date.now();
     
     setCache(prev => new Map(prev).set(key, {
@@ -52,7 +52,7 @@ export const usePerformanceOptimization = () => {
   const fetchWithCache = useCallback(async <T = unknown>(
     key: string, 
     fetchFn: () => Promise<T>,
-    cacheTime: number = WHITELABEL_CONFIG.PERFORMANCE.CACHE_TIMEOUT
+    cacheTime: number = WHITELABEL_CONFIG.PERFORMANCE.cache_timeout
   ): Promise<T> => {
     const cached = getCachedData<T>(key);
     if (cached) {

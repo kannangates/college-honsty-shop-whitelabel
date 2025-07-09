@@ -9,10 +9,19 @@ import { useToast } from '@/hooks/use-toast';
 const MyOrders = () => {
   const { user } = useAuth();
   interface Order {
-  id: string;
-  created_at: string;
-  [key: string]: unknown;
-}
+    id: string;
+    created_at: string;
+    payment_status: 'paid' | 'unpaid';
+    total_amount: number;
+    order_items?: {
+      id: string;
+      quantity: number;
+      products?: {
+        name: string;
+        unit_price: number;
+      };
+    }[];
+  }
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -81,7 +90,7 @@ const MyOrders = () => {
                   <div key={order.id} className="py-4">
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="text-md font-semibold">Order ID: {order.id}</h4>
-                      <Badge variant="secondary">{order.status}</Badge>
+                      <Badge variant="secondary">{order.payment_status}</Badge>
                     </div>
                     <p className="text-gray-500">
                       Order Date: {new Date(order.created_at).toLocaleDateString()}
@@ -91,7 +100,7 @@ const MyOrders = () => {
                         <li key={item.id} className="flex justify-between items-center py-1">
                           <span>{item.products?.name}</span>
                           <span>
-                            {item.quantity} x ${item.products?.price} = ${item.quantity * item.products?.price}
+                            {item.quantity} x ${item.products?.unit_price} = ${item.quantity * (item.products?.unit_price || 0)}
                           </span>
                         </li>
                       ))}

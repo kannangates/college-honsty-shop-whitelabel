@@ -21,6 +21,7 @@ const AdminDeveloper = () => {
   policy_name?: string;
   table_name?: string;
   policy_definition?: string;
+  policy_command?: string;
 }
   const [policyInfo, setPolicyInfo] = useState<PolicyInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,14 +35,22 @@ const AdminDeveloper = () => {
         .rpc('get_table_info');
       
       if (tableError) throw tableError;
-      setTableInfo(tableData || []);
+      setTableInfo((tableData || []).map(item => ({
+        table_name: item.table_name,
+        row_count: 0, // Mock value since API doesn't provide this
+        table_size: 'Unknown' // Mock value since API doesn't provide this
+      })));
 
       // Fetch function information  
       const { data: functionData, error: functionError } = await supabase
         .rpc('get_function_info');
         
       if (functionError) throw functionError;
-      setFunctionInfo(functionData || []);
+      setFunctionInfo((functionData || []).map(item => ({
+        function_name: item.function_name,
+        function_language: 'plpgsql', // Mock value since API doesn't provide this
+        function_definition: `Returns: ${item.return_type}, Args: ${item.argument_types}` // Mock definition
+      })));
 
       // Fetch policy information
       const { data: policyData, error: policyError } = await supabase
