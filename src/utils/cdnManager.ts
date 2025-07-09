@@ -1,5 +1,5 @@
 // CDN Manager for Images using jsDelivr
-import config from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 
 export interface CDNConfig {
   provider: 'jsdelivr' | 'local';
@@ -79,10 +79,7 @@ export class CDNManager {
 
   // Get optimized logo URL from config
   getLogoUrl(options?: { width?: number; height?: number }): string {
-    // Use a default logo path if not configured
-    const defaultLogo = '/logo/logo.svg';
-    const logoPath = '/logo/logo.svg'; // Default logo path
-    return this.optimizeImageUrl(logoPath, options);
+    return this.optimizeImageUrl(WHITELABEL_CONFIG.IMAGES.COLLEGE_LOGO, options);
   }
 
   // Performance monitoring for images

@@ -7,7 +7,7 @@ import { CDNManager } from '@/utils/cdnManager';
 import { DatabaseOptimizer } from '@/utils/databaseOptimizer';
 import { PerformanceMonitor } from '@/utils/performanceMonitoring';
 import { SecurityManager } from '@/utils/securityManager';
-import config from '@/config';
+import { CONFIG } from '@/config';
 
 export const useSystemInitialization = () => {
   useEffect(() => {
@@ -42,10 +42,10 @@ export const useSystemInitialization = () => {
       
       // Preload critical images with retry mechanism
       const criticalImages = [
-        '/logo/logo.svg', // College logo
-        '/images/badges/achievement.svg',
-        '/images/badges/honor.svg',
-        '/images/badges/excellence.svg'
+        CONFIG.IMAGES.COLLEGE_LOGO,
+        CONFIG.IMAGES.BADGE_IMAGES.ACHIEVEMENT_BADGE,
+        CONFIG.IMAGES.BADGE_IMAGES.HONOR_BADGE,
+        CONFIG.IMAGES.BADGE_IMAGES.EXCELLENCE_BADGE
       ];
       
       cdnManager.preloadImages(criticalImages);
@@ -72,16 +72,16 @@ export const useSystemInitialization = () => {
       });
 
       // Set up ISO compliance monitoring
-      if (config.SYSTEM?.COMPLIANCE?.GDPR) {
-        console.log('📋 GDPR compliance monitoring enabled');
+      if (CONFIG.SYSTEM.ISO_COMPLIANCE.enable_audit_logging) {
+        console.log('📋 ISO 27001 audit logging enabled');
       }
       
-      if (process.env.NODE_ENV === 'production') {
-        console.log('⚡ Production performance monitoring enabled');
+      if (CONFIG.SYSTEM.ISO_COMPLIANCE.enable_performance_monitoring) {
+        console.log('⚡ ISO 25010 performance monitoring enabled');
       }
       
-      if (config.SYSTEM?.SECURITY) {
-        console.log('🛡️ Security monitoring enabled');
+      if (CONFIG.SYSTEM.ISO_COMPLIANCE.enable_security_monitoring) {
+        console.log('🛡️ ISO 27001 security monitoring enabled');
       }
 
       // Request enhanced notification permissions
@@ -91,8 +91,8 @@ export const useSystemInitialization = () => {
           if (permission === 'granted') {
             // Test notification for system readiness
             new Notification('System Ready', {
-              body: `${config.APP_NAME} is now fully operational with enhanced security and performance monitoring.`,
-              icon: '/favicon.ico'
+              body: `${CONFIG.APP.NAME} is now fully operational with enhanced security and performance monitoring.`,
+              icon: CONFIG.IMAGES.FAVICON
             });
           }
         });

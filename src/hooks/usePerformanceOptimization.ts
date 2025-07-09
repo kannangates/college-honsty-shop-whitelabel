@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import config from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 
 interface CacheEntry<T = unknown> {
   data: T;
@@ -31,7 +31,7 @@ export const usePerformanceOptimization = () => {
   }, [cache]);
 
   const setCachedData = useCallback(<T = unknown>(key: string, data: T, customTTL?: number) => {
-    const ttl = customTTL || config.SYSTEM?.PERFORMANCE?.API_CACHE_TTL || 300000; // Default to 5 minutes if not set
+    const ttl = customTTL || WHITELABEL_CONFIG.PERFORMANCE.cache_timeout;
     const now = Date.now();
     
     setCache(prev => new Map(prev).set(key, {
@@ -52,7 +52,7 @@ export const usePerformanceOptimization = () => {
   const fetchWithCache = useCallback(async <T = unknown>(
     key: string, 
     fetchFn: () => Promise<T>,
-    cacheTime: number = config.SYSTEM?.PERFORMANCE?.API_CACHE_TTL || 300000 // Default to 5 minutes if not set
+    cacheTime: number = WHITELABEL_CONFIG.PERFORMANCE.cache_timeout
   ): Promise<T> => {
     const cached = getCachedData<T>(key);
     if (cached) {

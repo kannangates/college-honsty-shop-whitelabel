@@ -14,8 +14,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
-    "audit:performance": "node scripts/performance.cjs",
-    "setup:branding": "node scripts/setup-branding.mjs"
+    "audit:performance": "node scripts/performance.cjs"
   },
   "dependencies": {
     "@hcaptcha/react-hcaptcha": "^1.12.0",

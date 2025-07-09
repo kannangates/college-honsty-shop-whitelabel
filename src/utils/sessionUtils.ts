@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import config from '@/config';
+import { SYSTEM_CONFIG } from '@/config';
 
 export class SessionUtils {
   static async getCurrentSession() {
@@ -28,8 +28,6 @@ export class SessionUtils {
   static hasExceededMaxDuration(startTime: number): boolean {
     if (startTime === 0) return false;
     const sessionDuration = Date.now() - startTime;
-    // Use SESSION_TIMEOUT from SYSTEM.SECURITY or default to 24 hours if not set
-    const sessionTimeout = config.SYSTEM?.SECURITY?.SESSION_TIMEOUT || (24 * 60 * 60 * 1000);
-    return sessionDuration > sessionTimeout;
+    return sessionDuration > SYSTEM_CONFIG.PERFORMANCE.session_timeout;
   }
 }
