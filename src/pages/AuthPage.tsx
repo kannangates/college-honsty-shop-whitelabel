@@ -8,9 +8,11 @@ import { SignupForm } from '@/components/auth/SignupForm';
 import { PasswordRecoveryForm } from '@/components/auth/PasswordRecoveryForm';
 import { EnhancedImage } from '@/components/common/EnhancedImage';
 
-export const AuthPage = () => {
+export interface AuthPageProps { initialMode?: 'login' | 'signup' | 'recovery'; }
+
+const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const { user, loading } = useAuth();
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'recovery'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'recovery'>(initialMode);
   const [themeLoaded, setThemeLoaded] = useState(false);
   const theme = getCurrentTheme();
   

@@ -27,8 +27,10 @@ function App() {
         <AuthProvider>
           <ProductProvider>
             <Routes>
-              <Route path="/" element={<Navigate to="/auth" replace />} />
-              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/auth" element={<Navigate to="/login" replace />} />
+              <Route path="/login" element={<AuthPage initialMode="login" />} />
+              <Route path="/signup" element={<AuthPage initialMode="signup" />} />
               {UserRoutes()}
               {AdminRoutes()}
               <Route path="*" element={<NotFound />} />

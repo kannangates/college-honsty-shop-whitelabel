@@ -2,7 +2,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 
-Deno.serve(async (req) => {
+interface OrderRow { total_amount: number }
+interface ProductRow { name: string; current_stock: number; opening_stock: number }
+interface TopStudentRow { student_id: string; name: string; department: string; points: number; rank: number }
+interface TopDeptRow { department: string; points: number; rank: number }
+
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -111,10 +116,10 @@ Deno.serve(async (req) => {
     ]);
 
     // Calculate revenue efficiently
-    const revenue = revenueData.data?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+    const revenue = (revenueData.data as OrderRow[] | null)?.reduce((sum: number, order: OrderRow) => sum + Number(order.total_amount), 0) || 0;
 
     // Format stock data efficiently
-    const formattedStockData = stockData.data?.map(item => ({
+    const formattedStockData = (stockData.data as ProductRow[] | null)?.map((item: ProductRow) => ({
       product: item.name,
       current: item.current_stock,
       opening: item.opening_stock,
@@ -131,7 +136,7 @@ Deno.serve(async (req) => {
         .single();
 
       if (userData?.student_id && userData?.role === 'student') {
-        const userInTop = topStudentsData.data?.find(student => student.student_id === userData.student_id);
+        const userInTop = topStudentsData.data?.find((student: TopStudentRow) => student.student_id === userData.student_id);
         if (userInTop) {
           userRank = userInTop.rank;
         }
@@ -146,7 +151,7 @@ Deno.serve(async (req) => {
         lowStockItems: lowStockItems.count || 0,
         topDepartments: topDepartmentsData.data || []
       },
-      topStudents: topStudentsData.data?.map(student => ({
+      topStudents: topStudentsData.data?.map((student: TopStudentRow) => ({
         id: student.student_id,
         name: student.name,
         department: student.department,
@@ -171,8 +176,9 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('❌ Error fetching dashboard data:', error);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errMsg }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

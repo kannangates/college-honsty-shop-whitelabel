@@ -39,7 +39,7 @@ export function LoginForm({
   // Use env var first, then config, finally public test key
   // https://docs.hcaptcha.com/#localdev
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const siteKey: string = (import.meta.env.VITE_HCAPTCHA_SITE_KEY as string) || (config as any).security?.hcaptcha_site_key || '10000000-ffff-ffff-ffff-000000000001';
+  const siteKey: string = (import.meta.env.VITE_HCAPTCHA_SITE_KEY as string) || (config as any).security?.hcaptcha_site_key || 'ad901dde-946e-4c0e-bc78-d0fc4bb08868';
   const captchaRef = useRef<HCaptcha>(null);
   const { toast } = useToast();
   const { signIn } = useAuth();
