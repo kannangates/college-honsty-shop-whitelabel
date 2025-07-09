@@ -770,17 +770,6 @@ export type Database = {
       }
     }
     Enums: {
-      department_type:
-        | "Computer Science"
-        | "Information Technology"
-        | "Electronics and Communication"
-        | "Mechanical Engineering"
-        | "Civil Engineering"
-        | "Electrical Engineering"
-        | "Business Administration"
-        | "Commerce"
-        | "Arts and Science"
-        | "Other"
       notification_type:
         | "top_rank_change"
         | "badge_earned"
@@ -916,18 +905,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      department_type: [
-        "Computer Science",
-        "Information Technology",
-        "Electronics and Communication",
-        "Mechanical Engineering",
-        "Civil Engineering",
-        "Electrical Engineering",
-        "Business Administration",
-        "Commerce",
-        "Arts and Science",
-        "Other",
-      ],
       notification_type: [
         "top_rank_change",
         "badge_earned",

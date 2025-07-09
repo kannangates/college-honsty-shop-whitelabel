@@ -8,8 +8,10 @@ import { getCurrentConfig, getCurrentMessages } from '@/config';
 import { PersonalInfoFields } from './forms/PersonalInfoFields';
 import { PasswordFields } from './forms/PasswordFields';
 import { DepartmentRoleFields } from './forms/DepartmentRoleFields';
+import { useNavigate } from 'react-router-dom';
 
 export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     studentId: '',
     name: '',
@@ -212,7 +214,9 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             <Button
               variant="outline"
               type="button"
-              onClick={onToggleLogin}
+              onClick={() => {
+                navigate('/login');
+              }}
               className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300 rounded-xl px-6"
             >
               Sign In Instead ✨

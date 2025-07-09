@@ -190,7 +190,9 @@ export function LoginForm({
               </p>
               <button
                 type="button"
-                onClick={onToggleSignup}
+                onClick={() => {
+                  navigate('/signup');
+                }}
                 className="text-sm font-medium text-purple-600 hover:text-purple-800 underline underline-offset-4 transition-colors"
               >
                 Create your account ✨

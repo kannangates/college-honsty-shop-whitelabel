@@ -199,10 +199,13 @@ export class AuthService {
       // Construct email directly from student ID
       const email = `${studentId}@shasuncollege.edu.in`;
 
-      // Attempt authentication
+      // Attempt authentication with captcha token
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          captchaToken
+        }
       });
 
       if (signInError || !signInData.session) {
