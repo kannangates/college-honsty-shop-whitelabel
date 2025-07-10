@@ -8,7 +8,7 @@ import { DashboardLayout } from './DashboardLayout';
 import { DashboardGrid } from './DashboardGrid';
 import { CelebrationManager } from './CelebrationManager';
 import { ErrorDisplay } from './ErrorDisplay';
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/useAuth';
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const DashboardContent = React.memo(() => {

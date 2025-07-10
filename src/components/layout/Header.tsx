@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, User, Bell, LogOut, RefreshCw } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 import { BadgeDisplay } from '@/components/badges/BadgeDisplay';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {

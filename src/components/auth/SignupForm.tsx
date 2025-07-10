@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG } from '@/config';
 import { PersonalInfoFields } from './forms/PersonalInfoFields';
@@ -35,12 +35,13 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   const labels = WHITELABEL_CONFIG.FORM_LABELS;
   const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
   const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+  const errorMessages = WHITELABEL_CONFIG.ERROR_MESSAGES;
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'studentId') {
       const alphanumericOnly = value.replace(/[^a-zA-Z0-9]/g, '');
       if (value !== alphanumericOnly) {
-        setStudentIdError(messages.errors?.student_id_alphanumeric || 'Only letters and numbers allowed');
+        setStudentIdError(errorMessages?.student_id_alphanumeric || 'Only letters and numbers allowed');
       } else {
         setStudentIdError('');
       }
@@ -74,8 +75,8 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
     if (!formData.studentId || !formData.name || !formData.email || !formData.password || 
         !formData.department) {
       toast({
-        title: messages.errors?.all_fields_required || 'All fields required',
-        description: messages.errors?.fill_all_fields || 'Please fill in all required fields',
+        title: errorMessages?.all_fields_required || 'All fields required',
+        description: errorMessages?.fill_all_fields || 'Please fill in all required fields',
         variant: 'destructive',
       });
       return false;
@@ -120,7 +121,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         formData.department,
         formData.role,
         formData.shift,
-        config.app?.welcome_points || 100,
+        config.DEFAULT_POINTS || 100,
         captchaToken || undefined
       );
       

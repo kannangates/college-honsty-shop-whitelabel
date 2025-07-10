@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { useProductContext } from './useProductContext';
+import { ProductContext } from './ProductContextObject';
 
 type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
 
@@ -19,16 +21,6 @@ interface ProductContextType {
   updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
 }
-
-const ProductContext = createContext<ProductContextType | undefined>(undefined);
-
-export const useProductContext = () => {
-  const context = useContext(ProductContext);
-  if (!context) {
-    throw new Error('useProductContext must be used within a ProductProvider');
-  }
-  return context;
-};
 
 export const ProductProvider = ({ children }: { children: React.ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);

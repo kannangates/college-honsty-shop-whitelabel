@@ -12,7 +12,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Package, Warehouse } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 import {
   AlertDialog,
   AlertDialogAction,

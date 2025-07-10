@@ -15,8 +15,8 @@ import {
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 
-// Centralised list inside component file for fast-refresh compatibility
-export const DEPARTMENT_OPTIONS: readonly string[] = [
+
+const DEPARTMENT_OPTIONS: readonly string[] = [
   'All Department',
   'Computer Science',
   'Information Technology',
@@ -25,8 +25,6 @@ export const DEPARTMENT_OPTIONS: readonly string[] = [
   'Civil',
   'Electrical',
 ];
-
-
 
 interface DepartmentComboboxProps {
   /** Currently selected department string (empty if none) */

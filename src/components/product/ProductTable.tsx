@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useProductContext, Product } from '@/contexts/ProductContext';
+import { useProductContext } from '@/contexts/useProductContext';
 import { useCart } from '@/hooks/useCart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package } from 'lucide-react';
@@ -8,6 +8,7 @@ import { CartSummary } from '@/components/product/CartSummary';
 import { WHITELABEL_CONFIG } from '@/config';
 import { DataTable } from '@/components/ui/data-table';
 import { createProductColumns } from './product-table-columns';
+import { Product } from '@/contexts/ProductContext';
 
 const ProductTable = () => {
   const { products, loading } = useProductContext();

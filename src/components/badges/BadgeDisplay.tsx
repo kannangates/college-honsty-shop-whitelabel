@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Star } from 'lucide-react';
 import { useBadgeService } from '@/hooks/useBadgeService';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 
 export const BadgeDisplay = () => {
   const { profile } = useAuth();

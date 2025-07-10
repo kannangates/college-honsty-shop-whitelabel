@@ -6,6 +6,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAuthActions } from '@/hooks/useAuthActions';
 import { useSystemInitialization } from '@/hooks/useSystemInitialization';
+import { useAuth } from './useAuth';
 
 type UserProfile = Tables<'users'>;
 
@@ -87,10 +88,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
-  return context;
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 import { useISOCompliance } from '@/hooks/useISOCompliance';
 import { WHITELABEL_CONFIG } from '@/config';
 import { LoginForm } from '@/components/auth/LoginForm';

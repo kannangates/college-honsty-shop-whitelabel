@@ -61,7 +61,6 @@ describe('All pages smoke test (dynamic, auto-skip context pages)', () => {
 
   afterAll(() => {
     if (skippedPages.length > 0) {
-      // eslint-disable-next-line no-console
       console.log('\n[Dynamic Test] Skipped context-dependent pages:', skippedPages.join(', '));
     }
   });

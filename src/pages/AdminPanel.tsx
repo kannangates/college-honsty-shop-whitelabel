@@ -10,7 +10,7 @@ import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
 import { Shield, Users, Package, Settings, Mail, CreditCard, Award, University, Megaphone, ReceiptIndianRupee, ReceiptText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 import { BulkUserCreation } from '@/components/admin/BulkUserCreation';

@@ -1,6 +1,6 @@
 
 import { useEffect, useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 import { SessionManager } from '@/utils/sessionManager';
 import { AlertManager } from '@/utils/alertManager';
 
