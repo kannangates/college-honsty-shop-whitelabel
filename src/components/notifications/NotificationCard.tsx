@@ -1,11 +1,11 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useRef } from 'react';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, Heart, ThumbsUp, Star, Smile, Share, Download } from 'lucide-react';
+import { Share2, Pin } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
+// --- PROPS INTERFACE ---
 interface NotificationCardProps {
   notification: {
     id: string;
@@ -17,196 +17,190 @@ interface NotificationCardProps {
     is_read: boolean;
     reach_count: number;
     shared_count: number;
+    imageUrl?: string; 
   };
   onMarkAsRead: (id: string) => void;
   onReactionUpdate: (id: string, type: 'reach' | 'share') => void;
 }
 
+// --- ANNOUNCEMENT PLACEHOLDER ---
+// A simple, reusable SVG placeholder for announcements without an image
+const AnnouncementPlaceholder = () => (
+  <div className="w-full aspect-video bg-zinc-800 flex items-center justify-center p-4">
+    <div className="text-center text-zinc-600">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="48"
+        height="48"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="mx-auto"
+      >
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </svg>
+      <p className="text-xs font-semibold mt-2">ANNOUNCEMENT</p>
+    </div>
+  </div>
+);
+
+
+// --- MAIN COMPONENT ---
 export const NotificationCard = ({ notification, onMarkAsRead, onReactionUpdate }: NotificationCardProps) => {
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
+  // --- MODIFIED: Changed "Star" to "Claps" ---
   const reactions = [
-    { icon: Heart, label: 'Love', color: 'text-red-500' },
-    { icon: ThumbsUp, label: 'Like', color: 'text-blue-500' },
-    { icon: Star, label: 'Star', color: 'text-yellow-500' },
-    { icon: Smile, label: 'Happy', color: 'text-green-500' },
+    { icon: '❤️', label: 'Love' },
+    { icon: '👍', label: 'Like' },
+    { icon: '👏', label: 'Claps' }, // Changed from Star
+    { icon: '😊', label: 'Happy' },
   ];
 
   const handleReaction = (reactionLabel: string) => {
-    setSelectedReaction(reactionLabel);
+    setSelectedReaction((prev) => (prev === reactionLabel ? null : reactionLabel));
     onReactionUpdate(notification.id, 'reach');
   };
 
   const handleShare = async () => {
     onReactionUpdate(notification.id, 'share');
-    
-    // Export as image
-    const cardElement = document.getElementById(`notification-card-${notification.id}`);
-    if (cardElement) {
-      try {
-        const canvas = await html2canvas(cardElement, {
-          backgroundColor: '#ffffff',
-          scale: 2,
-          logging: false,
-        });
-        
-        // Convert to blob and download
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `notification-${notification.id}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-          }
-        });
-      } catch (error) {
-        console.error('Error exporting notification:', error);
-      }
+    if (!cardRef.current) return;
+    try {
+      cardRef.current.classList.add('is-exporting');
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: '#1C1C1E',
+        scale: 2,
+        useCORS: true,
+      });
+      cardRef.current.classList.remove('is-exporting');
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `vibes-notification-${notification.id}.png`;
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+    } catch (error) {
+      console.error('Error exporting notification:', error);
     }
   };
+  
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.round((now.getTime() - date.getTime()) / 1000);
+    const minutes = Math.round(seconds / 60);
+    const hours = Math.round(minutes / 60);
+    const days = Math.round(hours / 24);
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'top_rank_change':
-        return <Star className="h-5 w-5 text-yellow-600" />;
-      case 'badge_earned':
-        return <Heart className="h-5 w-5 text-green-600" />;
-      case 'announcement':
-        return <Bell className="h-5 w-5 text-blue-600" />;
-      case 'payment_reminder':
-        return <ThumbsUp className="h-5 w-5 text-orange-600" />;
-      default:
-        return <Bell className="h-5 w-5 text-gray-600" />;
-    }
+    if (seconds < 60) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'top_rank_change':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'badge_earned':
-        return 'bg-green-100 text-green-800';
-      case 'announcement':
-        return 'bg-blue-100 text-blue-800';
-      case 'payment_reminder':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  
+  const getTypeBadge = (type: string) => {
+    const typeMap: { [key: string]: { emoji: string; className: string } } = {
+      'top_rank_change': { emoji: '🏆', className: 'bg-yellow-400/20 text-yellow-300' },
+      'badge_earned': { emoji: '🎖️', className: 'bg-green-400/20 text-green-300' },
+      'announcement': { emoji: '📢', className: 'bg-blue-400/20 text-blue-300' },
+      'payment_reminder': { emoji: '💸', className: 'bg-red-400/20 text-red-300' },
+      'default': { emoji: '🔔', className: 'bg-gray-400/20 text-gray-300' },
+    };
+    const { emoji, className } = typeMap[type] || typeMap['default'];
+    return (
+      <Badge className={`border-none font-normal text-xs ${className}`}>
+        {emoji} {type.replace(/_/g, ' ')}
+      </Badge>
+    );
   };
-
+  
   return (
-    <Card 
-      id={`notification-card-${notification.id}`}
-      className={`transition-all hover:shadow-lg ${
-        !notification.is_read ? 'border-l-4 border-l-blue-500 bg-blue-50' : 'bg-white'
-      } ${notification.is_pinned ? 'ring-2 ring-yellow-200' : ''}`}
+    <Card
+      ref={cardRef}
+      data-pinned={notification.is_pinned}
+      className={`
+        bg-zinc-900 text-gray-50 border-zinc-800 rounded-2xl overflow-hidden shadow-lg
+        transition-all duration-300 ease-in-out transform hover:scale-[1.02] hover:shadow-cyan-400/10
+        ${!notification.is_read ? 'border-l-4 border-l-cyan-400' : 'border'}
+        ${notification.is_pinned ? 'sticky top-4 z-10' : ''}
+      `}
       onClick={() => !notification.is_read && onMarkAsRead(notification.id)}
     >
-      <CardContent className="p-6">
-        <div className="flex gap-4">
-          {/* Left side - Date/Time */}
-          <div className="flex-shrink-0 text-center">
-            <div className="bg-gray-100 rounded-lg p-3 min-w-[80px]">
-              <div className="text-sm font-medium text-gray-900">
-                {new Date(notification.created_at).toLocaleDateString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric' 
-                })}
-              </div>
-              <div className="text-xs text-gray-500">
-                {new Date(notification.created_at).toLocaleTimeString('en-US', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              </div>
-              {notification.is_pinned && (
-                <Badge className="mt-1 text-xs bg-yellow-100 text-yellow-800">
-                  Pinned
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          {/* Right side - Content */}
+      <div className="p-4">
+        <div className="flex justify-between items-start gap-3">
           <div className="flex-1">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                {getTypeIcon(notification.type)}
-                <h3 className="font-bold text-lg text-gray-900">
-                  {notification.title}
-                </h3>
-                {!notification.is_read && (
-                  <Badge className="bg-blue-100 text-blue-800 text-xs">
-                    New
-                  </Badge>
-                )}
-              </div>
-              <Badge className={getTypeColor(notification.type)}>
-                {notification.type.replace('_', ' ')}
-              </Badge>
-            </div>
-
-            <p className="text-gray-700 mb-4 leading-relaxed">
+            <h3 className="font-bold text-lg leading-tight text-gray-50">
+              {notification.title}
+            </h3>
+            <p className="text-sm text-gray-400 mt-1">
               {notification.body}
             </p>
-
-            {/* Reactions and Actions */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {reactions.map((reaction) => {
-                  const ReactionIcon = reaction.icon;
-                  return (
-                    <Button
-                      key={reaction.label}
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleReaction(reaction.label);
-                      }}
-                      className={`h-8 px-2 ${
-                        selectedReaction === reaction.label 
-                          ? 'bg-gray-100' 
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <ReactionIcon className={`h-4 w-4 ${reaction.color}`} />
-                    </Button>
-                  );
-                })}
-                <span className="text-xs text-gray-500 ml-2">
-                  {notification.reach_count > 0 && `${notification.reach_count} reactions`}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShare();
-                  }}
-                  className="h-8 px-3"
-                >
-                  <Share className="h-4 w-4 mr-1" />
-                  Share
-                </Button>
-                {notification.shared_count > 0 && (
-                  <span className="text-xs text-gray-500">
-                    {notification.shared_count} shares
-                  </span>
-                )}
-              </div>
-            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {getTypeBadge(notification.type)}
+            {notification.is_pinned && <Pin className="h-4 w-4 text-yellow-400" />}
           </div>
         </div>
-      </CardContent>
+      </div>
+
+      {/* === MODIFIED: Image rendering logic === */}
+      {/* If there's an image URL, show the image */}
+      {notification.imageUrl && (
+        <div className="w-full aspect-video bg-zinc-800">
+          <img 
+            src={notification.imageUrl} 
+            alt={notification.title} 
+            className="w-full h-full object-cover" 
+          />
+        </div>
+      )}
+      {/* If NO image URL AND it's an announcement, show the placeholder */}
+      {!notification.imageUrl && notification.type === 'announcement' && (
+        <AnnouncementPlaceholder />
+      )}
+
+      <div className="flex justify-between items-center p-4">
+        <div className="flex items-center gap-1 bg-zinc-800 rounded-full p-1">
+          {reactions.map((reaction) => (
+            <Button
+              key={reaction.label}
+              variant="ghost"
+              size="icon"
+              onClick={(e) => { e.stopPropagation(); handleReaction(reaction.label); }}
+              className={`
+                rounded-full w-10 h-10 text-lg transition-transform duration-200
+                hover:scale-125
+                ${selectedReaction === reaction.label ? 'bg-zinc-700 scale-110' : ''}
+              `}
+            >
+              {reaction.icon}
+            </Button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); handleShare(); }}
+            className="h-9 px-3 rounded-full hover:bg-zinc-800"
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Share
+          </Button>
+          <span className="text-xs font-mono text-gray-500">
+            {getRelativeTime(notification.created_at)}
+          </span>
+        </div>
+      </div>
     </Card>
   );
 };

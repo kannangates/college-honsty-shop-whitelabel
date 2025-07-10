@@ -25,7 +25,8 @@ const AdminPanel = () => {
     description: '',
     department: '',
     pinTill: '',
-    studentId: ''
+    studentId: '',
+    imageUrl: '' // <-- add this line
   });
   const [announcementSent, setAnnouncementSent] = useState(false);
 
@@ -188,7 +189,7 @@ const AdminPanel = () => {
       setTimeout(() => {
         setAnnouncementDialogOpen(false);
         setAnnouncementSent(false);
-        setAnnouncement({ title: '', description: '', department: '', pinTill: '', studentId: '' });
+        setAnnouncement({ title: '', description: '', department: '', pinTill: '', studentId: '', imageUrl: '' });
       }, 1500);
     } catch (error) {
       console.error('Error in handleSendAnnouncement:', error);
@@ -305,6 +306,34 @@ const AdminPanel = () => {
                       placeholder="Enter announcement description"
                       className="text-sm"
                       rows={4}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="imageUrl" className="text-xs">Image URL (Optional)</Label>
+                    <Input
+                      id="imageUrl"
+                      value={announcement.imageUrl}
+                      onChange={(e) => setAnnouncement({ ...announcement, imageUrl: e.target.value })}
+                      placeholder="https://example.com/image.png"
+                      className="text-sm h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="studentId" className="text-xs">Student ID</Label>
+                    <Input
+                      id="studentId"
+                      type="text"
+                      value={announcement.studentId}
+                      onChange={(e) => {
+                        const studentId = e.target.value;
+                        setAnnouncement(prev => ({
+                          ...prev,
+                          studentId,
+                          department: studentId.trim() !== '' ? '' : prev.department,
+                        }));
+                      }}
+                      placeholder="Enter student ID (optional)"
+                      className="text-sm h-8"
                     />
                   </div>
                   <div>
