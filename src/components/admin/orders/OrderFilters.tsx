@@ -88,7 +88,7 @@ export const OrderFilters = ({
               selected={range}
               onSelect={handleRangeChange}
               label="Date Range"
-              placeholder="Select date"
+              placeholder="Select date range"
             />
           </div>
 

@@ -156,18 +156,17 @@ const AdminPaymentReports = () => {
     <div className="max-w-screen-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <CreditCard className="h-8 w-8" />
-            Payment Reports
-          </h1>
-          <p className="text-purple-100">View payment analytics, transaction history and financial reports</p>
-        </div>
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+          <CreditCard className="h-8 w-8" />
+          Payment Reports
+        </h1>
+        <p className="text-purple-100 text-base ml-14">View payment analytics, transaction history and financial reports</p>
       </div>
 
+      {/* Custom Filter Section */}
       <Card className="shadow-lg rounded-lg">
         <CardHeader className="p-6">
-          <CardTitle className="text-2xl font-semibold">Transaction History</CardTitle>
+          <CardTitle className="text-2xl font-semibold">Transaction Filters</CardTitle>
           <CardDescription>Filter and search through payment records</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
@@ -223,9 +222,17 @@ const AdminPaymentReports = () => {
               </Popover>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
+      {/* DataTable Section */}
+      <Card className="shadow-lg rounded-lg">
+        <CardHeader className="p-6">
+          <CardTitle className="text-2xl font-semibold">Transaction History</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
           <div className="overflow-x-auto">
-            <DataTable columns={columns} data={filteredRecords} searchKey="studentName" searchPlaceholder="Search student..." />
+            <DataTable columns={columns} data={filteredRecords} />
           </div>
         </CardContent>
       </Card>

@@ -11,14 +11,30 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-export default function Calendar23() {
-  const [range, setRange] = React.useState<DateRange | undefined>(undefined)
+export default function Calendar23({
+  selected,
+  onSelect,
+  label,
+  placeholder
+}: {
+  selected: DateRange | undefined,
+  onSelect: (range: DateRange) => void,
+  label?: string,
+  placeholder?: string
+}) {
+  const [range, setRange] = React.useState<DateRange | undefined>(selected)
+
+  React.useEffect(() => {
+    setRange(selected)
+  }, [selected])
 
   return (
     <div className="flex flex-col gap-3">
-      <Label htmlFor="dates" className="px-1">
-        Select your stay
-      </Label>
+      {label && (
+        <Label htmlFor="dates" className="px-1">
+          {label}
+        </Label>
+      )}
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -28,7 +44,7 @@ export default function Calendar23() {
           >
             {range?.from && range?.to
               ? `${range.from.toLocaleDateString()} - ${range.to.toLocaleDateString()}`
-              : "Select date"}
+              : (placeholder || "Select date")}
             <ChevronDownIcon />
           </Button>
         </PopoverTrigger>
@@ -39,6 +55,7 @@ export default function Calendar23() {
             captionLayout="dropdown"
             onSelect={(range) => {
               setRange(range)
+              onSelect(range as DateRange)
             }}
           />
         </PopoverContent>

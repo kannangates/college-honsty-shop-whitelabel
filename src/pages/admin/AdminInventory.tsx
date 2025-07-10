@@ -334,17 +334,7 @@ const AdminInventory = () => {
       </div>
 
       {/* Custom Filter/Search Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <Label htmlFor="search">Search</Label>
-          <Input
-            type="text"
-            id="search"
-            placeholder="Search by name or category"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
           <Label htmlFor="status">Status</Label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -389,7 +379,7 @@ const AdminInventory = () => {
           {loading ? (
             <div className="flex items-center justify-center">Loading products...</div>
           ) : (
-            <DataTable columns={columns} data={filteredProducts} searchKey="name" searchPlaceholder="Search products..." />
+            <DataTable columns={columns} data={filteredProducts} />
           )}
         </CardContent>
       </Card>

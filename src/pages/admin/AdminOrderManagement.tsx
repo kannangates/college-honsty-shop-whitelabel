@@ -174,7 +174,7 @@ const AdminOrderManagement = React.memo(() => {
           <ShoppingCart className="h-8 w-8" />
           Order Management
         </h1>
-        <p className="text-purple-100">Track and manage all student orders</p>
+        <p className="text-purple-100 text-base ml-14">Track and manage all student orders</p>
       </div>
 
       <OrderStats stats={stats} />
