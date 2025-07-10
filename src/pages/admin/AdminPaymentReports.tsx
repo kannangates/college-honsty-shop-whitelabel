@@ -10,11 +10,13 @@ import { format } from 'date-fns';
 import { CalendarIcon, CreditCard } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
+import Calendar23 from '@/components/calendar-23';
+import { DateRange } from 'react-day-picker';
 
 const AdminPaymentReports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
   const paymentRecords = useMemo(() => [
     {
@@ -135,11 +137,14 @@ const AdminPaymentReports = () => {
       const matchesSearch = record.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           record.studentId.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || record.status.toLowerCase() === statusFilter;
-      const matchesDate = !dateFilter || record.date === formatDate(dateFilter);
-      
+      const recordDate = new Date(record.date);
+      const matchesDate = (!dateRange.from && !dateRange.to) ||
+        (dateRange.from && dateRange.to && recordDate >= dateRange.from && recordDate <= dateRange.to) ||
+        (dateRange.from && !dateRange.to && recordDate >= dateRange.from) ||
+        (!dateRange.from && dateRange.to && recordDate <= dateRange.to);
       return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [paymentRecords, searchTerm, statusFilter, dateFilter]);
+  }, [paymentRecords, searchTerm, statusFilter, dateRange]);
 
   // Define columns for shadcn DataTable
   const columns: ColumnDef<typeof paymentRecords[0]>[] = [
@@ -197,29 +202,13 @@ const AdminPaymentReports = () => {
               </Select>
             </div>
             <div>
-              <Label>Filter by Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Input
-                    id="date"
-                    placeholder="Select a date"
-                    value={formatDate(dateFilter)}
-                    className={cn(
-                      "bg-white text-sm font-medium pl-10",
-                      !dateFilter && "text-muted-foreground"
-                    )}
-                  />
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    captionLayout="dropdown"
-                    selected={dateFilter}
-                    onSelect={setDateFilter}
-                    className="rounded-md border-0"
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label>Filter by Date Range</Label>
+              <Calendar23
+                selected={dateRange}
+                onSelect={setDateRange}
+                label={undefined}
+                placeholder="Select date range"
+              />
             </div>
           </div>
         </CardContent>
