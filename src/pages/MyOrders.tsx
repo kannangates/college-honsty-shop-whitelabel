@@ -91,12 +91,12 @@ const MyOrders = () => {
           <p className="text-purple-100">Track your order history and payment status</p>
         </div>
         <Button
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/add-product')}
           variant="outline"
           className="flex items-center gap-2 rounded-xl border-white/50 text-white hover:border-white transition-all duration-200 backdrop-blur-md bg-white/20 hover:bg-white/30"
         >
           <Package className="h-4 w-4" />
-          Shop More
+          Add Products
         </Button>
       </div>
 
