@@ -32,7 +32,7 @@ export class AuthService {
 
   static validateSignupData(data: SignupData): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+    const messages = WHITELABEL_CONFIG.messages.auth;
 
     // Validate student ID
     const studentIdValidation = validateStudentId(data.studentId);

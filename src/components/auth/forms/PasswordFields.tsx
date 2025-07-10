@@ -27,8 +27,8 @@ export const PasswordFields = ({
   onTogglePassword,
   onToggleConfirmPassword
 }: PasswordFieldsProps) => {
-  const labels = WHITELABEL_CONFIG.FORM_LABELS;
-  const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
+  const labels = WHITELABEL_CONFIG.forms.labels;
+  const placeholders = WHITELABEL_CONFIG.forms.placeholders;
 
   return (
     <>

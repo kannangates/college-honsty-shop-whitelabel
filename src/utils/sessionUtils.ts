@@ -28,6 +28,6 @@ export class SessionUtils {
   static hasExceededMaxDuration(startTime: number): boolean {
     if (startTime === 0) return false;
     const sessionDuration = Date.now() - startTime;
-    return sessionDuration > Number(WHITELABEL_CONFIG.PERFORMANCE.session_timeout);
+    return sessionDuration > Number(WHITELABEL_CONFIG.system.performance.session_timeout);
   }
 }

@@ -13,7 +13,7 @@ import { Product } from '@/contexts/ProductContext';
 const ProductTable = () => {
   const { products, loading } = useProductContext();
   const { items, updateQuantity, totalPrice, addItem, removeItem, getItemQuantity, checkout } = useCart();
-  const productMessages = WHITELABEL_CONFIG.PRODUCT_MESSAGES;
+  const productMessages = WHITELABEL_CONFIG.messages.products;
 
   // Filter active and non-archived products
   const filteredProducts = products.filter(product =>

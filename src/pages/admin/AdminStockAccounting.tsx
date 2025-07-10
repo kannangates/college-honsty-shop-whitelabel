@@ -66,8 +66,8 @@ const AdminStockAccounting = () => {
     stockStatus: 'all',
   });
   const { toast } = useToast();
-  const errorMessages = WHITELABEL_CONFIG.ERROR_MESSAGES;
-  const authMessages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+  const errorMessages = WHITELABEL_CONFIG.messages.errors;
+  const authMessages = WHITELABEL_CONFIG.messages.auth;
   const today = new Date().toISOString().split('T')[0];
 
   const loadStockOperations = useCallback(async () => {

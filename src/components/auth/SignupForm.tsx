@@ -32,10 +32,10 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   const { signUp } = useAuth();
   const { toast } = useToast();
   const config = WHITELABEL_CONFIG;
-  const labels = WHITELABEL_CONFIG.FORM_LABELS;
-  const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
-  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
-  const errorMessages = WHITELABEL_CONFIG.ERROR_MESSAGES;
+  const labels = WHITELABEL_CONFIG.forms.labels;
+  const placeholders = WHITELABEL_CONFIG.forms.placeholders;
+  const messages = WHITELABEL_CONFIG.messages.auth;
+  const errorMessages = WHITELABEL_CONFIG.messages.errors;
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'studentId') {
@@ -121,7 +121,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         formData.department,
         formData.role,
         formData.shift,
-        config.DEFAULT_POINTS || 100,
+        WHITELABEL_CONFIG.app.welcome_points || 100,
         captchaToken || undefined
       );
       

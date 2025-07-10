@@ -79,7 +79,7 @@ export class CDNManager {
 
   // Get optimized logo URL from config
   getLogoUrl(options?: { width?: number; height?: number }): string {
-    return this.optimizeImageUrl(WHITELABEL_CONFIG.IMAGES.COLLEGE_LOGO, options);
+    return this.optimizeImageUrl(WHITELABEL_CONFIG.branding.logo.url, options);
   }
 
   // Performance monitoring for images

@@ -20,10 +20,10 @@ export const DepartmentRoleFields = ({
   loading,
   onInputChange
 }: DepartmentRoleFieldsProps) => {
-  const labels = WHITELABEL_CONFIG.FORM_LABELS;
-  const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
-  const shiftOptions = WHITELABEL_CONFIG.FORM_SHIFT_OPTIONS;
-  const roleOptions = WHITELABEL_CONFIG.FORM_ROLE_OPTIONS;
+  const labels = WHITELABEL_CONFIG.forms.labels;
+  const placeholders = WHITELABEL_CONFIG.forms.placeholders;
+  const shiftOptions = WHITELABEL_CONFIG.forms.shift_options;
+  const roleOptions = WHITELABEL_CONFIG.forms.role_options;
 
   const isDeptAll = formData.department.toLowerCase() === 'all department';
   const isShiftFull = formData.shift === 'full';

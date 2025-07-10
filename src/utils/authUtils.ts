@@ -23,22 +23,22 @@ export function getBackdoorUser() {
 }
 
 export function getBackdoorMessages() {
-  return WHITELABEL_CONFIG.AUTH_MESSAGES;
+  return WHITELABEL_CONFIG.messages.auth;
 }
 
 export function getBackdoorWelcomeMessage() {
-  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+  const messages = WHITELABEL_CONFIG.messages.auth;
   return messages?.welcome_back || 'Welcome back!';
 }
 
 export function getBackdoorErrorMessage() {
-  const messages = WHITELABEL_CONFIG.ERROR_MESSAGES;
+  const messages = WHITELABEL_CONFIG.messages.errors;
   return messages?.login_failed || 'Login failed';
 }
 
 // Auth validation helpers
 export const validateStudentId = (studentId: string): { isValid: boolean; error?: string } => {
-  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+  const messages = WHITELABEL_CONFIG.messages.auth;
   
   if (!studentId) {
     return { isValid: false, error: messages.errors?.missing_student_id || 'Student ID is required' };
@@ -53,7 +53,7 @@ export const validateStudentId = (studentId: string): { isValid: boolean; error?
 };
 
 export const validatePassword = (password: string): { isValid: boolean; error?: string } => {
-  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+  const messages = WHITELABEL_CONFIG.messages.auth;
   
   if (!password) {
     return { isValid: false, error: messages.errors?.missing_credentials || 'Password is required' };
@@ -67,7 +67,7 @@ export const validatePassword = (password: string): { isValid: boolean; error?: 
 };
 
 export const validatePasswordMatch = (password: string, confirmPassword: string): { isValid: boolean; error?: string } => {
-  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+  const messages = WHITELABEL_CONFIG.messages.auth;
   
   if (password !== confirmPassword) {
     return { isValid: false, error: messages.errors?.ensure_passwords_match || 'Passwords do not match' };
@@ -78,7 +78,7 @@ export const validatePasswordMatch = (password: string, confirmPassword: string)
 
 // Session management
 export const getSessionTimeoutWarning = (): string => {
-  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+  const messages = WHITELABEL_CONFIG.messages.auth;
   return messages.errors?.session_expired || 'Session expired, please login again';
 };
 

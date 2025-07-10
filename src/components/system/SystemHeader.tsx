@@ -3,10 +3,10 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Settings, CheckCircle, Activity, Shield, Star } from 'lucide-react';
 import { WHITELABEL_CONFIG } from '@/config';
-const APP_NAME = WHITELABEL_CONFIG.APP_NAME;
-const APP_TAGLINE = WHITELABEL_CONFIG.APP_TAGLINE;
-const APP_SUBTITLE = WHITELABEL_CONFIG.APP_SUBTITLE;
-const APP_DESCRIPTION = WHITELABEL_CONFIG.APP_DESCRIPTION;
+const APP_NAME = WHITELABEL_CONFIG.app.name;
+const APP_TAGLINE = WHITELABEL_CONFIG.app.tagline;
+const APP_SUBTITLE = WHITELABEL_CONFIG.app.subtitle;
+const APP_DESCRIPTION = WHITELABEL_CONFIG.app.description;
 
 interface SystemMetrics {
   performance: { score: number };

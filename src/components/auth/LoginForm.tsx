@@ -54,9 +54,10 @@ export function LoginForm({
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const labels = WHITELABEL_CONFIG.FORM_LABELS;
-  const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
-  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+  const labels = WHITELABEL_CONFIG.forms.labels;
+  const placeholders = WHITELABEL_CONFIG.forms.placeholders;
+  const messages = WHITELABEL_CONFIG.messages.auth;
+  const loadingMessages = WHITELABEL_CONFIG.messages.loading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +189,7 @@ export function LoginForm({
               {loading ? (
                 <span className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  {messages.signing_in || 'Signing in...'}
+                  {loadingMessages.signing_in}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">

@@ -19,7 +19,7 @@ export const createProductColumns = ({
   handleAddToCart,
   handleRemoveFromCart,
 }: ProductTableColumnsProps): ColumnDef<Product>[] => {
-  const productMessages = WHITELABEL_CONFIG.PRODUCT_MESSAGES;
+  const productMessages = WHITELABEL_CONFIG.messages.products;
   
   return [
     {

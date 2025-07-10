@@ -30,8 +30,8 @@ export const EnhancedImage: React.FC<EnhancedImageProps> = ({
   const [hasError, setHasError] = useState<boolean>(false);
   const [attempts, setAttempts] = useState<number>(0);
   const imgRef = useRef<HTMLImageElement>(null);
-  const errorMessages = WHITELABEL_CONFIG.ERROR_MESSAGES;
-  const loadingMessages = WHITELABEL_CONFIG.LOADING_STATES;
+  const errorMessages = WHITELABEL_CONFIG.messages.errors;
+  const loadingMessages = WHITELABEL_CONFIG.messages.loading;
 
   const handleLoad = useCallback(() => {
     setIsLoading(false);

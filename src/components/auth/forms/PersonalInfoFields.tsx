@@ -21,8 +21,8 @@ export const PersonalInfoFields = ({
   loading,
   onInputChange
 }: PersonalInfoFieldsProps) => {
-  const labels = WHITELABEL_CONFIG.FORM_LABELS;
-  const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
+  const labels = WHITELABEL_CONFIG.forms.labels;
+  const placeholders = WHITELABEL_CONFIG.forms.placeholders;
 
   return (
     <>

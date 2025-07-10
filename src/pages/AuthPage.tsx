@@ -13,7 +13,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const { user, loading } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'recovery'>(initialMode);
   const [themeLoaded, setThemeLoaded] = useState(false);
-  const theme = WHITELABEL_CONFIG.BRANDING;
+  const theme = WHITELABEL_CONFIG.branding;
   
   // Initialize ISO compliance for this component
   const { trackUserAction, recordError } = useISOCompliance('AuthPage');
@@ -106,8 +106,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
               {theme.portal_name} ✨
             </h1>
             <div className="text-white/90 text-sm md:text-base leading-relaxed drop-shadow-md space-y-1">
-              <p>{WHITELABEL_CONFIG.APP_TAGLINE}</p>
-              <p className="text-white/80 font-medium">{WHITELABEL_CONFIG.APP_SUBTITLE}</p>
+              <p>{WHITELABEL_CONFIG.app.tagline}</p>
+              <p className="text-white/80 font-medium">{WHITELABEL_CONFIG.app.subtitle}</p>
             </div>
           </div>
         </div>
