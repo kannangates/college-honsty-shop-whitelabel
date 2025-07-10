@@ -104,7 +104,7 @@ const AboutSystem = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       <SystemHeader systemMetrics={systemMetrics} />
 
       <Tabs defaultValue="overview" className="space-y-6">

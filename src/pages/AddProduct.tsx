@@ -5,7 +5,7 @@ import ProductTable from '@/components/product/ProductTable';
 
 const AddProduct = () => {
   return (
-    <div className="space-y-6">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">

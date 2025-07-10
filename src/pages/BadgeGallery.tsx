@@ -38,7 +38,7 @@ const BadgeGallery = () => {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       <Card className="border-0 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

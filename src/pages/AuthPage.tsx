@@ -86,7 +86,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
         />
       </div>
 
-      <section className="w-full max-w-2xl mx-auto relative z-10">
+      <section className="w-full max-w-screen-2xl mx-auto relative z-10">
         {/* Header Section - Improved styling */}
         <div className="flex items-center justify-center gap-4 mb-8">
           {/* Logo */}

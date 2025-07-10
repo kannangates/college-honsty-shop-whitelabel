@@ -93,7 +93,7 @@ export class ISOCompliantErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-          <Card className="max-w-2xl w-full shadow-lg border-red-200">
+          <Card className="max-w-screen-2xl w-full shadow-lg border-red-200">
             <CardHeader className="bg-red-50">
               <CardTitle className="flex items-center gap-2 text-red-800">
                 <AlertTriangle className="h-6 w-6" />

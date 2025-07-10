@@ -133,7 +133,7 @@ const Payment = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
         <div className="flex items-center gap-3 mb-2">

@@ -76,7 +76,7 @@ const AdminDeveloper = () => {
   }, [loadDatabaseInfo]);
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="max-w-screen-2xl mx-auto space-y-6">
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Developer Dashboard</CardTitle>
