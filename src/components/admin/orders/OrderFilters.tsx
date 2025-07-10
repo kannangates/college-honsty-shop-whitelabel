@@ -1,13 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar as Calendar05 } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, CalendarIcon, RefreshCw } from 'lucide-react';
-import { format } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import * as React from 'react';
+import { DateRange } from 'react-day-picker';
 
 interface OrderFiltersProps {
   searchTerm: string;
@@ -36,13 +38,26 @@ export const OrderFilters = ({
   onClearDateFilter,
   loading
 }: OrderFiltersProps) => {
+  // For shadcn calendar-05 range picker
+  const [range, setRange] = React.useState<DateRange>({ from: dateFrom, to: dateTo });
+
+  React.useEffect(() => {
+    setRange({ from: dateFrom, to: dateTo });
+  }, [dateFrom, dateTo]);
+
+  const handleRangeChange = (nextRange: DateRange) => {
+    setRange(nextRange);
+    setDateFrom(nextRange.from);
+    setDateTo(nextRange.to);
+  };
+
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader>
         <CardTitle className="text-gray-800">Filters & Search</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -67,56 +82,28 @@ export const OrderFilters = ({
             </SelectContent>
           </Select>
 
-          {/* Date From */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !dateFrom && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateFrom ? format(dateFrom, "PPP") : "From date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={dateFrom}
-                onSelect={setDateFrom}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-
-          {/* Date To */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !dateTo && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateTo ? format(dateTo, "PPP") : "To date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={dateTo}
-                onSelect={setDateTo}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          {/* Date Range Picker */}
+          <div className="col-span-2">
+            <Label>Date Range</Label>
+            <Calendar05
+              mode="range"
+              selected={range}
+              onSelect={handleRangeChange}
+              numberOfMonths={2}
+              className="rounded-md border"
+              initialFocus
+            />
+            <div className="text-xs mt-2">
+              {range.from && range.to
+                ? `${format(range.from, 'PPP')} - ${format(range.to, 'PPP')}`
+                : range.from
+                ? `${format(range.from, 'PPP')}`
+                : 'Select a date range'}
+            </div>
+          </div>
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-end">
             <Button variant="outline" onClick={onClearDateFilter}>
               Clear
             </Button>

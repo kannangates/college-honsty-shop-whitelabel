@@ -12,6 +12,7 @@ import { BulkUploadModal } from '@/components/admin/BulkUploadModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useDataExport } from '@/hooks/useDataExport';
 import { useToast } from '@/hooks/use-toast';
+import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
 
 interface Student {
   id: string;
@@ -58,7 +59,9 @@ const AdminStudentManagement = () => {
     shift?: string;
     role?: 'admin' | 'student' | 'teacher' | 'developer'; // Properly typed role in edit form
   }>({});
-  const [departmentFilter, setDepartmentFilter] = useState<string | undefined>(undefined);
+  const [departmentFilter, setDepartmentFilter] = useState<string>('All Department');
+  const [shiftFilter, setShiftFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
   
   const [departments, setDepartments] = useState<string[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -180,16 +183,25 @@ const AdminStudentManagement = () => {
     }, format);
   };
 
+  // Filtered students with all filters
   const filteredStudents = students.filter(student => {
-    const matchesSearch = 
+    const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (student.department && student.department.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesDepartment = !departmentFilter || departmentFilter === 'all' || student.department === departmentFilter;
-    
-    return matchesSearch && matchesDepartment;
+
+    const matchesDepartment =
+      !departmentFilter || departmentFilter === 'All Department' || departmentFilter === 'all' || student.department === departmentFilter;
+    const matchesShift =
+      shiftFilter === 'all' ||
+      (shiftFilter === 'morning' && student.shift === '1') ||
+      (shiftFilter === 'evening' && student.shift === '2') ||
+      (shiftFilter === 'full' && student.shift === 'full');
+    const matchesRole =
+      roleFilter === 'all' || student.role === roleFilter;
+
+    return matchesSearch && matchesDepartment && matchesShift && matchesRole;
   });
 
   const handleViewProfile = (student: Student) => {
@@ -252,54 +264,51 @@ const AdminStudentManagement = () => {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-gray-800 text-lg">Search Students</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 flex-wrap">
-            <div className="flex-1 relative min-w-[300px]">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input 
-                placeholder="Search by name, student ID, email, or department..." 
-                className="pl-10 text-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <div style={{ width: 200 }}>
-              <Select
-                value={departmentFilter}
-                onValueChange={setDepartmentFilter}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by Department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Departments</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button 
-              variant="outline" 
-              onClick={fetchStudents}
-              disabled={loading}
-              className="text-sm"
-            >
-              <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Custom Filter/Search Section */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div>
+          <Input
+            type="text"
+            placeholder="Search by name, ID, email, or department"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div>
+          <DepartmentCombobox
+            value={departmentFilter}
+            onChange={setDepartmentFilter}
+            placeholder="Select department"
+          />
+        </div>
+        <div>
+          <Select value={shiftFilter} onValueChange={setShiftFilter}>
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="All Shifts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Shifts</SelectItem>
+              <SelectItem value="morning">Morning (1st Shift)</SelectItem>
+              <SelectItem value="evening">Evening (2nd Shift)</SelectItem>
+              <SelectItem value="full">Full Day</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="All Roles" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="student">Student</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="teacher">Teacher</SelectItem>
+              <SelectItem value="developer">Developer</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Students Table */}
       <Card className="border-0 shadow-lg">
