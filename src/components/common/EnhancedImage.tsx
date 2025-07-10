@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { getCurrentMessages } from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 
 interface EnhancedImageProps {
   src: string;
@@ -30,7 +30,8 @@ export const EnhancedImage: React.FC<EnhancedImageProps> = ({
   const [hasError, setHasError] = useState<boolean>(false);
   const [attempts, setAttempts] = useState<number>(0);
   const imgRef = useRef<HTMLImageElement>(null);
-  const messages = getCurrentMessages();
+  const errorMessages = WHITELABEL_CONFIG.ERROR_MESSAGES;
+  const loadingMessages = WHITELABEL_CONFIG.LOADING_STATES;
 
   const handleLoad = useCallback(() => {
     setIsLoading(false);
@@ -71,7 +72,7 @@ export const EnhancedImage: React.FC<EnhancedImageProps> = ({
   if (hasError) {
     return (
       <div className={`flex items-center justify-center bg-gray-100 text-gray-500 ${className}`}>
-        <span className="text-sm">Failed to load image</span>
+        <span className="text-sm">{errorMessages.failed_to_load_image || 'Failed to load image'}</span>
       </div>
     );
   }
@@ -89,7 +90,7 @@ export const EnhancedImage: React.FC<EnhancedImageProps> = ({
       />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          <span className="text-sm text-gray-500">{messages.loading?.loading_image || 'Loading image...'}</span>
+          <span className="text-sm text-gray-500">{loadingMessages.loading_image || 'Loading image...'}</span>
         </div>
       )}
     </div>

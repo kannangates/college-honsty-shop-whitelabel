@@ -2,7 +2,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getCurrentConfig } from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 
 interface PersonalInfoFieldsProps {
   formData: {
@@ -21,18 +21,19 @@ export const PersonalInfoFields = ({
   loading,
   onInputChange
 }: PersonalInfoFieldsProps) => {
-  const config = getCurrentConfig();
+  const labels = WHITELABEL_CONFIG.FORM_LABELS;
+  const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
 
   return (
     <>
       <div className="space-y-2">
         <Label htmlFor="studentId" className="text-sm font-medium text-gray-700 text-left block">
-          {config.forms?.labels?.student_id || 'Student ID'} *
+          {labels.student_id || 'Student ID'} *
         </Label>
         <Input
           id="studentId"
           type="text"
-          placeholder={config.forms?.placeholders?.student_id || 'Enter your Student ID'}
+          placeholder={placeholders.student_id || 'Enter your Student ID'}
           value={formData.studentId}
           onChange={(e) => onInputChange('studentId', e.target.value)}
           required
@@ -46,12 +47,12 @@ export const PersonalInfoFields = ({
 
       <div className="space-y-2">
         <Label htmlFor="name" className="text-sm font-medium text-gray-700 text-left block">
-          {config.forms?.labels?.full_name || 'Full Name'} *
+          {labels.full_name || 'Full Name'} *
         </Label>
         <Input
           id="name"
           type="text"
-          placeholder={config.forms?.placeholders?.full_name || 'Enter your full name'}
+          placeholder={placeholders.full_name || 'Enter your full name'}
           value={formData.name}
           onChange={(e) => onInputChange('name', e.target.value)}
           required

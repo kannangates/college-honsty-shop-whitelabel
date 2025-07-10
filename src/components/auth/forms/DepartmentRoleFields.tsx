@@ -3,7 +3,7 @@ import React from 'react';
 import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getCurrentConfig } from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 
 interface DepartmentRoleFieldsProps {
   formData: {
@@ -20,22 +20,10 @@ export const DepartmentRoleFields = ({
   loading,
   onInputChange
 }: DepartmentRoleFieldsProps) => {
-  const config = getCurrentConfig();
-
-
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const shifts = (config as any).forms?.shift_options || [
-    { value: '1', label: 'Morning (1st Shift)' },
-    { value: '2', label: 'Evening (2nd Shift)' },
-    { value: 'full', label: 'Full Day' }
-  ];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roles = (config as any).forms?.role_options || [
-    { value: 'student', label: 'Student' },
-    { value: 'teacher', label: 'Teacher' }
-  ];
+  const labels = WHITELABEL_CONFIG.FORM_LABELS;
+  const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
+  const shiftOptions = WHITELABEL_CONFIG.FORM_SHIFT_OPTIONS;
+  const roleOptions = WHITELABEL_CONFIG.FORM_ROLE_OPTIONS;
 
   const isDeptAll = formData.department.toLowerCase() === 'all department';
   const isShiftFull = formData.shift === 'full';
@@ -45,7 +33,7 @@ export const DepartmentRoleFields = ({
     <>
       <div className="space-y-2">
         <Label htmlFor="department" className="text-sm font-medium text-gray-700 text-left block">
-          {config.forms?.labels?.department || 'Department'} *
+          {labels?.department || 'Department'} *
         </Label>
         <DepartmentCombobox
           value={formData.department}
@@ -56,7 +44,7 @@ export const DepartmentRoleFields = ({
 
       <div className="space-y-2">
         <Label htmlFor="shift" className="text-sm font-medium text-gray-700 text-left block">
-          {config.forms?.labels?.shift || 'Shift'} *
+          {labels?.shift || 'Shift'} *
         </Label>
         <Select
           value={formData.shift}
@@ -64,10 +52,10 @@ export const DepartmentRoleFields = ({
           disabled={loading}
         >
           <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl">
-            <SelectValue placeholder="Select your shift" />
+            <SelectValue placeholder={placeholders?.shift || 'Select your shift'} />
           </SelectTrigger>
           <SelectContent>
-            {shifts.map((shift) => (
+            {shiftOptions.map((shift) => (
               <SelectItem key={shift.value} value={shift.value}>
                 {shift.label}
               </SelectItem>
@@ -78,7 +66,7 @@ export const DepartmentRoleFields = ({
 
       <div className="space-y-2">
         <Label htmlFor="role" className="text-sm font-medium text-gray-700 text-left block">
-          {config.forms?.labels?.role || 'Role'} *
+          {labels?.role || 'Role'} *
         </Label>
         <Select
           value={formData.role}
@@ -86,10 +74,10 @@ export const DepartmentRoleFields = ({
           disabled={loading || isRoleForced}
         >
           <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl">
-            <SelectValue placeholder="Select your role" />
+            <SelectValue placeholder={placeholders?.role || 'Select your role'} />
           </SelectTrigger>
           <SelectContent>
-            {roles.map((role) => (
+            {roleOptions.map((role) => (
               <SelectItem key={role.value} value={role.value}>
                 {role.label}
               </SelectItem>

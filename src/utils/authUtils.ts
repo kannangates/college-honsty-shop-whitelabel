@@ -1,5 +1,5 @@
 
-import { getCurrentConfig, getCurrentMessages } from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 
 // Backdoor authentication for development/testing
 export const BACKDOOR_USERNAME = import.meta.env.VITE_BACKDOOR_USERNAME || '';
@@ -9,9 +9,36 @@ export const isBackdoorEnabled =
   BACKDOOR_USERNAME !== '' &&
   BACKDOOR_PASSWORD !== '';
 
+export function getBackdoorUser() {
+  return {
+    id: 'backdoor',
+    name: 'Backdoor User',
+    email: 'backdoor@honesty.shop',
+    role: 'admin',
+    department: 'all',
+    points: 9999,
+    is_active: true,
+    created_at: new Date().toISOString(),
+  };
+}
+
+export function getBackdoorMessages() {
+  return WHITELABEL_CONFIG.AUTH_MESSAGES;
+}
+
+export function getBackdoorWelcomeMessage() {
+  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
+  return messages?.welcome_back || 'Welcome back!';
+}
+
+export function getBackdoorErrorMessage() {
+  const messages = WHITELABEL_CONFIG.ERROR_MESSAGES;
+  return messages?.login_failed || 'Login failed';
+}
+
 // Auth validation helpers
 export const validateStudentId = (studentId: string): { isValid: boolean; error?: string } => {
-  const messages = getCurrentMessages();
+  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
   
   if (!studentId) {
     return { isValid: false, error: messages.errors?.missing_student_id || 'Student ID is required' };
@@ -26,7 +53,7 @@ export const validateStudentId = (studentId: string): { isValid: boolean; error?
 };
 
 export const validatePassword = (password: string): { isValid: boolean; error?: string } => {
-  const messages = getCurrentMessages();
+  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
   
   if (!password) {
     return { isValid: false, error: messages.errors?.missing_credentials || 'Password is required' };
@@ -40,7 +67,7 @@ export const validatePassword = (password: string): { isValid: boolean; error?: 
 };
 
 export const validatePasswordMatch = (password: string, confirmPassword: string): { isValid: boolean; error?: string } => {
-  const messages = getCurrentMessages();
+  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
   
   if (password !== confirmPassword) {
     return { isValid: false, error: messages.errors?.ensure_passwords_match || 'Passwords do not match' };
@@ -51,7 +78,7 @@ export const validatePasswordMatch = (password: string, confirmPassword: string)
 
 // Session management
 export const getSessionTimeoutWarning = (): string => {
-  const messages = getCurrentMessages();
+  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
   return messages.errors?.session_expired || 'Session expired, please login again';
 };
 

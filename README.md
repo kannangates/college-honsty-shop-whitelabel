@@ -4,32 +4,9 @@ A modern, white-labeled honesty shop management system that can be easily custom
 
 ## 🌟 Features
 
-### 🎨 **White-Label Ready**
-- **Multi-College Support**: Easy branding configuration for different institutions
-- **Dynamic Theming**: Automatic color scheme and branding application
-- **Customizable Content**: Institution-specific messages, forms, and configurations
-- **Logo & Asset Management**: Custom logos and visual identity support
-
-### 🔐 **Authentication & Security**
-- Multi-factor Authentication with secure login/signup
-- Role-based Access Control (Student, Teacher, Admin)
-- Advanced session management with automatic renewal
-- Real-time security monitoring and compliance checking
-- Comprehensive audit logging for compliance
-
-### 🏪 **Shop Management**
-- Product catalog with real-time inventory tracking
-- Honor-based transaction system
-- Order management with complete lifecycle tracking
-- Secure payment processing with multiple methods
-- Points & rewards system with gamification
-
-### 📊 **Analytics & Reporting**
-- Comprehensive admin dashboard with analytics
-- Real-time performance monitoring
-- Financial reports and transaction insights
-- User engagement analytics
-- ISO compliance automated reporting
+- **Single Source of Truth**: All branding, configuration, and messages are managed in one file: `whitelabel.json`.
+- **Easy Customization**: Update your logo, colors, text, and system settings in `whitelabel.json` and the `public/` folder.
+- **Safe Upgrades**: When you pull updates from the main repo, your custom `whitelabel.json` and `public/` assets remain untouched.
 
 ## 🚀 Quick Start for Colleges
 
@@ -44,56 +21,14 @@ npm install
 
 # Copy environment template
 cp .env.example .env
-
-# Set your college code in .env
-echo "COLLEGE_CODE=your_college_name" >> .env
 ```
 
-### 2. Configure Your College Branding
+### 2. Customize Your Branding and Content
 
-Create your college's branding folder:
-```bash
-mkdir -p branding/your_college_name
-```
+- **Edit `whitelabel.json`**: This file contains all your app's branding, configuration, and messages. Change the values to match your institution's identity.
+- **Update the `public/` folder**: Replace `logo.png`, `favicon.ico`, and any other assets as needed.
 
-Copy and customize the configuration files:
-```bash
-# Copy from an existing example
-cp -r branding/default/* branding/your_college_name/
-
-# Or start from scratch with the templates below
-```
-
-### 3. Customize Your Configuration
-
-#### `branding/your_college_name/theme.json`
-```json
-{
-  "name": "Your College Name",
-  "portal_name": "Your College Honesty Shop Portal",
-  "tagline": "Your Custom Tagline",
-  "subtitle": "Your Custom Subtitle",
-  "description": "Your college description",
-  "colors": {
-    "primary": "#your-primary-color",
-    "secondary": "#your-secondary-color", 
-    "accent": "#your-accent-color"
-  },
-  "logo": {
-    "url": "/your-logo.png",
-    "fallback": "fallback-logo-url"
-  },
-  "favicon": "/your-favicon.png"
-}
-```
-
-#### `branding/your_college_name/config.json`
-Customize app settings, form labels, and system configurations.
-
-#### `branding/your_college_name/messages.json`
-Customize all text content, error messages, and UI labels.
-
-### 4. Deploy Your Instance
+### 3. Deploy Your Instance
 
 ```bash
 # Build the application
@@ -103,77 +38,34 @@ npm run build
 # Deploy to your preferred hosting service
 ```
 
-## 🎨 Branding System
+## 📝 Whitelabel Configuration Example
 
-The white-label system supports multiple colleges through a flexible branding structure:
-
+```json
+{
+  "app": {
+    "name": "Your College Honesty Shop",
+    "welcome_points": 100,
+    "tagline": "Your Custom Tagline",
+    "subtitle": "Your Custom Subtitle",
+    "description": "Your college description."
+  },
+  "branding": {
+    "college_name": "Your College Name",
+    "portal_name": "Your College Honesty Shop Portal",
+    "colors": {
+      "primary": "#your-primary-color",
+      "secondary": "#your-secondary-color",
+      "accent": "#your-accent-color"
+    },
+    "logo": {
+      "url": "/logo.png",
+      "fallback": "fallback-logo-url"
+    },
+    "favicon": "/favicon.png"
+  },
+  // ... other config sections ...
+}
 ```
-branding/
-├── default/          # Default demo branding
-├── shasun/          # Shasun Engineering College (example)
-├── college_a/       # Example College A
-├── college_b/       # Example College B
-└── your_college/    # Your custom branding
-    ├── theme.json   # Visual branding (colors, logos, names)
-    ├── config.json  # App configuration (forms, system settings)
-    └── messages.json # All text content and messages
-```
-
-### College Detection Methods
-
-The system automatically detects which college configuration to use:
-
-1. **Environment Variable**: Set `COLLEGE_CODE=your_college_name` in `.env`
-2. **Subdomain Detection**: `collegea.yourdomain.com` → loads `college_a` branding
-3. **Fallback**: Uses `default` branding if detection fails
-
-## 🔧 Advanced Configuration
-
-### Custom Domain Setup
-1. Configure your college's subdomain to point to your deployment
-2. Set `VITE_BASE_DOMAIN=yourdomain.com` in your environment
-3. The system will automatically detect the college from the subdomain
-
-### Color System
-The branding system uses CSS custom properties for theming:
-- Colors are automatically converted from hex to HSL
-- Supports both light and dark mode variations
-- Maintains accessibility standards with proper contrast
-
-### Form Customization
-Each college can customize:
-- Field labels (Student ID vs Roll Number)
-- Placeholder text
-- Available options (shifts, roles, departments)
-- Validation rules and messages
-
-## 🚀 Deployment Options
-
-### 1. Using Lovable (Recommended)
-- Connect to Supabase for backend functionality
-- Use the built-in deployment system
-- Configure custom domains in project settings
-
-### 2. Self-Hosted Deployment
-```bash
-# Build for production
-npm run build
-
-# Deploy the 'dist' folder to:
-# - Vercel, Netlify, or similar static hosting
-# - Your own web server
-# - CDN with proper routing for SPA
-```
-
-### 3. Automated College Mirroring
-
-The repository includes GitHub Actions for automatic code mirroring to college-specific repositories:
-
-1. Fork this repository as your white-label base
-2. Set up secrets in GitHub:
-   - `COLLEGE_REPO_TOKEN`: GitHub PAT with push access
-   - `COLLEGE_REPO_URL`: Target college repository URL
-3. Push to `main` branch triggers automatic mirroring
 
 ## 🛠️ Development
 
@@ -189,92 +81,24 @@ npm test
 npm run build
 ```
 
-### Creating New College Configurations
-1. Copy an existing college folder in `branding/`
-2. Customize the three JSON files
-3. Test locally by setting `COLLEGE_CODE` in `.env`
-4. Deploy when ready
+### Upgrading Your Fork
+- When you pull new updates from the main repository, your `whitelabel.json` and `public/` folder will not be overwritten.
+- Review the release notes for any new required fields in `whitelabel.json` after an upgrade.
 
-### Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with tests
-4. Submit a pull request
+## 📚 Documentation
 
-## 📚 Example Configurations
-
-### Engineering College
-```json
-{
-  "name": "ABC Engineering College",
-  "colors": {
-    "primary": "#1e40af",
-    "secondary": "#dc2626",
-    "accent": "#f3f4f6"
-  }
-}
-```
-
-### Business School
-```json
-{
-  "name": "XYZ Business School",
-  "colors": {
-    "primary": "#059669",
-    "secondary": "#0891b2",
-    "accent": "#ecfdf5"
-  }
-}
-```
-
-## 🔒 Security & Compliance
-
-- **ISO 9001/27001** compliant architecture
-- **SOC 2** security controls
-- **GDPR** data protection compliance
-- Real-time security monitoring
-- Comprehensive audit logging
-- Automated vulnerability scanning
-
-## 📞 Support & Documentation
-
-### For Colleges
-- [Setup Guide](docs/setup-guide.md)
-- [Customization Guide](docs/customization-guide.md)
-- [Deployment Guide](docs/deployment-guide.md)
-
-### For Developers
-- [Technical Documentation](docs/technical-docs.md)
-- [API Reference](docs/api-reference.md)
-- [Contributing Guide](CONTRIBUTING.md)
-
-### Community
-- [GitHub Issues](https://github.com/your-org/white-label-college-honesty-shop/issues)
-- [Discussions](https://github.com/your-org/white-label-college-honesty-shop/discussions)
-- [Discord Community](https://discord.com/invite/lovable)
+All documentation is now located in the `docs/` folder:
+- `docs/getting-started.md`: Step-by-step setup guide
+- `docs/college-demo-guide.md`: Demo and feature overview
+- `docs/user-guides/admin-guide.md`: Admin user guide
+- `docs/user-guides/student-guide.md`: Student user guide
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🎯 Roadmap
-
-- [ ] Mobile app versions
-- [ ] Advanced analytics dashboard
-- [ ] Multi-language support
-- [ ] Third-party integrations (payment gateways, LMS)
-- [ ] White-label admin panel
-- [ ] API marketplace for extensions
 
 ---
 
 **Built with ❤️ for Educational Institutions Worldwide**
 
 *No Cameras 📷 | No Cashiers 💳 | Just Character 🫡*
-
-## 🌟 Live Examples
-
-- **Shasun Engineering College**: [demo-shasun.lovable.app](https://demo-shasun.lovable.app)
-- **Example College A**: [demo-collegea.lovable.app](https://demo-collegea.lovable.app)
-- **Example College B**: [demo-collegeb.lovable.app](https://demo-collegeb.lovable.app)
-- **Default Demo**: [demo-default.lovable.app](https://demo-default.lovable.app)

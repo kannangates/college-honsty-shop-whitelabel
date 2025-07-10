@@ -1,37 +1,9 @@
 
 colleges:
-  - name: shasun
-    enabled: true
-    branch: shasun-college
-    brandingPaths:
-      - branding/shasun/theme.json
-      - branding/shasun/config.json
-      - branding/shasun/messages.json
-      - public/logo.svg
-      - public/logo-dark.svg
-    mirrorRepo: https://github.com/shasun-honesty/honesty-shop.git
-    webhookUrl: https://chat.googleapis.com/v1/spaces/AAQAoWicARw/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=nhH3Z6qWgPvEPuk8Jg9tDSh5XtKfFzF9YrD0qGC7ccs
-
-  - name: alpha
-    enabled: true
-    branch: alpha-college
-    brandingPaths:
-      - branding/college_a/theme.json
-      - branding/college_a/config.json
-      - branding/college_a/messages.json
-      - public/logo.svg
-      - public/logo-dark.svg
-    mirrorRepo: https://github.com/alpha-org/alpha-shop.git
-    webhookUrl: https://hooks.alphacollege.edu/notify
-
-  - name: beta
-    enabled: false
-    branch: beta-college
-    brandingPaths:
-      - branding/college_b/theme.json
-      - branding/college_b/config.json  
-      - branding/college_b/messages.json
-      - public/logo.svg
-      - public/logo-dark.svg
-    mirrorRepo: https://github.com/beta-college/beta-shop.git
-    webhookUrl: https://hooks.betacollege.edu/notify
+  # Example entry for future use, but no branding paths should be listed
+  # - name: example
+  #   enabled: false
+  #   branch: example-branch
+  #   brandingPaths: []
+  #   mirrorRepo: https://github.com/example/example-shop.git
+  #   webhookUrl: https://hooks.example.edu/notify

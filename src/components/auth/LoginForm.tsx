@@ -17,8 +17,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { getCurrentConfig, getCurrentMessages } from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 import { Eye, EyeOff } from 'lucide-react';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getSiteKey(config: any) {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_HCAPTCHA_SITE_KEY) {
+    return import.meta.env.VITE_HCAPTCHA_SITE_KEY;
+  }
+  return config?.security?.hcaptcha_site_key || 'ad901dde-946e-4c0e-bc78-d0fc4bb08868';
+}
 
 export function LoginForm({
   className,
@@ -36,26 +44,27 @@ export function LoginForm({
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const config = getCurrentConfig();
+  const config = WHITELABEL_CONFIG;
   // Determine hCaptcha site key with sensible fallbacks for development
   // Use env var first, then config, finally public test key
   // https://docs.hcaptcha.com/#localdev
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const siteKey: string = (import.meta.env.VITE_HCAPTCHA_SITE_KEY as string) || (config as any).security?.hcaptcha_site_key || 'ad901dde-946e-4c0e-bc78-d0fc4bb08868';
+  const siteKey: string = getSiteKey(config);
   const captchaRef = useRef<HCaptcha>(null);
   const { toast } = useToast();
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const messages = getCurrentMessages();
+  const labels = WHITELABEL_CONFIG.FORM_LABELS;
+  const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
+  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!studentId || !password) {
       toast({
-        title: messages.errors?.missing_credentials || 'Missing Fields',
-        description: messages.errors.fill_all_fields || 'Please enter both Student ID and Password.',
+        title: messages['missing_credentials'] || 'Missing Fields',
+        description: messages['fill_all_fields'] || 'Please enter both Student ID and Password.',
         variant: 'destructive',
       });
       return;
@@ -67,9 +76,9 @@ export function LoginForm({
       await signIn(studentId, password, isLocalhost ? undefined : captchaToken || undefined);
       // Don't navigate immediately - let auth context handle it
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : messages.errors?.login_failed || 'Login failed';
+      const errorMessage = err instanceof Error ? err.message : messages['login_failed'] || 'Login failed';
       toast({
-        title: messages.errors?.login_failed || 'Login Failed',
+        title: messages['login_failed'] || 'Login Failed',
         description: errorMessage,
         variant: 'destructive',
       });
@@ -85,14 +94,14 @@ export function LoginForm({
             Welcome Back! ✨
           </CardTitle>
           <CardDescription className="text-gray-600 text-center">
-            {messages.auth.login_description || 'Sign in to continue your journey'}
+            {messages.login_description || 'Sign in to continue your journey'}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="space-y-2">
               <Label htmlFor="studentId" className="text-sm font-medium text-gray-700">
-                {config.forms?.labels?.student_id || 'Student ID'} 🎓
+                {labels.student_id || 'Student ID'} 🎓
               </Label>
               <Input
                 id="studentId"
@@ -101,7 +110,7 @@ export function LoginForm({
                 onChange={(e) =>
                   setStudentId(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))
                 }
-                placeholder={config.forms?.placeholders?.student_id || 'Enter your ID'}
+                placeholder={placeholders.student_id || 'Enter your ID'}
                 className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
                 required
               />
@@ -110,7 +119,7 @@ export function LoginForm({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  {config.forms?.labels?.password || 'Password'} 🔐
+                  {labels.password || 'Password'} 🔐
                 </Label>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -146,7 +155,7 @@ export function LoginForm({
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={config.forms?.placeholders?.password || 'Enter your password'}
+                  placeholder={placeholders.password || 'Enter your password'}
                   className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl pr-10"
                   required
                 />
@@ -179,11 +188,11 @@ export function LoginForm({
               {loading ? (
                 <span className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  {messages.auth?.signing_in || 'Signing in...'}
+                  {messages.signing_in || 'Signing in...'}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  {messages.auth.login_button || 'Sign In'} 🚀
+                  {messages.login_button || 'Sign In'} 🚀
                 </span>
               )}
             </Button>

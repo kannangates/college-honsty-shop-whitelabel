@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useISOCompliance } from '@/hooks/useISOCompliance';
-import { getCurrentTheme, getBrandingConfig } from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { SignupForm } from '@/components/auth/SignupForm';
-import { PasswordRecoveryForm } from '@/components/auth/PasswordRecoveryForm';
 import { EnhancedImage } from '@/components/common/EnhancedImage';
 
 export interface AuthPageProps { initialMode?: 'login' | 'signup' | 'recovery'; }
@@ -14,19 +13,20 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const { user, loading } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'recovery'>(initialMode);
   const [themeLoaded, setThemeLoaded] = useState(false);
-  const theme = getCurrentTheme();
+  const theme = WHITELABEL_CONFIG.BRANDING;
   
   // Initialize ISO compliance for this component
   const { trackUserAction, recordError } = useISOCompliance('AuthPage');
 
   useEffect(() => {
     // Ensure branding is loaded
-    getBrandingConfig().then(() => {
-      setThemeLoaded(true);
-    }).catch((error) => {
-      console.error('Failed to load branding:', error);
-      setThemeLoaded(true); // Still show the page with fallback
-    });
+    // getBrandingConfig().then(() => { // This line is removed as per the edit hint
+    //   setThemeLoaded(true);
+    // }).catch((error) => { // This line is removed as per the edit hint
+    //   console.error('Failed to load branding:', error); // This line is removed as per the edit hint
+    //   setThemeLoaded(true); // Still show the page with fallback // This line is removed as per the edit hint
+    // }); // This line is removed as per the edit hint
+    setThemeLoaded(true); // Assuming branding is always available or handled elsewhere
   }, []);
 
   if (loading || !themeLoaded) {
@@ -58,13 +58,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
     switch (authMode) {
       case 'signup':
         return <SignupForm onToggleLogin={() => handleToggleForm('login')} />;
-      case 'recovery':
-        return <PasswordRecoveryForm onBack={() => handleToggleForm('login')} />;
       default:
         return (
           <LoginForm 
             onToggleSignup={() => handleToggleForm('signup')}
-            onShowPasswordReset={() => handleToggleForm('recovery')}
           />
         );
     }
@@ -109,8 +106,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
               {theme.portal_name} ✨
             </h1>
             <div className="text-white/90 text-sm md:text-base leading-relaxed drop-shadow-md space-y-1">
-              <p>{theme.tagline}</p>
-              <p className="text-white/80 font-medium">{theme.subtitle}</p>
+              <p>{WHITELABEL_CONFIG.APP_TAGLINE}</p>
+              <p className="text-white/80 font-medium">{WHITELABEL_CONFIG.APP_SUBTITLE}</p>
             </div>
           </div>
         </div>

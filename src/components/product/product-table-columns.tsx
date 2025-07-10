@@ -6,7 +6,7 @@ import { ArrowUpDown, Plus, Minus, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Product } from "@/contexts/ProductContext"
-import { getCurrentMessages } from "@/config"
+import { WHITELABEL_CONFIG } from '@/config';
 
 interface ProductTableColumnsProps {
   getItemQuantity: (productId: string) => number
@@ -19,7 +19,7 @@ export const createProductColumns = ({
   handleAddToCart,
   handleRemoveFromCart,
 }: ProductTableColumnsProps): ColumnDef<Product>[] => {
-  const messages = getCurrentMessages();
+  const productMessages = WHITELABEL_CONFIG.PRODUCT_MESSAGES;
   
   return [
     {
@@ -44,7 +44,7 @@ export const createProductColumns = ({
             <span className="font-medium">{product.name}</span>
             {isOutOfStock && (
               <Badge variant="destructive" className="w-fit mt-1">
-                {messages.products?.out_of_stock || 'Out of Stock'}
+                {productMessages.out_of_stock || 'Out of Stock'}
               </Badge>
             )}
           </div>
@@ -177,7 +177,7 @@ export const createProductColumns = ({
             className="flex items-center gap-2"
           >
             <ShoppingCart className="h-4 w-4" />
-            {messages.products?.add_to_cart || 'Add to Cart'}
+            {productMessages.add_to_cart || 'Add to Cart'}
           </Button>
         )
       },

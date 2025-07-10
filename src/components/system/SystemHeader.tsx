@@ -2,8 +2,11 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Settings, CheckCircle, Activity, Shield, Star } from 'lucide-react';
-import { CONFIG } from '@/config';
-const APP_CONFIG = CONFIG.APP;
+import { WHITELABEL_CONFIG } from '@/config';
+const APP_NAME = WHITELABEL_CONFIG.APP_NAME;
+const APP_TAGLINE = WHITELABEL_CONFIG.APP_TAGLINE;
+const APP_SUBTITLE = WHITELABEL_CONFIG.APP_SUBTITLE;
+const APP_DESCRIPTION = WHITELABEL_CONFIG.APP_DESCRIPTION;
 
 interface SystemMetrics {
   performance: { score: number };
@@ -23,8 +26,8 @@ export const SystemHeader: React.FC<SystemHeaderProps> = ({ systemMetrics }) => 
           <Settings className="h-8 w-8 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{APP_CONFIG.NAME}</h1>
-          <p className="text-gray-600 text-lg">{APP_CONFIG.DESCRIPTION}</p>
+          <h1 className="text-3xl font-bold text-gray-900">{APP_NAME}</h1>
+          <p className="text-gray-600 text-lg">{APP_TAGLINE}</p>
         </div>
       </div>
       

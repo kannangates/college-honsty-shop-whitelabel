@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { getCurrentConfig, getCurrentMessages } from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 import { PersonalInfoFields } from './forms/PersonalInfoFields';
 import { PasswordFields } from './forms/PasswordFields';
 import { DepartmentRoleFields } from './forms/DepartmentRoleFields';
@@ -31,8 +31,10 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   
   const { signUp } = useAuth();
   const { toast } = useToast();
-  const config = getCurrentConfig();
-  const messages = getCurrentMessages();
+  const config = WHITELABEL_CONFIG;
+  const labels = WHITELABEL_CONFIG.FORM_LABELS;
+  const placeholders = WHITELABEL_CONFIG.FORM_PLACEHOLDERS;
+  const messages = WHITELABEL_CONFIG.AUTH_MESSAGES;
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'studentId') {

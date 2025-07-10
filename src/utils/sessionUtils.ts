@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SYSTEM_CONFIG } from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 
 export class SessionUtils {
   static async getCurrentSession() {
@@ -28,6 +28,6 @@ export class SessionUtils {
   static hasExceededMaxDuration(startTime: number): boolean {
     if (startTime === 0) return false;
     const sessionDuration = Date.now() - startTime;
-    return sessionDuration > SYSTEM_CONFIG.PERFORMANCE.session_timeout;
+    return sessionDuration > Number(WHITELABEL_CONFIG.PERFORMANCE.session_timeout);
   }
 }

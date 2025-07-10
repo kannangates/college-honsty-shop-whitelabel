@@ -1,0 +1,134 @@
+{
+  "app": {
+    "name": "College Honesty Shop",
+    "welcome_points": 100,
+    "tagline": "No Cameras 📷 | No Cashiers 💳 | Just Character 🫡",
+    "subtitle": "🛡️ Honor in Every Transaction 🤝",
+    "description": "A modern, secure, and ISO-compliant honesty shop management system built with enterprise-grade security and performance optimization."
+  },
+  "branding": {
+    "college_name": "Your College Name",
+    "portal_name": "Your College Honesty Shop Portal",
+    "colors": {
+      "primary": "#3b82f6",
+      "secondary": "#64748b",
+      "accent": "#f1f5f9"
+    },
+    "logo": {
+      "url": "/logo.png",
+      "fallback": "https://cdn.jsdelivr.net/gh/lucide-icons/lucide@0.263.1/icons/graduation-cap.svg"
+    },
+    "favicon": "/logo.png"
+  },
+  "forms": {
+    "labels": {
+      "student_id": "Student ID",
+      "full_name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "confirm_password": "Confirm Password",
+      "mobile_number": "Mobile Number",
+      "department": "Department",
+      "shift": "Shift",
+      "role": "Role",
+      "welcome_points": "Welcome Points"
+    },
+    "placeholders": {
+      "student_id": "Enter your Student ID",
+      "full_name": "Enter your full name",
+      "email": "Enter your email",
+      "password": "Enter your password",
+      "confirm_password": "Confirm your password",
+      "mobile_number": "Enter your mobile number"
+    },
+    "shift_options": [
+      { "value": "1", "label": "Morning (1st Shift)" },
+      { "value": "2", "label": "Evening (2nd Shift)" },
+      { "value": "full", "label": "Full Shift" }
+    ],
+    "role_options": [
+      { "value": "student", "label": "Student" },
+      { "value": "teacher", "label": "Teacher" }
+    ]
+  },
+  "messages": {
+    "auth": {
+      "login_description": "Enter your Student ID and password to access the portal",
+      "signup_description": "Create your account to access the portal",
+      "login_button": "Sign In 🚀",
+      "signup_button": "Create Account 🚀",
+      "welcome_back": "Welcome back! 🎉",
+      "account_created": "Account created! 🎉",
+      "sign_in_success": "You're successfully logged in!"
+    },
+    "navigation": {
+      "header_title": "College Honesty Shop",
+      "notifications": "Notifications",
+      "no_notifications": "No notifications"
+    },
+    "products": {
+      "no_products": "No products available",
+      "out_of_stock": "Out of Stock",
+      "add_to_cart": "Add to Cart",
+      "total": "Total",
+      "check_back": "Check back later for new products"
+    },
+    "errors": {
+      "all_fields_required": "All fields required",
+      "fill_all_fields": "Please fill in all required fields",
+      "passwords_dont_match": "Passwords don't match",
+      "password_too_short": "Password too short",
+      "missing_credentials": "Missing credentials",
+      "login_failed": "Login failed",
+      "signup_failed": "Signup failed",
+      "student_id_alphanumeric": "Only letters and numbers are allowed",
+      "student_id_not_found": "Student ID not found",
+      "session_expired": "Session expired, please login again",
+      "network_error": "Network error, please try again",
+      "missing_student_id": "Student ID is required",
+      "password_min_length": "Password must be at least 6 characters",
+      "ensure_passwords_match": "Please ensure passwords match"
+    },
+    "loading": {
+      "signing_in": "Signing in... ⏳",
+      "creating_account": "Creating Account... ⏳",
+      "loading_products": "Loading products...",
+      "loading_image": "Loading image..."
+    },
+    "success": {
+      "password_reset_sent": "Password Reset",
+      "reset_link_sent": "Password reset link sent to:"
+    }
+  },
+  "system": {
+    "performance": {
+      "cache_timeout": 300000,
+      "max_login_attempts": 5,
+      "session_timeout": 86400000,
+      "image_retry_attempts": 3,
+      "image_retry_delay": 1000
+    },
+    "security": {
+      "enable_csrf_protection": true,
+      "enable_xss_protection": true,
+      "enable_rate_limiting": true,
+      "session_validation_interval": 300000,
+      "audit_log_retention": 7776000000
+    },
+    "iso_compliance": {
+      "enable_audit_logging": true,
+      "enable_performance_monitoring": true,
+      "enable_security_monitoring": true,
+      "enable_quality_assurance": true,
+      "compliance_check_interval": 86400000
+    }
+  },
+  "badge_images": {
+    "achievement_badge": "https://cdn.jsdelivr.net/gh/twbs/icons@1.10.5/icons/award.svg",
+    "honor_badge": "https://cdn.jsdelivr.net/gh/twbs/icons@1.10.5/icons/trophy.svg",
+    "excellence_badge": "https://cdn.jsdelivr.net/gh/twbs/icons@1.10.5/icons/star.svg"
+  },
+  "admin": {
+    "access_note": "Super Admin Access: Check with Radhika"
+  }
+} 

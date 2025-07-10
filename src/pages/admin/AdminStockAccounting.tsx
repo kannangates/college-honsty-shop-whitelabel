@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { getCurrentMessages } from '@/config';
+import { WHITELABEL_CONFIG } from '@/config';
 import { Loader2, Save } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -66,7 +66,8 @@ const AdminStockAccounting = () => {
     stockStatus: 'all',
   });
   const { toast } = useToast();
-  const messages = getCurrentMessages();
+  const errorMessages = WHITELABEL_CONFIG.ERROR_MESSAGES;
+  const authMessages = WHITELABEL_CONFIG.AUTH_MESSAGES;
   const today = new Date().toISOString().split('T')[0];
 
   const loadStockOperations = useCallback(async () => {
@@ -126,13 +127,13 @@ const AdminStockAccounting = () => {
       console.error('Error loading stock operations:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load stock operations',
+        description: errorMessages.failedToLoadStockOperations,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, [toast, today]);
+  }, [toast, today, errorMessages]);
 
   const applyFilters = useCallback(() => {
     let filtered = [...stockOperations];
@@ -242,13 +243,13 @@ const AdminStockAccounting = () => {
       console.error('Error saving operations:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to save stock operations',
+        description: error instanceof Error ? error.message : errorMessages.failedToSaveStockOperations,
         variant: 'destructive',
       });
     } finally {
       setSaving(false);
     }
-  }, [stockOperations, toast, loadStockOperations]);
+  }, [stockOperations, toast, loadStockOperations, errorMessages]);
 
   if (loading) {
     return (

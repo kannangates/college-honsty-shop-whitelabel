@@ -10,7 +10,6 @@ import { UserRoutes } from "@/routes/UserRoutes";
 import { AdminRoutes } from "@/routes/AdminRoutes";
 import NotFound from "@/pages/NotFound";
 import { Navigate } from "react-router-dom";
-import { getBrandingConfig } from "@/config";
 import { useEffect } from "react";
 import "./App.css";
 
@@ -19,7 +18,7 @@ const queryClient = new QueryClient();
 function App() {
   useEffect(() => {
     // Initialize branding configuration on app start
-    getBrandingConfig().catch(console.error);
+    // If needed, use WHITELABEL_CONFIG for branding access
   }, []);
 
   return (
