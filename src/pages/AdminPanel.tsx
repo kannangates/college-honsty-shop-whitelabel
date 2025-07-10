@@ -128,15 +128,31 @@ const AdminPanel = () => {
 
     try {
       const deptCode = deptCodeFromLabel[announcement.department] || announcement.department;
+      let targetUserId = null;
+      if (announcement.studentId.trim()) {
+        // Query users table for the UUID
+        const { data: user, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('student_id', announcement.studentId.trim())
+          .single();
+
+        if (userError || !user) {
+          toast({
+            title: 'Error',
+            description: 'Student not found',
+            variant: 'destructive',
+          });
+          return;
+        }
+        targetUserId = user.id;
+      }
       // Create notification record with proper typing
       const notificationData = {
         title: announcement.title,
         body: announcement.description,
         type: 'announcement' as const, // Explicitly type as 'announcement'
-        
-
-        target_user_id: announcement.studentId.trim() || null,
-
+        target_user_id: targetUserId,
         is_pinned: announcement.pinTill ? true : false,
         department: deptCode === 'all' ? null : [deptCode],
         pin_till: announcement.pinTill || null
