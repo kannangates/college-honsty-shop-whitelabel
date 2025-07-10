@@ -37,16 +37,16 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
   };
 
   const downloadTemplate = () => {
-    const csvContent = 'student_id,name,email,department,mobile_number,shift,role,initial_points,password\n' +
-                      'ST001,John Doe,john@example.com,Computer Science,9876543210,1,student,100,password123\n' +
-                      'ST002,Jane Smith,jane@example.com,Information Technology,9876543211,2,teacher,150,password456\n' +
-                      'ST003,Mike Johnson,mike@example.com,All Department,9876543212,full,teacher,200,password789';
+    const csvContent = 'student_id,name,department,shift,role,initial_points,password\n' +
+                      'ST001,John Doe,Computer Science,1,student,100,password123\n' +
+                      'ST002,Jane Smith,Information Technology,2,teacher,150,password456\n' +
+                      'ST003,Mike Johnson,All Department,full,teacher,200,password789';
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'users_bulk_upload_template.csv';
+    a.download = 'bulk_users_upload_template.csv';
     a.click();
     window.URL.revokeObjectURL(url);
   };
