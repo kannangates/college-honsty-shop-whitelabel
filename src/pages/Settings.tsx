@@ -174,116 +174,144 @@ const Settings = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Profile Information */}
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-yellow-300 to-pink-300 rounded-full opacity-20 -translate-y-16 translate-x-16"></div>
-            
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile Information
-              </CardTitle>
-              <CardDescription>Update your personal details</CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 bg-white/40 backdrop-blur-md rounded-2xl p-6 shadow-inner">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Profile Information - Left Column */}
+            <Card className="border-0 shadow-2xl bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 overflow-hidden relative h-full">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-yellow-300 to-pink-300 rounded-full opacity-20 -translate-y-16 translate-x-16"></div>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Profile Information
+                </CardTitle>
+                <CardDescription>Update your personal details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 bg-white/40 backdrop-blur-md rounded-2xl p-6 shadow-inner">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        {profile?.name || 'User Profile'}
+                      </div>
+                      <div className="text-sm text-gray-700 font-medium">
+                        <Badge variant="outline">{profile?.role || 'student'}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center px-4 py-2 bg-white/60 rounded-xl shadow backdrop-blur-sm">
+                    <div className="text-lg font-bold text-green-600">#{profile?.student_id}</div>
+                    <div className="text-xs text-gray-600">Student ID</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                    <Input
+                      id="email"
+                      value={profile?.email || ''}
+                      disabled
+                      className="bg-gray-100 border-0 rounded-xl"
+                    />
                   </div>
                   <div>
-                    <div className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                      {profile?.name || 'User Profile'}
-                    </div>
-                    <div className="text-sm text-gray-700 font-medium">
-                      <Badge variant="outline">{profile?.role || 'student'}</Badge>
-                    </div>
+                    <Label htmlFor="name" className="text-sm font-medium text-gray-700">Full Name</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="border-0 rounded-xl bg-white/70 backdrop-blur-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="mobile_number" className="text-sm font-medium text-gray-700">Mobile Number</Label>
+                    <Input
+                      id="mobile_number"
+                      value={formData.mobile_number}
+                      onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value })}
+                      placeholder="Enter your mobile number"
+                      className="border-0 rounded-xl bg-white/70 backdrop-blur-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department</Label>
+                    <DepartmentCombobox
+                      value={formData.department}
+                      onChange={(value) => setFormData({ ...formData, department: value })}
+                      className="border-0 rounded-xl bg-white/70 backdrop-blur-sm"
+                      placeholder="Select your department"
+                    />
                   </div>
                 </div>
-                <div className="flex flex-col items-center px-4 py-2 bg-white/60 rounded-xl shadow backdrop-blur-sm">
-                  <div className="text-lg font-bold text-green-600">#{profile?.student_id}</div>
-                  <div className="text-xs text-gray-600">Student ID</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
-                  <Input
-                    id="email"
-                    value={profile?.email || ''}
-                    disabled
-                    className="bg-gray-100 border-0 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="name" className="text-sm font-medium text-gray-700">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="border-0 rounded-xl bg-white/70 backdrop-blur-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="mobile_number" className="text-sm font-medium text-gray-700">Mobile Number</Label>
-                  <Input
-                    id="mobile_number"
-                    value={formData.mobile_number}
-                    onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value })}
-                    placeholder="Enter your mobile number"
-                    className="border-0 rounded-xl bg-white/70 backdrop-blur-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department</Label>
-                  <DepartmentCombobox
-                    value={formData.department}
-                    onChange={(value) => setFormData({ ...formData, department: value })}
-                    className="border-0 rounded-xl bg-white/70 backdrop-blur-sm"
-                    placeholder="Select your department"
-                  />
-                </div>
-              </div>
-
-              <Button
-                onClick={handleUpdateProfile}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-[#202072] to-[#e66166] text-white rounded-xl py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {loading ? 'Updating...' : 'Update Profile ✨'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Password Change */}
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-orange-50 via-rose-50 to-purple-50 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-300 to-pink-300 rounded-full opacity-20 -translate-y-16 translate-x-16"></div>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                Change Password
-              </CardTitle>
-              <CardDescription>Update your account password</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input id="newPassword" type="password" value={pwdData.newPassword} onChange={(e)=>setPwdData({...pwdData,newPassword:e.target.value})}/>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input id="confirmPassword" type="password" value={pwdData.confirmPassword} onChange={(e)=>setPwdData({...pwdData,confirmPassword:e.target.value})}/>
-              </div>
-              <Button onClick={handleChangePassword} disabled={loading} className="rounded-xl">
-                {loading? 'Updating...' : 'Submit'}
-              </Button>
-            </CardContent>
-          </Card>
-
+                <Button
+                  onClick={handleUpdateProfile}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-[#202072] to-[#e66166] text-white rounded-xl py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  {loading ? 'Updating...' : 'Update Profile ✨'}
+                </Button>
+              </CardContent>
+            </Card>
+            {/* Change Password + Account Status - Right Column */}
+            <div className="flex flex-col gap-6 h-full">
+              <Card className="border-0 shadow-2xl bg-gradient-to-br from-orange-50 via-rose-50 to-purple-50 overflow-hidden relative flex-1">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-300 to-pink-300 rounded-full opacity-20 -translate-y-16 translate-x-16"></div>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Key className="h-5 w-5" />
+                    Change Password
+                  </CardTitle>
+                  <CardDescription>Update your account password</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input id="newPassword" type="password" value={pwdData.newPassword} onChange={(e)=>setPwdData({...pwdData,newPassword:e.target.value})}/>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Input id="confirmPassword" type="password" value={pwdData.confirmPassword} onChange={(e)=>setPwdData({...pwdData,confirmPassword:e.target.value})}/>
+                  </div>
+                  <Button onClick={handleChangePassword} disabled={loading} className="rounded-xl">
+                    {loading? 'Updating...' : 'Submit'}
+                  </Button>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Key className="h-5 w-5" />
+                    Account Status
+                  </CardTitle>
+                  <CardDescription>Your current account information</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Account Status:</span>
+                    <Badge 
+                      variant={profile?.status === 'active' ? 'default' : 'secondary'}
+                      className={profile?.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}
+                    >
+                      {profile?.status || 'Unknown'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Role:</span>
+                    <Badge variant="outline">{profile?.role || 'Student'}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Points Balance:</span>
+                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+                      {profile?.points || 0} pts
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
           {/* Security Settings */}
-          <div className="space-y-6">
+          <div className="space-y-6 mt-6">
             {/* Two-Factor Authentication */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
@@ -297,38 +325,6 @@ const Settings = () => {
               </CardHeader>
               <CardContent>
                 <MFASetup />
-              </CardContent>
-            </Card>
-
-            {/* Account Status */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Key className="h-5 w-5" />
-                  Account Status
-                </CardTitle>
-                <CardDescription>Your current account information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Account Status:</span>
-                  <Badge 
-                    variant={profile?.status === 'active' ? 'default' : 'secondary'}
-                    className={profile?.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}
-                  >
-                    {profile?.status || 'Unknown'}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Role:</span>
-                  <Badge variant="outline">{profile?.role || 'Student'}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Points Balance:</span>
-                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                    {profile?.points || 0} pts
-                  </Badge>
-                </div>
               </CardContent>
             </Card>
           </div>
