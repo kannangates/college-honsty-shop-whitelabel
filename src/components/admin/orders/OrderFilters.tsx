@@ -1,15 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar as Calendar05 } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, CalendarIcon, RefreshCw } from 'lucide-react';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 import { DateRange } from 'react-day-picker';
+import Calendar23 from '@/components/calendar-23';
 
 interface OrderFiltersProps {
   searchTerm: string;
@@ -82,24 +82,14 @@ export const OrderFilters = ({
             </SelectContent>
           </Select>
 
-          {/* Date Range Picker */}
+          {/* Date Range Picker (calendar-23, popover on click) */}
           <div className="col-span-2">
-            <Label>Date Range</Label>
-            <Calendar05
-              mode="range"
+            <Calendar23
               selected={range}
               onSelect={handleRangeChange}
-              numberOfMonths={2}
-              className="rounded-md border"
-              initialFocus
+              label="Date Range"
+              placeholder="Select date"
             />
-            <div className="text-xs mt-2">
-              {range.from && range.to
-                ? `${format(range.from, 'PPP')} - ${format(range.to, 'PPP')}`
-                : range.from
-                ? `${format(range.from, 'PPP')}`
-                : 'Select a date range'}
-            </div>
           </div>
 
           {/* Actions */}
