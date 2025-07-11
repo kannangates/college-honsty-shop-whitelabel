@@ -17,14 +17,28 @@ import { Button } from '@/components/ui/button';
 
 
 const DEPARTMENT_OPTIONS: readonly string[] = [
+  'B.COM (GENERAL) - SEC A',
+  'B.COM (GENERAL) - SEC B',
+  'B.COM (ACCOUNTING & FINANCE) - SEC A',
+  'B.COM (ACCOUNTING & FINANCE) - SEC B',
+  'B B A - SEC A',
+  'B B A - SEC B',
+  'B.Sc (COMPUTER SCIENCE) - SEC A',
+  'B.Sc (COMPUTER SCIENCE) - SEC B',
+  'B C A',
+  'B. COM (CORPORATE SECREARYSHIP)',
+  'B. COM (HONORS)',
+  'B.Sc (PSYCHOLOGY)',
+  'M.Com (ACCOUNTING & FINANCE)',
+  'M.Sc Pyschology',
+  'B.Sc ID& D',
+  'B.Com (BANK MANAGEMENT)',
+  'M.Com (General)',
+  'M.Phil Commerce',
+  'Ph.D Commerce',
   'All Department',
-  'Computer Science',
-  'Information Technology',
-  'Electronics',
-  'Mechanical',
-  'Civil',
-  'Electrical',
 ];
+
 
 interface DepartmentComboboxProps {
   /** Currently selected department string (empty if none) */
