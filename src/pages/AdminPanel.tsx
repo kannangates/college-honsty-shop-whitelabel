@@ -404,17 +404,17 @@ const AdminPanel = () => {
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <CreditCard className="h-5 w-5" />
-              Coming Soon...
+              <Settings className="h-5 w-5" />
+              Whitelabel Config
             </CardTitle>
-            <CardDescription className="text-sm">Description...</CardDescription>
+            <CardDescription className="text-sm">View and edit the whitelabel.json configuration file</CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
-              onClick={() => navigate('/admin/reports')}
-              className="w-full bg-green-600 hover:bg-green-700 text-white text-sm"
+              onClick={() => navigate('/admin/whitelabel-config')}
+              className="w-full bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm"
             >
-              Coming Soon...
+              Edit Whitelabel Config
             </Button>
           </CardContent>
         </Card>
