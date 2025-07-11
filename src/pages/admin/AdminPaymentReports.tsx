@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import { CalendarIcon, CreditCard } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import Calendar23 from '@/components/calendar-23';
+import Calendar23 from '@/components/ui/calendar-23';
 import { DateRange } from 'react-day-picker';
 
 const AdminPaymentReports = () => {

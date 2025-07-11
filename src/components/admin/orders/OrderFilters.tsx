@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 import { DateRange } from 'react-day-picker';
-import Calendar23 from '@/components/calendar-23';
+import Calendar23 from '@/components/ui/calendar-23';
 
 interface OrderFiltersProps {
   searchTerm: string;
