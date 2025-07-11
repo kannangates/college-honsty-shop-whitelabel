@@ -7,7 +7,9 @@ import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG } from '@/config';
 import { PersonalInfoFields } from './forms/PersonalInfoFields';
 import { PasswordFields } from './forms/PasswordFields';
-import { DepartmentRoleFields } from './forms/DepartmentRoleFields';
+import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 
 export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) => {
@@ -179,11 +181,68 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
           />
 
-          <DepartmentRoleFields
-            formData={formData}
-            loading={loading}
-            onInputChange={handleInputChange}
-          />
+          {/* Department Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="department" className="text-sm font-medium text-gray-700 text-left block">
+              {labels?.department || 'Department'} *
+            </Label>
+            <DepartmentCombobox
+              value={formData.department}
+              onChange={(value) => handleInputChange('department', value)}
+              disabled={loading}
+            />
+          </div>
+
+          {/* Shift Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="shift" className="text-sm font-medium text-gray-700 text-left block">
+              {labels?.shift || 'Shift'} *
+            </Label>
+            <Select
+              value={formData.shift}
+              onValueChange={(value) => handleInputChange('shift', value)}
+              disabled={loading}
+            >
+              <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl">
+                <SelectValue placeholder={placeholders?.shift || 'Select your shift'} />
+              </SelectTrigger>
+              <SelectContent>
+                {WHITELABEL_CONFIG.forms.shift_options.map((shift) => (
+                  <SelectItem key={shift.value} value={shift.value}>
+                    {shift.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Role Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="role" className="text-sm font-medium text-gray-700 text-left block">
+              {labels?.role || 'Role'} *
+            </Label>
+            <Select
+              value={formData.role}
+              onValueChange={(value) => handleInputChange('role', value)}
+              disabled={loading || (formData.department.toLowerCase() === 'all department' || formData.shift === 'full')}
+            >
+              <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl">
+                <SelectValue placeholder={placeholders?.role || 'Select your role'} />
+              </SelectTrigger>
+              <SelectContent>
+                {WHITELABEL_CONFIG.forms.role_options.map((role) => (
+                  <SelectItem key={role.value} value={role.value}>
+                    {role.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(formData.department.toLowerCase() === 'all department' || formData.shift === 'full') && (
+              <p className="text-xs text-gray-500">
+                Role automatically set based on department/shift selection
+              </p>
+            )}
+          </div>
 
           {/* hCaptcha */}
           <div className="mt-4 flex w-full justify-center">

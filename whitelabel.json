@@ -71,7 +71,8 @@
       "out_of_stock": "Out of Stock",
       "add_to_cart": "Add to Cart",
       "total": "Total",
-      "check_back": "Check back later for new products"
+      "check_back": "Check back later for new products",
+      "loading_products": "Loading products..."
     },
     "errors": {
       "all_fields_required": "All fields required",
@@ -87,7 +88,8 @@
       "network_error": "Network error, please try again",
       "missing_student_id": "Student ID is required",
       "password_min_length": "Password must be at least 6 characters",
-      "ensure_passwords_match": "Please ensure passwords match"
+      "ensure_passwords_match": "Please ensure passwords match",
+      "failed_to_load_image": "Failed to load image"
     },
     "loading": {
       "signing_in": "Signing in... ⏳",
