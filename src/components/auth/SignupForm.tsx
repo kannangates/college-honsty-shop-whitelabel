@@ -41,6 +41,8 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   const messages = WHITELABEL_CONFIG.messages.auth;
   const errorMessages = WHITELABEL_CONFIG.messages.errors;
 
+  const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
+
   const handleInputChange = (field: keyof SignupFormData, value: string) => {
     if (field === 'studentId') {
       const alphanumericOnly = value.replace(/[^a-zA-Z0-9]/g, '');
@@ -250,7 +252,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
           <div className="mt-4 flex w-full justify-center">
             <HCaptcha
               ref={captchaRef}
-              sitekey="ad901dde-946e-4c0e-bc78-d0fc4bb08868"
+              sitekey={HCAPTCHA_SITE_KEY}
               onVerify={token => setCaptchaToken(token)}
             />
           </div>

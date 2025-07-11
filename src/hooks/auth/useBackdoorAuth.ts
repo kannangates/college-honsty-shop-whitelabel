@@ -16,7 +16,7 @@ interface UseBackdoorAuthProps {
 const DEMO_USERS = [
   {
     username: 'admin',
-    password: 'admin123',
+    password: ADMIN_PASSWORD,
     role: 'developer',
     name: 'Kannan',
     student_id: 'DEV001',
@@ -28,7 +28,7 @@ const DEMO_USERS = [
   },
   {
     username: 'student',
-    password: 'student123',
+    password: STUDENT_PASSWORD,
     role: 'student',
     name: 'Demo Student',
     student_id: 'STU001',
@@ -39,6 +39,10 @@ const DEMO_USERS = [
     email: 'studentdemo@example.com',
   },
 ];
+
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
+const STUDENT_PASSWORD = import.meta.env.VITE_STUDENT_PASSWORD;
+const FAKE_ACCESS_TOKEN = import.meta.env.VITE_FAKE_ACCESS_TOKEN;
 
 export const useBackdoorAuth = ({
   setUser,
@@ -56,7 +60,7 @@ export const useBackdoorAuth = ({
         const fakeUser = { id: demo.mobile_number, email: demo.email };
         const fakeSession = {
           user: fakeUser,
-          access_token: 'fake-token',
+          access_token: FAKE_ACCESS_TOKEN,
           token_type: 'bearer',
           expires_in: 3600,
           refresh_token: '',
