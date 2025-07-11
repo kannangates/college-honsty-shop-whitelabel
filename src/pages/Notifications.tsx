@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Bell, CheckCheck, Trash2 } from 'lucide-react';
@@ -13,7 +12,6 @@ const Notifications = () => {
     notifications,
     unreadCount,
     loading,
-    markAsRead,
     markAllAsRead,
     clearAllNotifications,
     updateReactionCount
@@ -81,12 +79,14 @@ const Notifications = () => {
           </Card>
         ) : (
           sortedNotifications.map((notification) => (
-            <NotificationCard
-              key={notification.id}
-              notification={notification}
-              onMarkAsRead={markAsRead}
-              onReactionUpdate={updateReactionCount}
-            />
+            // 👇 THIS WRAPPER DIV IS THE IMPORTANT CHANGE FOR CENTERING 👇
+            <div key={notification.id} className="max-w-xl mx-auto">
+                <NotificationCard
+                  notification={notification}
+                  onMarkAsRead={markAsRead}
+                  onReactionUpdate={updateReactionCount}
+                />
+            </div>
           ))
         )}
       </div>

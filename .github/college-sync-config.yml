@@ -1,9 +1,0 @@
-
-colleges:
-  # Example entry for future use, but no branding paths should be listed
-  # - name: example
-  #   enabled: false
-  #   branch: example-branch
-  #   brandingPaths: []
-  #   mirrorRepo: https://github.com/example/example-shop.git
-  #   webhookUrl: https://hooks.example.edu/notify
