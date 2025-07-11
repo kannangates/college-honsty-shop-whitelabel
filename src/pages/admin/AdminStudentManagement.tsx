@@ -158,14 +158,13 @@ const AdminStudentManagement = () => {
 
   const handleExport = (format: 'csv') => {
     const exportHeaders = [
-      'Student ID', 'Name', 'Email', 'Department', 'Role', 'Points', 
+      'Student ID', 'Name', 'Department', 'Role', 'Points', 
       'Status', 'Mobile', 'Shift', 'Created At', 'Last Signed In'
     ];
     
     const exportRows = filteredStudents.map(student => [
       student.student_id,
       student.name,
-      student.email,
       student.department || 'N/A',
       student.role,
       student.points,
@@ -188,7 +187,6 @@ const AdminStudentManagement = () => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (student.department && student.department.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesDepartment =
@@ -334,7 +332,6 @@ const AdminStudentManagement = () => {
               <TableRow>
                 <TableHead className="text-xs">Student ID</TableHead>
                 <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Email</TableHead>
                 <TableHead className="text-xs">Department</TableHead>
                 <TableHead className="text-xs">Shift</TableHead>
                 <TableHead className="text-xs">Role</TableHead>
@@ -363,7 +360,6 @@ const AdminStudentManagement = () => {
                   <TableRow key={student.id}>
                     <TableCell className="font-medium text-sm">{student.student_id}</TableCell>
                     <TableCell className="text-sm">{student.name}</TableCell>
-                    <TableCell className="text-sm">{student.email}</TableCell>
                     <TableCell className="text-sm">{student.department || 'N/A'}</TableCell>
                     <TableCell className="text-sm">{getShiftDisplay(student.shift)}</TableCell>
                     <TableCell className="text-sm">{student.role}</TableCell>
