@@ -262,6 +262,26 @@ const AdminPanel = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+        {/* Whitelabel Config */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Settings className="h-5 w-5" />
+              Whitelabel Config
+            </CardTitle>
+            <CardDescription className="text-sm">View and edit the whitelabel.json configuration file</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => navigate('/admin/whitelabel-config')}
+              className="w-full bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm"
+            >
+              Edit Whitelabel Config
+            </Button>
+          </CardContent>
+        </Card>
+
+        
         {/* Quick Announcements */}
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-3">
@@ -401,23 +421,6 @@ const AdminPanel = () => {
           )}
         </Card>
 
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Settings className="h-5 w-5" />
-              Whitelabel Config
-            </CardTitle>
-            <CardDescription className="text-sm">View and edit the whitelabel.json configuration file</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => navigate('/admin/whitelabel-config')}
-              className="w-full bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm"
-            >
-              Edit Whitelabel Config
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
