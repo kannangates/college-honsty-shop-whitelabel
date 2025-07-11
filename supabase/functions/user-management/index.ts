@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function fetchLeaderboard(supabase: ReturnType<typeof createClient>) {
+async function fetchLeaderboard(supabase: SupabaseClient) {
   console.log('🏆 Fetching leaderboard data');
   
   const { data, error } = await supabase
@@ -61,7 +61,7 @@ async function fetchLeaderboard(supabase: ReturnType<typeof createClient>) {
   );
 }
 
-async function updateLastSignin(supabase: ReturnType<typeof createClient>, userId: string) {
+async function updateLastSignin(supabase: SupabaseClient, userId: string) {
   console.log('🕐 Updating last signin for user:', userId);
   
   const { error } = await supabase
@@ -79,7 +79,7 @@ async function updateLastSignin(supabase: ReturnType<typeof createClient>, userI
   );
 }
 
-async function fetchUsers(supabase: ReturnType<typeof createClient>) {
+async function fetchUsers(supabase: SupabaseClient) {
   console.log('📋 Fetching all users');
   
   const { data, error } = await supabase
@@ -106,7 +106,7 @@ interface UserUpdate {
   status?: string;
 }
 
-async function updateUser(supabase: ReturnType<typeof createClient>, userData: UserUpdate) {
+async function updateUser(supabase: SupabaseClient, userData: UserUpdate) {
   console.log('✏️ Updating user:', userData.id);
   
   const { data, error } = await supabase
@@ -132,7 +132,7 @@ async function updateUser(supabase: ReturnType<typeof createClient>, userData: U
   );
 }
 
-async function getUserStats(supabase: ReturnType<typeof createClient>) {
+async function getUserStats(supabase: SupabaseClient) {
   console.log('📊 Getting user statistics');
   
   // Total students

@@ -1,54 +1,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-interface Database {
-  public: {
-    Tables: {
-      orders: {
-        Row: {
-          id: string
-          user_id: string
-          total_amount: number
-          payment_status: string
-          payment_mode: string | null
-          transaction_id: string | null
-          paid_at: string | null
-          created_at: string
-          updated_at: string
-          updated_by: string | null
-        }
-      }
-      users: {
-        Row: {
-          id: string
-          student_id: string
-          name: string
-        }
-      }
-      order_items: {
-        Row: {
-          id: string
-          order_id: string
-          product_id: string
-          quantity: number
-          unit_price: number
-          total_price: number
-        }
-      }
-      products: {
-        Row: {
-          id: string
-          name: string
-        }
-      }
-    }
-  }
 }
 
 serve(async (req: Request) => {
@@ -59,7 +15,7 @@ serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const { operation, ...params } = await req.json()
 
@@ -161,8 +117,9 @@ serve(async (req: Request) => {
     }
   } catch (error) {
     console.error('Error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

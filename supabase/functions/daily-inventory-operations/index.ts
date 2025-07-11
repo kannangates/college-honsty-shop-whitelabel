@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
 interface InventoryRow {
@@ -14,48 +14,51 @@ interface InventoryRow {
   sales: number;
 }
 
+interface InventoryRecord extends InventoryRow {
+  id?: string;
+  created_at: string;
+}
+
 interface Product {
   id: string;
   name: string;
-  unit_price: number;
-  opening_stock: number;
+  description?: string;
+  price?: number;
+  category: string;
+  current_stock: number;
+  created_at?: string;
+  created_by?: string;
+  image_url?: string;
+  is_archived?: boolean;
+  opening_stock?: number;
+  status?: string;
+  unit_price?: number;
+  [key: string]: string | number | boolean | undefined;
 }
 
-interface OrderItem {
-  product_id: string;
-  quantity: number;
-}
-
-interface InventoryRecord {
-  id?: string | null;
+interface StockOperationRow {
+  id?: string;
   product_id: string;
   opening_stock: number;
   additional_stock: number;
   actual_closing_stock: number;
-  wastage_stock: number;
-  order_count: number;
   estimated_closing_stock: number;
   stolen_stock: number;
+  wastage_stock: number;
   sales: number;
+  order_count: number;
   created_at: string;
-  products?: { name: string };
+  updated_at: string | null;
 }
 
-interface SupabaseClient {
-  from: (table: string) => {
-    select: (columns: string) => {
-      eq: (column: string, value: boolean) => Promise<{ data: unknown[] | null; error: Error | null }>;
-      gte: (column: string, value: string) => {
-        lt: (column: string, value: string) => Promise<{ data: unknown[] | null; error: Error | null }>;
-      };
-    };
-    delete: () => {
-      gte: (column: string, value: string) => {
-        lt: (column: string, value: string) => Promise<{ error: Error | null }>;
-      };
-    };
-    insert: (data: Omit<InventoryRecord, 'id'>[]) => Promise<{ error: Error | null }>;
-  };
+interface StockOperation extends StockOperationRow {
+  product: Product;
+}
+
+interface Filters {
+  category: string;
+  status: string;
+  stockStatus: string;
 }
 
 Deno.serve(async (req) => {
@@ -102,185 +105,196 @@ Deno.serve(async (req) => {
 async function syncInventoryData(supabase: SupabaseClient, date: string) {
   console.log(`🔄 Syncing inventory data for ${date}`);
 
-  // Get all products
-  const { data: products, error: productsError } = await supabase
-    .from('products')
-    .select('id, name, unit_price, opening_stock')
-    .eq('is_archived', false);
+  try {
+    // Get all active products
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_archived', false)
+      .eq('status', 'active');
 
-  if (productsError) throw productsError;
+    if (productsError) throw productsError;
 
-  // Get existing inventory for the date
-  const { data: existingInventory, error: inventoryError } = await supabase
-    .from('daily_inventory')
-    .select('*')
-    .gte('created_at', `${date}T00:00:00`)
-    .lt('created_at', `${date}T23:59:59`);
+    // Get existing inventory records for the date
+    const { data: existingRecords, error: existingError } = await supabase
+      .from('daily_stock_operations')
+      .select('*')
+      .gte('created_at', `${date}T00:00:00`)
+      .lt('created_at', `${date}T23:59:59`);
 
-  if (inventoryError) throw inventoryError;
+    if (existingError) throw existingError;
 
-  // Get order counts for the date
-  const { data: orderCounts, error: orderError } = await supabase
-    .from('order_items')
-    .select('product_id, quantity')
-    .gte('created_at', `${date}T00:00:00`)
-    .lt('created_at', `${date}T23:59:59`);
+    // Create inventory rows for products that don't have records
+    const existingProductIds = new Set(existingRecords?.map(r => r.product_id) || []);
+    const newRecords: Omit<InventoryRecord, 'id'>[] = [];
 
-  if (orderError) throw orderError;
-
-  // Aggregate order counts by product
-  const orderCountMap = (orderCounts as OrderItem[]).reduce((acc: Record<string, number>, item: OrderItem) => {
-    acc[item.product_id] = (acc[item.product_id] || 0) + item.quantity;
-    return acc;
-  }, {});
-
-  // Build inventory data
-  const inventoryData = (products as Product[]).map((product: Product) => {
-    const existing = (existingInventory as InventoryRecord[]).find((inv: InventoryRecord) => inv.product_id === product.id);
-    const orderCount = orderCountMap[product.id] || 0;
-    const openingStock = existing?.opening_stock || product.opening_stock;
-    const additionalStock = existing?.additional_stock || 0;
-    const estimatedClosingStock = openingStock + additionalStock - orderCount;
-    const actualClosingStock = existing?.actual_closing_stock || 0;
-    const wastedStock = existing?.wastage_stock || 0;
-    const stolenStock = Math.max(0, estimatedClosingStock - (actualClosingStock + wastedStock));
-    const sales = orderCount * product.unit_price;
-
-    return {
-      id: existing?.id || null,
-      product: product.name,
-      product_id: product.id,
-      orderCount,
-      openingStock,
-      additionalStock,
-      actualClosingStock,
-      wastedStock,
-      unitPrice: product.unit_price,
-      estimatedClosingStock,
-      stolenStock,
-      sales
-    };
-  });
-
-  return new Response(
-    JSON.stringify({ data: inventoryData }),
-    { 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    for (const product of products || []) {
+      if (!existingProductIds.has(product.id)) {
+        newRecords.push({
+          product_id: product.id,
+          opening_stock: product.current_stock || 0,
+          additional_stock: 0,
+          actual_closing_stock: product.current_stock || 0,
+          estimated_closing_stock: product.current_stock || 0,
+          stolen_stock: 0,
+          wastage_stock: 0,
+          sales: 0,
+          order_count: 0,
+          created_at: new Date().toISOString()
+        });
+      }
     }
-  );
+
+    if (newRecords.length > 0) {
+      const { error: insertError } = await supabase
+        .from('daily_stock_operations')
+        .insert(newRecords);
+
+      if (insertError) throw insertError;
+    }
+
+    // Return merged data
+    const allRecords = [
+      ...(existingRecords || []),
+      ...newRecords
+    ];
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        records: allRecords,
+        synced: newRecords.length 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('❌ Error syncing inventory data:', error);
+    throw error;
+  }
 }
 
 async function saveInventoryData(supabase: SupabaseClient, inventoryRows: InventoryRow[], date: string) {
   console.log(`💾 Saving inventory data for ${date}, ${inventoryRows.length} rows`);
 
-  const upsertData = inventoryRows.map(row => ({
-    product_id: row.product_id,
-    opening_stock: row.opening_stock,
-    additional_stock: row.additional_stock,
-    actual_closing_stock: row.actual_closing_stock,
-    wastage_stock: row.wastage_stock,
-    order_count: row.order_count,
-    estimated_closing_stock: row.estimated_closing_stock,
-    stolen_stock: row.stolen_stock,
-    sales: row.sales,
-    created_at: `${date}T00:00:00`
-  }));
+  try {
+    // Convert to proper format and add timestamps
+    const records: Omit<InventoryRecord, 'id'>[] = inventoryRows.map(row => ({
+      ...row,
+      created_at: new Date().toISOString()
+    }));
 
-  // Delete existing records for the date first
-  const { error: deleteError } = await supabase
-    .from('daily_inventory')
-    .delete()
-    .gte('created_at', `${date}T00:00:00`)
-    .lt('created_at', `${date}T23:59:59`);
+    // Upsert the records
+    const { error } = await supabase
+      .from('daily_stock_operations')
+      .upsert(records, { onConflict: 'product_id,created_at' });
 
-  if (deleteError) throw deleteError;
+    if (error) throw error;
 
-  // Insert new records
-  const { error: insertError } = await supabase
-    .from('daily_inventory')
-    .insert(upsertData);
+    // Update product current_stock with actual_closing_stock
+    const updates = inventoryRows.map(row =>
+      supabase
+        .from('products')
+        .update({ current_stock: row.actual_closing_stock })
+        .eq('id', row.product_id)
+    );
 
-  if (insertError) throw insertError;
+    await Promise.all(updates);
 
-  return new Response(
-    JSON.stringify({ success: true, message: 'Inventory data saved successfully' }),
-    { 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    }
-  );
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        saved: inventoryRows.length 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('❌ Error saving inventory data:', error);
+    throw error;
+  }
 }
 
 async function exportInventoryData(supabase: SupabaseClient, date: string, format: string) {
   console.log(`📤 Exporting inventory data for ${date} as ${format}`);
 
-  // Get inventory data with product names
-  const { data: inventoryData, error } = await supabase
-    .from('daily_inventory')
-    .select(`
-      *,
-      products:product_id (name)
-    `)
-    .gte('created_at', `${date}T00:00:00`)
-    .lt('created_at', `${date}T23:59:59`);
+  try {
+    const { data: records, error } = await supabase
+      .from('daily_stock_operations')
+      .select(`
+        *,
+        products (
+          name,
+          category,
+          unit_price
+        )
+      `)
+      .gte('created_at', `${date}T00:00:00`)
+      .lt('created_at', `${date}T23:59:59`)
+      .order('created_at', { ascending: true });
 
-  if (error) throw error;
+    if (error) throw error;
+
+    if (format === 'csv') {
+      const csv = convertToCSV(records || []);
+      return new Response(csv, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/csv',
+          'Content-Disposition': `attachment; filename="inventory-${date}.csv"`
+        }
+      });
+    } else {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          records: records || [],
+          format 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+  } catch (error) {
+    console.error('❌ Error exporting inventory data:', error);
+    throw error;
+  }
+}
+
+function convertToCSV(records: StockOperation[]): string {
+  if (records.length === 0) return '';
 
   const headers = [
-    'Product',
-    'Order Count',
+    'Product Name',
+    'Category',
     'Opening Stock',
     'Additional Stock',
-    'Estimated Closing Stock',
-    'Actual Closing Stock',
-    'Wasted Stock',
+    'Sales',
     'Stolen Stock',
-    'Sales'
+    'Wastage Stock',
+    'Actual Closing Stock',
+    'Estimated Closing Stock',
+    'Order Count',
+    'Unit Price',
+    'Total Value'
   ];
 
-  if (format === 'csv') {
-    let csvContent = headers.join(',') + '\n';
-    (inventoryData as InventoryRecord[]).forEach((row: InventoryRecord) => {
-      const csvRow = [
-        row.products?.name || 'Unknown',
-        row.order_count,
-        row.opening_stock,
-        row.additional_stock,
-        row.estimated_closing_stock,
-        row.actual_closing_stock,
-        row.wastage_stock,
-        row.stolen_stock,
-        row.sales
-      ].join(',');
-      csvContent += csvRow + '\n';
-    });
+  const rows = records.map(record => [
+    record.product?.name || 'Unknown',
+    record.product?.category || 'Unknown',
+    record.opening_stock,
+    record.additional_stock,
+    record.sales,
+    record.stolen_stock,
+    record.wastage_stock,
+    record.actual_closing_stock,
+    record.estimated_closing_stock,
+    record.order_count,
+    record.product?.unit_price || 0,
+    (record.product?.unit_price || 0) * record.actual_closing_stock
+  ]);
 
-    return new Response(csvContent, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename="daily-inventory-${date}.csv"`
-      }
-    });
-  }
-
-  // For Excel format, return JSON that frontend can convert
-  return new Response(
-    JSON.stringify({ 
-      headers,
-      data: (inventoryData as InventoryRecord[]).map((row: InventoryRecord) => [
-        row.products?.name || 'Unknown',
-        row.order_count,
-        row.opening_stock,
-        row.additional_stock,
-        row.estimated_closing_stock,
-        row.actual_closing_stock,
-        row.wastage_stock,
-        row.stolen_stock,
-        row.sales
-      ])
-    }),
-    { 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    }
-  );
+  return [headers, ...rows]
+    .map(row => row.map(cell => `"${cell}"`).join(','))
+    .join('\n');
 }

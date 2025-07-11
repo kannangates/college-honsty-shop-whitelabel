@@ -59,7 +59,17 @@
       "signup_button": "Create Account 🚀",
       "welcome_back": "Welcome back! 🎉",
       "account_created": "Account created! 🎉",
-      "sign_in_success": "You're successfully logged in!"
+      "sign_in_success": "You're successfully logged in!",
+      "fill_all_fields": "Please fill in all required fields",
+      "errors": {
+        "missing_student_id": "Student ID is required",
+        "student_id_alphanumeric": "Only letters and numbers allowed",
+        "missing_credentials": "Password is required",
+        "password_min_length": "Password must be at least 6 characters",
+        "ensure_passwords_match": "Passwords do not match",
+        "session_expired": "Session expired, please login again",
+        "login_failed": "Login failed"
+      }
     },
     "navigation": {
       "header_title": "College Honesty Shop",
@@ -89,7 +99,9 @@
       "missing_student_id": "Student ID is required",
       "password_min_length": "Password must be at least 6 characters",
       "ensure_passwords_match": "Please ensure passwords match",
-      "failed_to_load_image": "Failed to load image"
+      "failed_to_load_image": "Failed to load image",
+      "failedToLoadStockOperations": "Failed to load stock operations",
+      "failedToSaveStockOperations": "Failed to save stock operations"
     },
     "loading": {
       "signing_in": "Signing in... ⏳",
@@ -124,6 +136,9 @@
       "enable_quality_assurance": true,
       "compliance_check_interval": 86400000
     }
+  },
+  "SECURITY": {
+    "session_validation_interval": 300000
   },
   "badge_images": {
     "achievement_badge": "https://cdn.jsdelivr.net/gh/twbs/icons@1.10.5/icons/award.svg",

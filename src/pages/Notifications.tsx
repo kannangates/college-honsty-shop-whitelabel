@@ -12,6 +12,7 @@ const Notifications = () => {
     notifications,
     unreadCount,
     loading,
+    markAsRead,
     markAllAsRead,
     clearAllNotifications,
     updateReactionCount

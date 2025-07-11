@@ -4,16 +4,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { WHITELABEL_CONFIG } from '@/config';
+import type { SignupFormData } from '@/types/forms';
 
 interface PasswordFieldsProps {
-  formData: {
-    password: string;
-    confirmPassword: string;
-  };
+  formData: SignupFormData;
   showPassword: boolean;
   showConfirmPassword: boolean;
   loading: boolean;
-  onInputChange: (field: string, value: string) => void;
+  onInputChange: (field: keyof SignupFormData, value: string) => void;
   onTogglePassword: () => void;
   onToggleConfirmPassword: () => void;
 }

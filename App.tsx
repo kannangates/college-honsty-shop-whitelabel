@@ -1,12 +1,13 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ProductProvider } from "@/contexts/ProductContext";
-import AuthPage from "@/pages/AuthPage";
-import { UserRoutes } from "@/routes/UserRoutes";
-import { AdminRoutes } from "@/routes/AdminRoutes";
-import NotFound from "@/pages/NotFound";
+import { Toaster } from "./src/components/ui/toaster";
+import { AuthProvider } from "./src/contexts/AuthContext";
+import { ProductProvider } from "./src/contexts/ProductContext";
+import AuthPage from "./src/pages/AuthPage";
+import { UserRoutes } from "./src/routes/UserRoutes";
+import { AdminRoutes } from "./src/routes/AdminRoutes";
+import NotFound from "./src/pages/NotFound";
 import { Navigate } from "react-router-dom";
 import "./App.css";
 

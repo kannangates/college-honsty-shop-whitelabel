@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -119,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const emailExists = existingAuthUsers.users.some((u: { email: string }) => u.email === email);
+    const emailExists = existingAuthUsers.users.some((u) => u.email === email);
 
     if (emailExists) {
       log("❌ Email already in use:", email);

@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
 interface BadgeAwardResult {
@@ -25,23 +25,6 @@ interface Order {
   payment_status: string;
   paid_at: string | null;
   created_at: string;
-}
-
-interface SupabaseResponse<T> {
-  data: T | null;
-  error: Error | null;
-}
-
-interface SupabaseClient {
-  from: (table: string) => {
-    select: (columns: string) => {
-      eq: (column: string, value: string) => {
-        single: () => Promise<SupabaseResponse<unknown>>;
-      };
-      order: (column: string, options: { ascending: boolean }) => Promise<SupabaseResponse<unknown[]>>;
-    };
-    insert: (data: Record<string, unknown>) => Promise<{ error: Error | null }>;
-  };
 }
 
 Deno.serve(async (req) => {

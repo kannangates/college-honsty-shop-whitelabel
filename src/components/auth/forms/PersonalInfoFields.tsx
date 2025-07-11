@@ -3,16 +3,13 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { WHITELABEL_CONFIG } from '@/config';
+import type { SignupFormData } from '@/types/forms';
 
 interface PersonalInfoFieldsProps {
-  formData: {
-    studentId: string;
-    name: string;
-    email: string;
-  };
+  formData: SignupFormData;
   studentIdError: string;
   loading: boolean;
-  onInputChange: (field: string, value: string) => void;
+  onInputChange: (field: keyof SignupFormData, value: string) => void;
 }
 
 export const PersonalInfoFields = ({

@@ -11,10 +11,12 @@ import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
+import type { SignupFormData } from '@/types/forms';
 
 export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  
+  const [formData, setFormData] = useState<SignupFormData>({
     studentId: '',
     name: '',
     email: '',
@@ -39,7 +41,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   const messages = WHITELABEL_CONFIG.messages.auth;
   const errorMessages = WHITELABEL_CONFIG.messages.errors;
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof SignupFormData, value: string) => {
     if (field === 'studentId') {
       const alphanumericOnly = value.replace(/[^a-zA-Z0-9]/g, '');
       if (value !== alphanumericOnly) {
@@ -121,8 +123,8 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         formData.studentId,
         formData.name,
         formData.department,
-        formData.role,
-        formData.shift,
+        formData.role as string,
+        formData.shift as string,
         WHITELABEL_CONFIG.app.welcome_points || 100,
         captchaToken || undefined
       );
