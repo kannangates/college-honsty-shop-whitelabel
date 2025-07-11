@@ -10,6 +10,7 @@ interface DepartmentRoleFieldsProps {
     department: string;
     shift: string;
     role: string;
+    [key: string]: string; // Allow additional properties
   };
   loading: boolean;
   onInputChange: (field: string, value: string) => void;
