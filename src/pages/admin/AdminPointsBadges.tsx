@@ -137,7 +137,7 @@ const AdminPointsBadges = () => {
         return;
       }
 
-      // Call the Edge Function to update points
+      // Call the Edge Function to update points with proper authentication
       const { data, error } = await supabase.functions.invoke('update-user-points', {
         body: {
           studentId: manualAllocation.studentId,

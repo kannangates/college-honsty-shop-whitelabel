@@ -18,6 +18,38 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has admin role
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'developer')) {
+      return new Response(
+        JSON.stringify({ error: 'Insufficient permissions' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { studentId, points, reason }: UpdatePointsRequest = await req.json();
     console.log('💰 Updating points for student:', studentId, 'points:', points, 'reason:', reason);
 
@@ -54,29 +86,42 @@ Deno.serve(async (req) => {
     });
 
     // Update user points
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ 
-        points: newPoints,
-        updated_at: new Date().toISOString()
-      })
-      .eq('student_id', studentId);
+    try {
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          points: newPoints,
+          updated_at: new Date().toISOString()
+        })
+        .eq('student_id', studentId);
 
-    if (updateError) {
-      console.error('❌ Error updating user points:', updateError);
+      if (updateError) {
+        console.error('❌ Error updating user points:', updateError);
+        return new Response(
+          JSON.stringify({ error: `Failed to update user points: ${updateError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (updateError) {
+      console.error('❌ Exception updating user points:', updateError);
       return new Response(
-        JSON.stringify({ error: 'Failed to update user points' }),
+        JSON.stringify({ error: `Failed to update user points: ${updateError instanceof Error ? updateError.message : 'Unknown error'}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Refresh rankings to update top_students table
     console.log('🔄 Refreshing rankings...');
-    const { error: refreshError } = await supabase.rpc('refresh_rankings');
-    
-    if (refreshError) {
-      console.error('⚠️ Warning: Rankings refresh failed:', refreshError);
-      // Don't fail the request if rankings refresh fails
+    try {
+      const { error: refreshError } = await supabase.rpc('refresh_rankings');
+      
+      if (refreshError) {
+        console.error('⚠️ Warning: Rankings refresh failed:', refreshError);
+        // Don't fail the request if rankings refresh fails
+      }
+    } catch (refreshError) {
+      console.error('⚠️ Warning: Rankings refresh failed with exception:', refreshError);
+      // Continue even if rankings refresh fails
     }
 
     // Log the points update for audit purposes
