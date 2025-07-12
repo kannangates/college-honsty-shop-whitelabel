@@ -66,7 +66,8 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
         department: formData.department,
         shift: formData.shift,
         role: formData.role,
-        points: parseInt(formData.points)
+        points: parseInt(formData.points),
+        userMetadata: { must_change_password: true }
       };
       
       console.log('📤 Sending payload to auth-signup:', payload);
@@ -122,7 +123,9 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
             <UserPlus className="h-5 w-5" />
             Add New Student
           </DialogTitle>
-          <DialogDescription>Create a new student account</DialogDescription>
+          <DialogDescription>
+            Create a new student account. The user will be required to change their password on first login for security.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">

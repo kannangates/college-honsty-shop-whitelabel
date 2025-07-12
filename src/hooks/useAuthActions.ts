@@ -91,7 +91,8 @@ export const useAuthActions = ({
         role: role as Database["public"]["Enums"]["user_role"],
         shift,
         points,
-        captchaToken
+        captchaToken,
+        userMetadata: { must_change_password: true }
       });
 
       if (!signupResult.success) {

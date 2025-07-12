@@ -88,8 +88,10 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
   };
 
   const downloadTemplate = () => {
-    const csvContent = 'student_id,name,email,department,mobile_number,shift,role,initial_points,password\n' +
-                      'ST001,John Doe,john.doe@shasuncollege.edu.in,Computer Science,9876543210,Morning (1st Shift),student,100,password123\n' +
+    const csvContent = '# Bulk User Upload Template\n' +
+                      '# Note: Users will be required to change their password on first login\n' +
+                      'student_id,name,email,department,mobile_number,shift,role,initial_points,password\n' +
+                      'ST001,John Doe,john.doe@shasuncollege.edu.in,Computer Science,9876543210,Morning (1st Shift),student,100,shasun@123\n' +
                       'ST002,Jane Smith,jane.smith@shasuncollege.edu.in,Information Technology,9876543211,Evening (2nd Shift),teacher,150,password456\n' +
                       'ST003,Mike Johnson,mike.johnson@shasuncollege.edu.in,All Department,Full Shift,teacher,200,password789';
     
@@ -123,7 +125,8 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
           password: userData.password,
           role: userData.role,
           shift: userData.shift,
-          points: userData.initial_points
+          points: userData.initial_points,
+          userMetadata: { must_change_password: true }
         }
       });
 
@@ -313,6 +316,9 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
             
             <p className="text-xs text-gray-500">
               Required columns: student_id, name, email, department, mobile_number, shift, role, initial_points, password
+            </p>
+            <p className="text-xs text-blue-600">
+              💡 Users will be required to change their password on first login for security
             </p>
           </div>
 

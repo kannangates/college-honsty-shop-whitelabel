@@ -15,6 +15,7 @@ interface SignupRequest {
   role?: string;
   shift?: string;
   points?: number;
+  userMetadata?: Record<string, unknown>;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -58,7 +59,8 @@ const handler = async (req: Request): Promise<Response> => {
       password,
       role = "student",
       shift = "1",
-      points = 100
+      points = 100,
+      userMetadata = {}
     } = (await req.json()) as SignupRequest;
 
     log("📥 Incoming Payload:", {
@@ -134,7 +136,13 @@ const handler = async (req: Request): Promise<Response> => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { student_id: studentId, name, department, role }
+      user_metadata: { 
+        student_id: studentId, 
+        name, 
+        department, 
+        role,
+        ...userMetadata
+      }
     });
 
     if (authError || !authData?.user?.id) {
