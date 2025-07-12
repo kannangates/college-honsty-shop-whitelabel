@@ -203,11 +203,11 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
           </div>
           
           <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Creating...' : 'Create Student'}
-            </Button>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
+            </Button>
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading ? 'Creating...' : 'Create Student'}
             </Button>
           </div>
         </form>
