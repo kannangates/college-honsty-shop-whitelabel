@@ -167,7 +167,7 @@ const handler = async (req: Request): Promise<Response> => {
       name,
       department,
       email,
-      role,
+      role: role as "admin" | "student" | "teacher" | "developer",
       shift,
       points,
       status: "active",
