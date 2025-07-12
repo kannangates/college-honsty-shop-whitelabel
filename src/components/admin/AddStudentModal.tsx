@@ -60,7 +60,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
     try {
       const { data, error } = await supabase.functions.invoke('auth-signup', {
         body: {
-          student_id: formData.student_id,
+          studentId: formData.student_id,
           name: formData.name,
           email: formData.email,
           password: formData.password,
