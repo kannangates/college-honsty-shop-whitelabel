@@ -90,10 +90,11 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
   const downloadTemplate = () => {
     const csvContent = '# Bulk User Upload Template\n' +
                       '# Note: Users will be required to change their password on first login\n' +
-                      'student_id,name,email,department,mobile_number,shift,role,initial_points,password\n' +
-                      'ST001,John Doe,john.doe@shasuncollege.edu.in,Computer Science,9876543210,Morning (1st Shift),student,100,shasun@123\n' +
-                      'ST002,Jane Smith,jane.smith@shasuncollege.edu.in,Information Technology,9876543211,Evening (2nd Shift),teacher,150,password456\n' +
-                      'ST003,Mike Johnson,mike.johnson@shasuncollege.edu.in,All Department,Full Shift,teacher,200,password789';
+                      '# Email will be automatically generated as: student_id@shasuncollege.edu.in\n' +
+                      'student_id,name,department,shift,role,initial_points,password\n' +
+                      'ST001,John Doe,Computer Science,Morning (1st Shift),student,100,shasun@123\n' +
+                      'ST002,Jane Smith,Information Technology,Evening (2nd Shift),teacher,150,password456\n' +
+                      'ST003,Mike Johnson,All Department,Full Shift,teacher,200,password789';
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -185,16 +186,18 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
         
         // Simple CSV parsing - split by comma and handle quoted values
         const values = dataLines[i].split(',').map(v => v.trim());
+        
+        // Parse based on actual CSV structure: student_id, name, department, shift, role, initial_points, password
         const userData = {
           student_id: values[0] || '',
           name: values[1] || '',
-          email: values[2] || '',
-          department: values[3] || '',
-          mobile_number: values[4] || '',
-          shift: values[5] || 'Morning (1st Shift)',
-          role: values[6] || 'student',
-          initial_points: parseInt(values[7] || '100'),
-          password: values[8] || 'Temp@123'
+          email: `${values[0]}@shasuncollege.edu.in`, // Generate email from student ID
+          department: values[2] || '',
+          mobile_number: '', // Not in CSV, leave empty
+          shift: values[3] || 'Morning (1st Shift)',
+          role: values[4] || 'student',
+          initial_points: parseInt(values[5] || '100'),
+          password: values[6] || 'Temp@123'
         };
 
         // Update current user being processed
@@ -336,7 +339,7 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
             />
             
             <p className="text-xs text-gray-500">
-              Required columns: student_id, name, email, department, mobile_number, shift, role, initial_points, password
+              Required columns: student_id, name, department, shift, role, initial_points, password
             </p>
             <p className="text-xs text-blue-600">
               💡 Users will be required to change their password on first login for security
