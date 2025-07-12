@@ -36,7 +36,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
     name: '',
     email: '',
     department: 'Computer Science',
-    shift: '1',
+    shift: 'Morning (1st Shift)',
     password: '',
     role: 'student',
     points: '0'
@@ -58,17 +58,21 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
     setLoading(true);
 
     try {
+      const payload = {
+        studentId: formData.student_id,
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        department: formData.department,
+        shift: formData.shift,
+        role: formData.role,
+        points: parseInt(formData.points)
+      };
+      
+      console.log('📤 Sending payload to auth-signup:', payload);
+      
       const { data, error } = await supabase.functions.invoke('auth-signup', {
-        body: {
-          studentId: formData.student_id,
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          department: formData.department,
-          shift: parseInt(formData.shift),
-          role: formData.role,
-          points: parseInt(formData.points)
-        }
+        body: payload
       });
 
       if (error) throw error;
@@ -83,7 +87,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
         name: '',
         email: '',
         department: 'Computer Science',
-        shift: '1',
+        shift: 'Morning (1st Shift)',
         password: '',
         role: 'student',
         points: '0'
@@ -196,8 +200,9 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Morning (1st Shift)</SelectItem>
-                <SelectItem value="2">Evening (2nd Shift)</SelectItem>
+                <SelectItem value="Morning (1st Shift)">Morning (1st Shift)</SelectItem>
+                <SelectItem value="Evening (2nd Shift)">Evening (2nd Shift)</SelectItem>
+                <SelectItem value="Full Shift">Full Shift</SelectItem>
               </SelectContent>
             </Select>
           </div>
