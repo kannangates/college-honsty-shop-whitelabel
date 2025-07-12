@@ -137,30 +137,34 @@ const AdminPointsBadges = () => {
         return;
       }
 
-      // Update points in the database
-      const { error } = await supabase
-        .from('users')
-        .update({ 
-          points: (selectedStudent.points || 0) + pointsToAdd,
-          updated_at: new Date().toISOString()
-        })
-        .eq('student_id', manualAllocation.studentId);
+      // Call the Edge Function to update points
+      const { data, error } = await supabase.functions.invoke('update-user-points', {
+        body: {
+          studentId: manualAllocation.studentId,
+          points: pointsToAdd,
+          reason: manualAllocation.reason
+        }
+      });
 
       if (error) throw error;
 
-      toast({
-        title: 'Points Updated',
-        description: `Successfully updated points for ${selectedStudent.name}`,
-      });
+      if (data?.success) {
+        toast({
+          title: 'Points Updated',
+          description: `Successfully updated points for ${selectedStudent.name}`,
+        });
 
-      // Reset form and refresh students
-      setManualAllocation({ studentId: '', points: '', reason: '' });
-      await fetchStudents();
+        // Reset form and refresh students
+        setManualAllocation({ studentId: '', points: '', reason: '' });
+        await fetchStudents();
+      } else {
+        throw new Error(data?.error || 'Failed to update points');
+      }
     } catch (error) {
       console.error('Error updating points:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update points',
+        description: error instanceof Error ? error.message : 'Failed to update points',
         variant: 'destructive',
       });
     }
