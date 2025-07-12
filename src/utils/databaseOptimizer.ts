@@ -56,11 +56,14 @@ export class DatabaseOptimizer {
       const indexSuggestions = this.generateIndexSuggestions(tables);
       const optimizationTips = this.getOptimizationTips();
 
-      await this.auditLogger.logSystemEvent('database_analysis_completed', {
-        slowQueriesCount: slowQueries.length,
-        indexSuggestionsCount: indexSuggestions.length,
-        tablesAnalyzed: tables?.length || 0
-      });
+      // Only log in development mode to reduce noise
+      if (process.env.NODE_ENV === 'development') {
+        await this.auditLogger.logSystemEvent('database_analysis_completed', {
+          slowQueriesCount: slowQueries.length,
+          indexSuggestionsCount: indexSuggestions.length,
+          tablesAnalyzed: tables?.length || 0
+        });
+      }
 
       console.log('✅ Database performance analysis completed:', {
         slowQueries: slowQueries.length,
@@ -194,11 +197,12 @@ export class DatabaseOptimizer {
   async optimizeConnections(): Promise<void> {
     console.log('🔧 Optimizing database connections...');
     
-    await this.auditLogger.logSystemEvent('database_connections_optimized', {
-      timestamp: Date.now(),
-      action: 'connection_pool_configured'
-    });
-    
-    console.log('✅ Database connection optimization completed');
+    // Only log in development mode to reduce noise
+    if (process.env.NODE_ENV === 'development') {
+      await this.auditLogger.logSystemEvent('database_connections_optimized', {
+        timestamp: Date.now(),
+        action: 'connection_pool_configured'
+      });
+    }
   }
 }

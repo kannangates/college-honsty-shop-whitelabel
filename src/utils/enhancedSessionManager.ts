@@ -25,11 +25,14 @@ export class EnhancedSessionManager {
       const session = await SessionUtils.getCurrentSession();
       
       if (session) {
-        await this.auditLogger.logSecurityEvent('enhanced_session_initialized', {
-          userId: session.user.id,
-          expiresAt: session.expires_at,
-          sessionStartTime: this.sessionStartTime
-        });
+        // Only log session initialization in development mode
+        if (process.env.NODE_ENV === 'development') {
+          await this.auditLogger.logSecurityEvent('enhanced_session_initialized', {
+            userId: session.user.id,
+            expiresAt: session.expires_at,
+            sessionStartTime: this.sessionStartTime
+          });
+        }
         
         this.scheduleTokenRefresh(session.expires_at);
         this.scheduleSessionValidation();

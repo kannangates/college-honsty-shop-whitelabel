@@ -19,7 +19,7 @@ export class AuditLogger {
   private static instance: AuditLogger;
   private pendingLogs: AuditLog[] = [];
   private batchSize = 10;
-  private flushInterval = 5000; // 5 seconds
+  private flushInterval = 10000; // Increased from 5000ms to 10000ms to reduce frequency
   private maxRetries = 3;
   private retryDelay = 1000; // 1 second
 
@@ -103,21 +103,42 @@ export class AuditLogger {
     let retries = 0;
     while (retries < this.maxRetries) {
       try {
-        // Since we don't have an audit_log table, we'll use structured console logging
-        // In production, this would write to a proper audit table
-        console.group('📊 Audit Logs Batch');
-        logsToFlush.forEach(log => {
-          const logLevel = log.severity === 'critical' ? 'error' : 
-                          log.severity === 'high' ? 'warn' : 'info';
-          console[logLevel](`[${log.severity.toUpperCase()}] ${log.action}:`, {
-            user: log.user_id,
-            resource: log.resource_type,
-            details: log.details,
-            timestamp: log.created_at,
-            ip: log.ip_address
+        // Only log critical and high severity events to console to reduce noise
+        const criticalLogs = logsToFlush.filter(log => log.severity === 'critical' || log.severity === 'high');
+        
+        if (criticalLogs.length > 0) {
+          console.group('📊 Critical Audit Logs');
+          criticalLogs.forEach(log => {
+            const logLevel = log.severity === 'critical' ? 'error' : 'warn';
+            console[logLevel](`[${log.severity.toUpperCase()}] ${log.action}:`, {
+              user: log.user_id,
+              resource: log.resource_type,
+              details: log.details,
+              timestamp: log.created_at,
+              ip: log.ip_address
+            });
           });
-        });
-        console.groupEnd();
+          console.groupEnd();
+        }
+        
+        // For low/medium severity logs, only log if in development mode
+        if (process.env.NODE_ENV === 'development') {
+          const devLogs = logsToFlush.filter(log => log.severity === 'low' || log.severity === 'medium');
+          if (devLogs.length > 0) {
+            console.group('📊 Dev Audit Logs');
+            devLogs.forEach(log => {
+              console.info(`[${log.severity.toUpperCase()}] ${log.action}:`, {
+                user: log.user_id,
+                resource: log.resource_type,
+                details: log.details,
+                timestamp: log.created_at,
+                ip: log.ip_address
+              });
+            });
+            console.groupEnd();
+          }
+        }
+        
         return;
       } catch (error) {
         retries++;

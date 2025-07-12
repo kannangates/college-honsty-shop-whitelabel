@@ -36,7 +36,7 @@ export const useAuthState = () => {
     const loadingTimeout = setTimeout(() => {
       console.warn('⚠️ Auth loading timeout reached, forcing loading to false');
       setLoading(false);
-    }, 3000);
+    }, 1500); // Reduced from 3000ms to 1500ms for faster UX
 
     return () => clearTimeout(loadingTimeout);
   }, []);
@@ -47,7 +47,7 @@ export const useAuthState = () => {
       console.log('🔍 Fetching profile for user:', userId);
       
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 2000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 1000) // Reduced from 2000ms to 1000ms
       );
       
       const fetchPromise = supabase
@@ -93,11 +93,11 @@ export const useAuthState = () => {
         
         console.log('🔄 Auth state changed:', event, newSession?.user?.email);
         
-        // Always update session and user state
+        // Always update session and user state immediately
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
-        // Handle profile fetching - non-blocking
+        // Handle profile fetching - non-blocking and faster
         const newUserId = newSession?.user?.id || null;
         if (newUserId && newUserId !== currentUserId) {
           currentUserId = newUserId;
@@ -114,7 +114,7 @@ export const useAuthState = () => {
       }
     );
 
-    // Check for existing session on mount
+    // Check for existing session on mount - optimized for speed
     const initializeAuth = async () => {
       if (!isMounted) return;
       
@@ -133,9 +133,9 @@ export const useAuthState = () => {
           return;
         }
 
-        // Fallback to regular session check
+        // Fallback to regular session check with shorter timeout
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session check timeout')), 2000)
+          setTimeout(() => reject(new Error('Session check timeout')), 1000) // Reduced from 2000ms to 1000ms
         );
         
         const sessionPromise = supabase.auth.getSession();
@@ -198,10 +198,9 @@ export const useAuthState = () => {
     setUser,
     setProfile,
     setSession,
-    setBackdoorMode,
-    setLoading,
+    fetchProfile,
     backdoorMode,
-    fetchProfile
+    setBackdoorMode,
   };
 };
 

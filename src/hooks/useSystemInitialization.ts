@@ -11,7 +11,12 @@ import { WHITELABEL_CONFIG } from '@/config';
 
 export const useSystemInitialization = () => {
   useEffect(() => {
-    initializeEnhancedSystem();
+    // Defer heavy initialization to avoid blocking the main thread
+    const initTimer = setTimeout(() => {
+      initializeEnhancedSystem();
+    }, 100); // Small delay to let auth load first
+
+    return () => clearTimeout(initTimer);
   }, []);
 
   const initializeEnhancedSystem = async () => {
@@ -23,12 +28,14 @@ export const useSystemInitialization = () => {
       const initTimingId = performanceMonitor.startTiming('system_initialization');
       console.log('📊 Performance monitoring initialized');
 
-      // Initialize enhanced session management
+      // Initialize enhanced session management (non-blocking)
       const sessionManager = EnhancedSessionManager.getInstance();
-      await sessionManager.initializeSession();
+      sessionManager.initializeSession().catch(error => {
+        console.error('❌ Session manager initialization failed:', error);
+      });
       console.log('✅ Enhanced session management initialized');
 
-      // Initialize security manager
+      // Initialize security manager (non-blocking)
       const securityManager = SecurityManager.getInstance();
       const securityStatus = securityManager.getComplianceStatus();
       console.log('🔒 Security manager initialized - Score:', securityStatus.score);
@@ -37,41 +44,47 @@ export const useSystemInitialization = () => {
       const alertManager = AlertManager.getInstance();
       console.log('📢 Enhanced alert system initialized');
 
-      // Initialize CDN manager with image optimization
-      const cdnManager = CDNManager.getInstance();
-      
-      // Preload critical images with retry mechanism
-      const criticalImages = [
-        WHITELABEL_CONFIG.branding.logo.url,
-        WHITELABEL_CONFIG.badge_images.achievement_badge,
-        WHITELABEL_CONFIG.badge_images.honor_badge,
-        WHITELABEL_CONFIG.badge_images.excellence_badge
-      ];
-      
-      cdnManager.preloadImages(criticalImages);
-      
-      // Track performance for each critical image
-      criticalImages.forEach(url => {
-        cdnManager.trackImagePerformance(url);
-      });
-      
-      console.log('🖼️ Enhanced CDN manager initialized with performance tracking');
-
-      // Initialize database optimizer
-      const dbOptimizer = DatabaseOptimizer.getInstance();
-      await dbOptimizer.optimizeConnections();
-      
-      // Get initial optimization analysis
-      const analysisPromise = dbOptimizer.analyzePerformance();
-      analysisPromise.then(analysis => {
-        console.log('🗄️ Database optimization analysis completed:', {
-          slowQueries: analysis.slowQueries.length,
-          indexSuggestions: analysis.indexSuggestions.length,
-          tips: analysis.optimizationTips.length
+      // Initialize CDN manager with image optimization (deferred)
+      setTimeout(() => {
+        const cdnManager = CDNManager.getInstance();
+        
+        // Preload critical images with retry mechanism
+        const criticalImages = [
+          WHITELABEL_CONFIG.branding.logo.url,
+          WHITELABEL_CONFIG.badge_images.achievement_badge,
+          WHITELABEL_CONFIG.badge_images.honor_badge,
+          WHITELABEL_CONFIG.badge_images.excellence_badge
+        ];
+        
+        cdnManager.preloadImages(criticalImages);
+        
+        // Track performance for each critical image
+        criticalImages.forEach(url => {
+          cdnManager.trackImagePerformance(url);
         });
-      });
+        
+        console.log('🖼️ Enhanced CDN manager initialized with performance tracking');
+      }, 500); // Defer CDN operations
 
-      // Set up ISO compliance monitoring
+      // Initialize database optimizer (deferred)
+      setTimeout(async () => {
+        const dbOptimizer = DatabaseOptimizer.getInstance();
+        await dbOptimizer.optimizeConnections();
+        
+        // Get initial optimization analysis
+        const analysisPromise = dbOptimizer.analyzePerformance();
+        analysisPromise.then(analysis => {
+          console.log('🗄️ Database optimization analysis completed:', {
+            slowQueries: analysis.slowQueries.length,
+            indexSuggestions: analysis.indexSuggestions.length,
+            tips: analysis.optimizationTips.length
+          });
+        }).catch(error => {
+          console.error('❌ Database optimization failed:', error);
+        });
+      }, 1000); // Defer database operations
+
+      // Set up ISO compliance monitoring (non-blocking)
       if (WHITELABEL_CONFIG.system.iso_compliance.enable_audit_logging) {
         console.log('📋 ISO 27001 audit logging enabled');
       }
@@ -84,19 +97,21 @@ export const useSystemInitialization = () => {
         console.log('🛡️ ISO 27001 security monitoring enabled');
       }
 
-      // Request enhanced notification permissions
-      if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-          console.log('🔔 Enhanced notification permission:', permission);
-          if (permission === 'granted') {
-            // Test notification for system readiness
-            new Notification('System Ready', {
-              body: `${WHITELABEL_CONFIG.app.name} is now fully operational with enhanced security and performance monitoring.`,
-              icon: WHITELABEL_CONFIG.branding.favicon
-            });
-          }
-        });
-      }
+      // Request enhanced notification permissions (deferred)
+      setTimeout(() => {
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission().then(permission => {
+            console.log('🔔 Enhanced notification permission:', permission);
+            if (permission === 'granted') {
+              // Test notification for system readiness
+              new Notification('System Ready', {
+                body: `${WHITELABEL_CONFIG.app.name} is now fully operational with enhanced security and performance monitoring.`,
+                icon: WHITELABEL_CONFIG.branding.favicon
+              });
+            }
+          });
+        }
+      }, 2000); // Defer notification permission request
 
       // End performance timing with correct ID
       performanceMonitor.endTiming(initTimingId, 'api');
