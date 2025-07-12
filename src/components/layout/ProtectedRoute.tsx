@@ -19,12 +19,8 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return () => clearTimeout(timeout);
   }, []);
 
-  // Store the intended destination for redirect after login
-  useEffect(() => {
-    if (!user && !loading && location.pathname !== '/auth') {
-      localStorage.setItem('redirectAfterLogin', location.pathname + location.search);
-    }
-  }, [user, loading, location]);
+  // No longer store redirect URL - users will always go to dashboard after login
+  // This prevents role mismatch issues when users visit admin pages while logged out
 
   // If timeout reached and still loading, force navigation to auth
   if (timeoutReached && loading) {
