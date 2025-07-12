@@ -27,7 +27,6 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
     name: string;
     email: string;
     department: string;
-    mobile_number: string;
     shift: string;
     password: string;
     role: string;
@@ -37,7 +36,6 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
     name: '',
     email: '',
     department: 'Computer Science',
-    mobile_number: '',
     shift: '1',
     password: '',
     role: 'student',
@@ -67,7 +65,6 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
           email: formData.email,
           password: formData.password,
           department: formData.department,
-          mobile_number: formData.mobile_number,
           shift: parseInt(formData.shift),
           role: formData.role,
           points: parseInt(formData.points)
@@ -86,7 +83,6 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
         name: '',
         email: '',
         department: 'Computer Science',
-        mobile_number: '',
         shift: '1',
         password: '',
         role: 'student',
@@ -167,14 +163,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
             <DepartmentCombobox value={formData.department} onChange={(val) => setFormData({ ...formData, department: val })} />
           </div>
           
-          <div>
-            <Label htmlFor="mobile">Mobile Number</Label>
-            <Input
-              id="mobile"
-              value={formData.mobile_number}
-              onChange={(e) => setFormData({...formData, mobile_number: e.target.value})}
-            />
-          </div>
+
           
           <div>
             <Label htmlFor="role">Role</Label>
