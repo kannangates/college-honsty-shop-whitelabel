@@ -1,45 +1,65 @@
-import React from "react";
-import { toast } from "@/hooks/use-toast";
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 
-type State = {
-  hasError: boolean;
-  error?: Error;
-};
-
-interface ErrorInfo {
-  componentStack: string;
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
-export class ErrorBoundary extends React.Component<{ children: React.ReactNode }, State> {
-  constructor(props: { children: React.ReactNode }) {
+interface State {
+  hasError: boolean;
+  error?: Error;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): State {
+    // Update state so the next render will show the fallback UI
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    // Custom logging can go here
-    toast({
-      title: "Unexpected Error",
-      description: error.message,
-      variant: "destructive"
-    });
-    // Optionally log info to monitoring
-    // console.error(error, info);
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log the error to console for debugging
+    console.error('❌ Error Boundary caught an error:', error);
+    console.error('Error info:', errorInfo);
+    
+    // You can also log the error to an error reporting service here
+    // Example: Sentry.captureException(error, { extra: errorInfo });
   }
 
   render() {
     if (this.state.hasError) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh]">
-          <div className="text-2xl font-bold text-red-600 mb-2">Something went wrong</div>
-          <div className="text-gray-500">{this.state.error?.message || "Unknown error."}</div>
+      // You can render any custom fallback UI
+      return this.props.fallback || (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div className="mt-4 text-center">
+              <h3 className="text-lg font-medium text-gray-900">Something went wrong</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                We're sorry, but something unexpected happened. Please try refreshing the page.
+              </p>
+              <div className="mt-4">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Refresh Page
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
+
     return this.props.children;
   }
 }
