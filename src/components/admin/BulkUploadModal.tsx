@@ -167,6 +167,11 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
       
       setProgress(prev => ({ ...prev, total: dataLines.length }));
 
+      // Use local variables to track results
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: { row: number; error: string; user: string }[] = [];
+
       for (let i = 0; i < dataLines.length; i++) {
         const values = dataLines[i].split(',');
         const userData = {
@@ -191,11 +196,14 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
         const result = await createUserViaEdgeFunction(userData, i + 2);
 
         if (result.success) {
+          successCount++;
           setProgress(prev => ({ 
             ...prev, 
             successCount: prev.successCount + 1 
           }));
         } else {
+          errorCount++;
+          errors.push({ row: result.row, error: result.error, user: result.user });
           setProgress(prev => ({ 
             ...prev, 
             errorCount: prev.errorCount + 1,
@@ -208,17 +216,19 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
         }
       }
 
-      const finalResults = {
-        success: progress.successCount,
-        errors: progress.errorCount
-      };
-
-      setResults(finalResults);
+      // Set results and progress with final values
+      setResults({ success: successCount, errors: errorCount });
+      setProgress(prev => ({
+        ...prev,
+        successCount,
+        errorCount,
+        errors
+      }));
       setStatus('completed');
       
       toast({
         title: 'Upload Complete',
-        description: `${finalResults.success} users created successfully, ${finalResults.errors} errors`,
+        description: `${successCount} users created successfully, ${errorCount} errors`,
       });
 
       onUploadComplete();
