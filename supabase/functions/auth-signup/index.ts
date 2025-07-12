@@ -51,6 +51,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+    const rawBody = await req.text();
+    log("🔍 Raw request body:", rawBody);
+    
+    const bodyData = JSON.parse(rawBody) as SignupRequest;
+    log("🔍 Parsed body data:", bodyData);
+
     const {
       studentId,
       name,
@@ -61,7 +67,7 @@ const handler = async (req: Request): Promise<Response> => {
       shift = "1",
       points = 100,
       userMetadata = {}
-    } = (await req.json()) as SignupRequest;
+    } = bodyData;
 
     log("📥 Incoming Payload:", {
       studentId,
@@ -71,6 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
       shift,
       role,
       points,
+      userMetadata,
       origin: req.headers.get("origin"),
       ip: req.headers.get("x-forwarded-for")
     });

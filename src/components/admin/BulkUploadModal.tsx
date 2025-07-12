@@ -116,26 +116,33 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
     password: string;
   }, rowIndex: number) => {
     try {
+      const payload = {
+        studentId: userData.student_id,
+        name: userData.name,
+        email: userData.email,
+        department: userData.department,
+        password: userData.password,
+        role: userData.role,
+        shift: userData.shift,
+        points: userData.initial_points,
+        userMetadata: { must_change_password: true }
+      };
+
+      console.log(`🔍 Sending payload for row ${rowIndex}:`, payload);
+
       const { data, error } = await supabase.functions.invoke('auth-signup', {
-        body: {
-          studentId: userData.student_id,
-          name: userData.name,
-          email: userData.email,
-          department: userData.department,
-          password: userData.password,
-          role: userData.role,
-          shift: userData.shift,
-          points: userData.initial_points,
-          userMetadata: { must_change_password: true }
-        }
+        body: payload
       });
 
       if (error || data.error) {
+        console.error(`❌ Error for row ${rowIndex}:`, error || data.error);
         throw new Error(error?.message || data.error || 'Failed to create user');
       }
 
+      console.log(`✅ Success for row ${rowIndex}:`, data);
       return { success: true };
     } catch (error) {
+      console.error(`❌ Exception for row ${rowIndex}:`, error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -173,17 +180,21 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
       const errors: { row: number; error: string; user: string }[] = [];
 
       for (let i = 0; i < dataLines.length; i++) {
-        const values = dataLines[i].split(',');
+        // Skip comment lines
+        if (dataLines[i].startsWith('#')) continue;
+        
+        // Simple CSV parsing - split by comma and handle quoted values
+        const values = dataLines[i].split(',').map(v => v.trim());
         const userData = {
-          student_id: values[0]?.trim(),
-          name: values[1]?.trim(),
-          email: values[2]?.trim(),
-          department: values[3]?.trim(),
-          mobile_number: values[4]?.trim(),
-          shift: values[5]?.trim() || 'Morning (1st Shift)',
-          role: values[6]?.trim() || 'student',
-          initial_points: parseInt(values[7]?.trim() || '100'),
-          password: values[8]?.trim() || 'Temp@123'
+          student_id: values[0] || '',
+          name: values[1] || '',
+          email: values[2] || '',
+          department: values[3] || '',
+          mobile_number: values[4] || '',
+          shift: values[5] || 'Morning (1st Shift)',
+          role: values[6] || 'student',
+          initial_points: parseInt(values[7] || '100'),
+          password: values[8] || 'Temp@123'
         };
 
         // Update current user being processed
