@@ -1,6 +1,5 @@
 
 import React, { useState, useCallback, useMemo } from "react";
-import DashboardHeader from './DashboardHeader';
 import DashboardStats from './DashboardStats';
 import UserPositionCard from './UserPositionCard';
 import TodaysSoldProductsTable from '../ui/TodaysSoldProductsTable';
@@ -72,8 +71,6 @@ const DashboardContent = React.memo(() => {
 
   return (
     <DashboardLayout>
-      <DashboardHeader />
-      
       {/* 1st Row: All Dashboard Stats Cards */}
       <DashboardStats
         todaysStats={todaysStats}
