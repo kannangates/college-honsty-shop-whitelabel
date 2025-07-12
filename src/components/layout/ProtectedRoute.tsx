@@ -14,7 +14,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const timeout = setTimeout(() => {
       console.warn('⚠️ ProtectedRoute loading timeout reached');
       setTimeoutReached(true);
-    }, 1000); // Reduced from 1500ms to 1000ms for faster UX
+    }, 2000); // Increased from 1000ms to 2000ms to give more time for auth
 
     return () => clearTimeout(timeout);
   }, []);

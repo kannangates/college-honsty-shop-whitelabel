@@ -40,18 +40,14 @@ export class DatabaseOptimizer {
     indexSuggestions: IndexSuggestion[];
     optimizationTips: string[];
   }> {
-    console.log('🔍 Analyzing database performance...');
-    
     try {
       // Get actual table information to provide more realistic suggestions
       const { data: tables, error } = await supabase.rpc('get_table_info');
       
       if (error) {
-        console.warn('Unable to fetch real table data, using simulated data:', error);
+        // Silent fail - no logging needed for expected errors
       }
 
-      console.log('📊 Database tables analyzed:', tables?.length || 0);
-      
       const slowQueries = await this.identifySlowQueries();
       const indexSuggestions = this.generateIndexSuggestions(tables);
       const optimizationTips = this.getOptimizationTips();
@@ -64,12 +60,6 @@ export class DatabaseOptimizer {
           tablesAnalyzed: tables?.length || 0
         });
       }
-
-      console.log('✅ Database performance analysis completed:', {
-        slowQueries: slowQueries.length,
-        suggestions: indexSuggestions.length,
-        tips: optimizationTips.length
-      });
 
       return { slowQueries, indexSuggestions, optimizationTips };
     } catch (error) {
@@ -87,7 +77,6 @@ export class DatabaseOptimizer {
   private async identifySlowQueries(): Promise<SlowQuery[]> {
     // Note: This is simulated data as we cannot access pg_stat_statements directly
     // In production, this would query actual performance statistics
-    console.log('⚠️ Note: Query performance data is simulated for demo purposes');
     
     return [
       {
@@ -128,8 +117,6 @@ export class DatabaseOptimizer {
 
     // Add table-specific suggestions if we have real table data
     if (tables && tables.length > 0) {
-      console.log('📋 Generating suggestions based on actual tables:', tables.map(t => t.table_name));
-      
       tables.forEach(table => {
         if (table.table_name === 'users') {
           suggestions.push({
@@ -195,8 +182,6 @@ export class DatabaseOptimizer {
 
   // Connection optimization
   async optimizeConnections(): Promise<void> {
-    console.log('🔧 Optimizing database connections...');
-    
     // Only log in development mode to reduce noise
     if (process.env.NODE_ENV === 'development') {
       await this.auditLogger.logSystemEvent('database_connections_optimized', {

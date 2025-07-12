@@ -1,16 +1,14 @@
 
 import React, { createContext, useContext } from 'react';
-// eslint-disable react-refresh/only-export-components
 import type { User, Session } from '@supabase/supabase-js';
-import { Tables } from '@/integrations/supabase/types';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAuthActions } from '@/hooks/useAuthActions';
+import { useAuthCleanup } from '@/hooks/auth/useAuthCleanup';
+import { useAuthRedirect } from '@/hooks/auth/useAuthRedirect';
 import { useSystemInitialization } from '@/hooks/useSystemInitialization';
-import { useAuth } from './useAuth';
+import { UserProfile } from '@/types/auth';
 
-type UserProfile = Tables<'users'>;
-
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   session: Session | null;
@@ -33,7 +31,6 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -88,4 +85,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

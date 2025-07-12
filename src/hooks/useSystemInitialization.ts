@@ -24,12 +24,9 @@ export const useSystemInitialization = () => {
 
   const initializeEnhancedSystem = async () => {
     try {
-      console.log('🚀 Initializing enhanced system with ISO compliance...');
-
       // Initialize performance monitoring first
       const performanceMonitor = PerformanceMonitor.getInstance();
       const initTimingId = performanceMonitor.startTiming('system_initialization');
-      console.log('📊 Performance monitoring initialized');
 
       // Initialize enhanced session management (non-blocking)
       try {
@@ -37,7 +34,6 @@ export const useSystemInitialization = () => {
         sessionManager.initializeSession().catch(error => {
           console.error('❌ Session manager initialization failed:', error);
         });
-        console.log('✅ Enhanced session management initialized');
       } catch (error) {
         console.error('❌ Session manager failed to initialize:', error);
       }
@@ -45,16 +41,14 @@ export const useSystemInitialization = () => {
       // Initialize security manager (non-blocking)
       try {
         const securityManager = SecurityManager.getInstance();
-        const securityStatus = securityManager.getComplianceStatus();
-        console.log('🔒 Security manager initialized - Score:', securityStatus.score);
+        securityManager.getComplianceStatus();
       } catch (error) {
         console.error('❌ Security manager failed to initialize:', error);
       }
 
       // Initialize alert system (AlertManager auto-initializes, no initialize method needed)
       try {
-        const alertManager = AlertManager.getInstance();
-        console.log('📢 Enhanced alert system initialized');
+        AlertManager.getInstance();
       } catch (error) {
         console.error('❌ Alert manager failed to initialize:', error);
       }
@@ -78,8 +72,6 @@ export const useSystemInitialization = () => {
           criticalImages.forEach(url => {
             cdnManager.trackImagePerformance(url);
           });
-          
-          console.log('🖼️ Enhanced CDN manager initialized with performance tracking');
         } catch (error) {
           console.error('❌ CDN manager failed to initialize:', error);
         }
@@ -93,13 +85,7 @@ export const useSystemInitialization = () => {
           
           // Get initial optimization analysis
           const analysisPromise = dbOptimizer.analyzePerformance();
-          analysisPromise.then(analysis => {
-            console.log('🗄️ Database optimization analysis completed:', {
-              slowQueries: analysis.slowQueries.length,
-              indexSuggestions: analysis.indexSuggestions.length,
-              tips: analysis.optimizationTips.length
-            });
-          }).catch(error => {
+          analysisPromise.catch(error => {
             console.error('❌ Database optimization failed:', error);
           });
         } catch (error) {
@@ -109,17 +95,10 @@ export const useSystemInitialization = () => {
 
       // Set up ISO compliance monitoring (non-blocking)
       try {
-        if (WHITELABEL_CONFIG.system.iso_compliance.enable_audit_logging) {
-          console.log('📋 ISO 27001 audit logging enabled');
-        }
-        
-        if (WHITELABEL_CONFIG.system.iso_compliance.enable_performance_monitoring) {
-          console.log('⚡ ISO 25010 performance monitoring enabled');
-        }
-        
-        if (WHITELABEL_CONFIG.system.iso_compliance.enable_security_monitoring) {
-          console.log('🛡️ ISO 27001 security monitoring enabled');
-        }
+        // Silent initialization - no logging needed
+        const _auditLogging = WHITELABEL_CONFIG.system.iso_compliance.enable_audit_logging;
+        const _performanceMonitoring = WHITELABEL_CONFIG.system.iso_compliance.enable_performance_monitoring;
+        const _securityMonitoring = WHITELABEL_CONFIG.system.iso_compliance.enable_security_monitoring;
       } catch (error) {
         console.error('❌ ISO compliance monitoring failed to initialize:', error);
       }
@@ -129,7 +108,6 @@ export const useSystemInitialization = () => {
         try {
           if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission().then(permission => {
-              console.log('🔔 Enhanced notification permission:', permission);
               if (permission === 'granted') {
                 // Test notification for system readiness
                 new Notification('System Ready', {
@@ -146,9 +124,6 @@ export const useSystemInitialization = () => {
 
       // End performance timing with correct ID
       performanceMonitor.endTiming(initTimingId, 'api');
-
-      console.log('✅ Enhanced system initialization completed successfully');
-      console.log('📈 Performance Score:', performanceMonitor.getPerformanceScore());
       
     } catch (error) {
       console.error('❌ Enhanced system initialization failed:', error);

@@ -2,10 +2,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
-import { Tables } from '@/integrations/supabase/types';
+import { UserProfile } from '@/types/auth';
 import { AuthService } from '@/services/authService';
-
-type UserProfile = Tables<'users'>;
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -32,11 +30,11 @@ export const useAuthState = () => {
       return;
     }
 
-    // Reduced timeout for faster loading experience
+    // Increased timeout for more reliable auth loading
     const loadingTimeout = setTimeout(() => {
       console.warn('⚠️ Auth loading timeout reached, forcing loading to false');
       setLoading(false);
-    }, 1000); // Reduced from 1500ms to 1000ms for faster UX
+    }, 3000); // Increased from 1000ms to 3000ms for more reliable auth
 
     return () => clearTimeout(loadingTimeout);
   }, []);
@@ -44,10 +42,8 @@ export const useAuthState = () => {
   // Optimized profile fetching with shorter timeout
   const fetchProfile = async (userId: string): Promise<void> => {
     try {
-      console.log('🔍 Fetching profile for user:', userId);
-      
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 800) // Reduced from 1000ms to 800ms
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 1500) // Increased from 800ms to 1500ms
       );
       
       const fetchPromise = supabase
@@ -67,7 +63,6 @@ export const useAuthState = () => {
         return;
       }
       
-      console.log('✅ Profile loaded successfully:', data?.name, data?.student_id);
       setProfile(data);
     } catch (error) {
       console.error("❌ Profile fetch exception:", error);
@@ -90,8 +85,6 @@ export const useAuthState = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
         if (!isMounted) return;
-        
-        console.log('🔄 Auth state changed:', event, newSession?.user?.email);
         
         // Always update session and user state immediately
         setSession(newSession);
@@ -119,8 +112,6 @@ export const useAuthState = () => {
       if (!isMounted) return;
       
       try {
-        console.log('🚀 Initializing auth state...');
-        
         // Try to restore session from our custom storage first
         const { session: restoredSession, profile: restoredProfile } = await AuthService.restoreSession();
         
@@ -135,7 +126,7 @@ export const useAuthState = () => {
 
         // Fallback to regular session check with shorter timeout
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session check timeout')), 800) // Reduced from 1000ms to 800ms
+          setTimeout(() => reject(new Error('Session check timeout')), 1500) // Increased from 800ms to 1500ms
         );
         
         const sessionPromise = supabase.auth.getSession();
@@ -198,6 +189,7 @@ export const useAuthState = () => {
     setUser,
     setProfile,
     setSession,
+    setLoading,
     fetchProfile,
     backdoorMode,
     setBackdoorMode,

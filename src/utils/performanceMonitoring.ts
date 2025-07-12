@@ -57,7 +57,7 @@ export class PerformanceMonitor {
         navObserver.observe({ entryTypes: ['navigation'] });
         this.observers.set('navigation', navObserver);
       } catch (error) {
-        console.warn('Navigation observer not supported:', error);
+        // Silent fail - no logging needed
       }
 
       // Observe resource timing
@@ -82,7 +82,7 @@ export class PerformanceMonitor {
         resourceObserver.observe({ entryTypes: ['resource'] });
         this.observers.set('resource', resourceObserver);
       } catch (error) {
-        console.warn('Resource observer not supported:', error);
+        // Silent fail - no logging needed
       }
 
       // Observe largest contentful paint
@@ -101,7 +101,7 @@ export class PerformanceMonitor {
         lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
         this.observers.set('lcp', lcpObserver);
       } catch (error) {
-        console.warn('LCP observer not supported:', error);
+        // Silent fail - no logging needed
       }
     }
   }
@@ -113,7 +113,7 @@ export class PerformanceMonitor {
       try {
         performance.mark(`${id}-start`);
       } catch (error) {
-        console.warn('Performance mark failed:', error);
+        // Silent fail - no logging needed
       }
     }
     
@@ -136,7 +136,7 @@ export class PerformanceMonitor {
         performance.clearMarks(`${id}-end`);
         performance.clearMeasures(id);
       } catch (error) {
-        console.warn('Performance measurement failed:', error);
+        // Silent fail - no logging needed
       }
     }
   }
@@ -171,8 +171,8 @@ export class PerformanceMonitor {
   private checkThresholds(metric: PerformanceMetric): void {
     if (metric.severity === 'critical') {
       console.error(`🚨 Critical performance issue: ${metric.name} took ${metric.duration.toFixed(2)}ms`);
-    } else if (metric.severity === 'high' && metric.duration > 5000) {
-      // Only log high severity if duration is truly problematic
+    } else if (metric.severity === 'high' && metric.duration > 10000) {
+      // Only log high severity if duration is truly problematic (>10 seconds)
       console.warn(`⚠️ Performance threshold exceeded: ${metric.name} took ${metric.duration.toFixed(2)}ms`);
     }
   }
