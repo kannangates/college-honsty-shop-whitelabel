@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,16 @@ import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface Student {
+  id: string;
+  student_id: string;
+  name: string;
+  department?: string;
+  points: number;
+}
 
 const AdminPointsBadges = () => {
   const [pointsConfig, setPointsConfig] = useState({
@@ -33,6 +43,13 @@ const AdminPointsBadges = () => {
     maxPoints: ''
   });
 
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [studentPopoverOpen, setStudentPopoverOpen] = useState(false);
+  const [reasonPopoverOpen, setReasonPopoverOpen] = useState(false);
+
+  const { toast } = useToast();
+
   const reasons = [
     'Payment Completion',
     'Early Payment Bonus',
@@ -42,14 +59,34 @@ const AdminPointsBadges = () => {
     'Refund Processing'
   ];
 
-  const STUDENTS = [
-    { value: '569', label: '569 - Radhika' },
-    { value: '570', label: '570 - John Doe' },
-    { value: '571', label: '571 - Jane Smith' },
-  ];
+  // Fetch students from the users table
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, student_id, name, department, points')
+        .eq('role', 'student')
+        .eq('status', 'active')
+        .order('name', { ascending: true });
 
-  const [studentPopoverOpen, setStudentPopoverOpen] = useState(false);
-  const [reasonPopoverOpen, setReasonPopoverOpen] = useState(false);
+      if (error) throw error;
+      setStudents(data || []);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load students',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
   const handlePointsConfigChange = (field: string, value: string) => {
     setPointsConfig(prev => ({ ...prev, [field]: parseInt(value) || 0 }));
@@ -68,10 +105,65 @@ const AdminPointsBadges = () => {
     // Implementation for saving points configuration
   };
 
-  const handleUpdatePoints = () => {
-    console.log('Updating points:', manualAllocation);
-    // Implementation for manual points allocation
-    setManualAllocation({ studentId: '', points: '', reason: '' });
+  const handleUpdatePoints = async () => {
+    if (!manualAllocation.studentId || !manualAllocation.points || !manualAllocation.reason) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please fill in all fields',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const pointsToAdd = parseInt(manualAllocation.points);
+      if (isNaN(pointsToAdd)) {
+        toast({
+          title: 'Invalid Points',
+          description: 'Please enter a valid number for points',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Find the selected student
+      const selectedStudent = students.find(s => s.student_id === manualAllocation.studentId);
+      if (!selectedStudent) {
+        toast({
+          title: 'Student Not Found',
+          description: 'Selected student not found',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Update points in the database
+      const { error } = await supabase
+        .from('users')
+        .update({ 
+          points: (selectedStudent.points || 0) + pointsToAdd,
+          updated_at: new Date().toISOString()
+        })
+        .eq('student_id', manualAllocation.studentId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Points Updated',
+        description: `Successfully updated points for ${selectedStudent.name}`,
+      });
+
+      // Reset form and refresh students
+      setManualAllocation({ studentId: '', points: '', reason: '' });
+      await fetchStudents();
+    } catch (error) {
+      console.error('Error updating points:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update points',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleAddBadge = () => {
@@ -175,7 +267,7 @@ const AdminPointsBadges = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="studentSelect" className="text-xs">Select Student ID</Label>
+                  <Label htmlFor="studentSelect" className="text-xs">Select Student</Label>
                   <Popover open={studentPopoverOpen} onOpenChange={setStudentPopoverOpen}>
                     <PopoverTrigger asChild>
                       <button
@@ -184,8 +276,12 @@ const AdminPointsBadges = () => {
                           "w-full h-8 border border-input bg-background rounded-md px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                           !manualAllocation.studentId && "text-muted-foreground"
                         )}
+                        disabled={loading}
                       >
-                        {STUDENTS.find(s => s.value === manualAllocation.studentId)?.label || "Select student"}
+                        {loading ? "Loading students..." : 
+                         manualAllocation.studentId ? 
+                         students.find(s => s.student_id === manualAllocation.studentId)?.name || "Select student" :
+                         "Select student"}
                       </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
@@ -193,22 +289,27 @@ const AdminPointsBadges = () => {
                         <CommandInput placeholder="Search student..." />
                         <CommandList>
                           <CommandEmpty>No student found.</CommandEmpty>
-                          {STUDENTS.map((student) => (
+                          {students.map((student) => (
                             <CommandItem
-                              key={student.value}
-                              value={student.label}
+                              key={student.student_id}
+                              value={`${student.name} ${student.student_id} ${student.department || ''}`}
                               onSelect={() => {
-                                handleManualAllocationChange('studentId', student.value);
+                                handleManualAllocationChange('studentId', student.student_id);
                                 setStudentPopoverOpen(false);
                               }}
                             >
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  manualAllocation.studentId === student.value ? "opacity-100" : "opacity-0"
+                                  manualAllocation.studentId === student.student_id ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              {student.label}
+                              <div className="flex flex-col">
+                                <span className="font-medium">{student.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {student.student_id} • {student.department || 'No Department'} • {student.points || 0} pts
+                                </span>
+                              </div>
                             </CommandItem>
                           ))}
                         </CommandList>
