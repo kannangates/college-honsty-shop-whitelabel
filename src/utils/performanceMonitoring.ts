@@ -22,11 +22,11 @@ export class PerformanceMonitor {
   private observers: Map<string, PerformanceObserver> = new Map();
   
   private readonly thresholds: PerformanceThresholds = {
-    render: 50, // Increased from 16ms to 50ms for more realistic expectations
-    api: 2000, // Increased from 1000ms to 2000ms for network operations
-    interaction: 200, // Increased from 100ms to 200ms for user interactions
-    resource: 3000, // Increased from 2000ms to 3000ms for resource loading
-    navigation: 5000 // Increased from 3000ms to 5000ms for page navigation
+    render: 100, // Increased from 50ms to 100ms for more realistic expectations
+    api: 3000, // Increased from 2000ms to 3000ms for network operations
+    interaction: 300, // Increased from 200ms to 300ms for user interactions
+    resource: 5000, // Increased from 3000ms to 5000ms for resource loading
+    navigation: 8000 // Increased from 5000ms to 8000ms for page navigation
   };
 
   private readonly maxMetrics = 1000;

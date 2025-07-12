@@ -36,7 +36,7 @@ export const useAuthState = () => {
     const loadingTimeout = setTimeout(() => {
       console.warn('⚠️ Auth loading timeout reached, forcing loading to false');
       setLoading(false);
-    }, 1500); // Reduced from 3000ms to 1500ms for faster UX
+    }, 1000); // Reduced from 1500ms to 1000ms for faster UX
 
     return () => clearTimeout(loadingTimeout);
   }, []);
@@ -47,7 +47,7 @@ export const useAuthState = () => {
       console.log('🔍 Fetching profile for user:', userId);
       
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 1000) // Reduced from 2000ms to 1000ms
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 800) // Reduced from 1000ms to 800ms
       );
       
       const fetchPromise = supabase
@@ -135,7 +135,7 @@ export const useAuthState = () => {
 
         // Fallback to regular session check with shorter timeout
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session check timeout')), 1000) // Reduced from 2000ms to 1000ms
+          setTimeout(() => reject(new Error('Session check timeout')), 800) // Reduced from 1000ms to 800ms
         );
         
         const sessionPromise = supabase.auth.getSession();

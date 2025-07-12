@@ -15,6 +15,7 @@ export interface CDNConfig {
 export class CDNManager {
   private static instance: CDNManager;
   private cache = new Map<string, string>();
+  private performanceCache = new Map<string, number>();
   
   private readonly config: CDNConfig = {
     provider: 'jsdelivr',
@@ -65,15 +66,20 @@ export class CDNManager {
     return url;
   }
 
-  // Preload critical images
+  // Preload critical images with better error handling
   preloadImages(urls: string[]): void {
     urls.forEach(url => {
-      const optimizedUrl = this.optimizeImageUrl(url);
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
-      link.href = optimizedUrl;
-      document.head.appendChild(link);
+      try {
+        const optimizedUrl = this.optimizeImageUrl(url);
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = optimizedUrl;
+        link.crossOrigin = 'anonymous';
+        document.head.appendChild(link);
+      } catch (error) {
+        console.warn(`⚠️ Failed to preload image: ${url}`, error);
+      }
     });
   }
 
@@ -82,18 +88,28 @@ export class CDNManager {
     return this.optimizeImageUrl(WHITELABEL_CONFIG.branding.logo.url, options);
   }
 
-  // Performance monitoring for images
+  // Performance monitoring for images - only track in development
   trackImagePerformance(url: string): void {
+    // Only track in development to reduce console noise
+    if (process.env.NODE_ENV !== 'development') {
+      return;
+    }
+
+    // Skip if already tracked
+    if (this.performanceCache.has(url)) {
+      return;
+    }
+
     const img = new Image();
     const startTime = performance.now();
     
     img.onload = () => {
       const loadTime = performance.now() - startTime;
-      console.log(`📊 Image loaded in ${loadTime.toFixed(2)}ms: ${url}`);
+      this.performanceCache.set(url, loadTime);
       
-      // Report to performance monitor
-      if (loadTime > 2000) {
-        console.warn(`⚠️ Slow image load detected: ${loadTime.toFixed(2)}ms`);
+      // Only log if it's actually slow (>3 seconds)
+      if (loadTime > 3000) {
+        console.warn(`⚠️ Slow image load detected: ${loadTime.toFixed(2)}ms for ${url}`);
       }
     };
     
@@ -107,13 +123,15 @@ export class CDNManager {
   // Clear cache
   clearCache(): void {
     this.cache.clear();
+    this.performanceCache.clear();
   }
 
   // Get cache statistics
-  getCacheStats(): { size: number; urls: string[] } {
+  getCacheStats(): { size: number; urls: string[]; performanceCount: number } {
     return {
       size: this.cache.size,
-      urls: Array.from(this.cache.keys())
+      urls: Array.from(this.cache.keys()),
+      performanceCount: this.performanceCache.size
     };
   }
 }
