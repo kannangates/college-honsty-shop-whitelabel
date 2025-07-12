@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,7 +60,7 @@ const AdminPointsBadges = () => {
   ];
 
   // Fetch students from the users table
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -82,11 +82,11 @@ const AdminPointsBadges = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchStudents();
-  }, []);
+  }, [fetchStudents]);
 
   const handlePointsConfigChange = (field: string, value: string) => {
     setPointsConfig(prev => ({ ...prev, [field]: parseInt(value) || 0 }));
