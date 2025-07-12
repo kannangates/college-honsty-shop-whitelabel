@@ -24,19 +24,28 @@ export const PasswordChangePrompt = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (user?.user_metadata?.must_change_password) {
+    // Only show the prompt if the user has the must_change_password flag
+    if (user?.user_metadata?.must_change_password === true) {
       setOpen(true);
+    } else {
+      setOpen(false);
     }
   }, [user]);
 
   const dismissForever = async () => {
     if (!user) return;
     try {
-      await supabase.auth.admin.updateUserById(user.id, {
-        user_metadata: { must_change_password: false },
+      // Use the regular user API instead of admin API
+      await supabase.auth.updateUser({
+        data: { must_change_password: false }
       });
       setOpen(false);
+      toast({ 
+        title: 'Password Choice Saved', 
+        description: 'You chose to keep your current password. You can change it anytime in Settings.' 
+      });
     } catch (error) {
+      console.error('Failed to update user metadata:', error);
       toast({ title: 'Error', description: 'Failed to update user metadata', variant: 'destructive' });
     }
   };
