@@ -97,9 +97,16 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating student:', error);
+      
+      // Try to extract detailed error message
+      let errorMessage = 'Failed to create student account';
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Error',
-        description: 'Failed to create student account',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

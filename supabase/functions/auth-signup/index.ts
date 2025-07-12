@@ -161,25 +161,35 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const insertData = {
+      id: authData.user.id,
+      student_id: studentId,
+      name,
+      department,
+      email,
+      role,
+      shift,
+      points,
+      status: "active",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      last_signed_in_at: new Date().toISOString()
+    };
+
+    log("📝 Attempting to insert user data:", insertData);
+
     const { error: insertError } = await supabase
       .from("users")
-      .insert({
-        id: authData.user.id,
-        student_id: studentId,
-        name,
-        department,
-        email,
-        role,
-        shift,
-        points,
-        status: "active",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        last_signed_in_at: new Date().toISOString()
-      });
+      .insert(insertData);
 
     if (insertError) {
       log("❌ Failed inserting into users table:", insertError);
+      log("❌ Insert error details:", {
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        code: insertError.code
+      });
 
       try {
         await supabase.auth.admin.deleteUser(authData.user.id);
@@ -189,7 +199,10 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       return new Response(
-        JSON.stringify({ error: "Failed inserting into users table." }),
+        JSON.stringify({ 
+          error: "Failed inserting into users table.",
+          details: insertError.message 
+        }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
