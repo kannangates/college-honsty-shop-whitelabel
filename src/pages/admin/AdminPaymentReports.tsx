@@ -1,17 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { CalendarIcon, CreditCard } from 'lucide-react';
+import { CalendarIcon, CreditCard, Search, RefreshCw } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import Calendar23 from '@/components/ui/calendar-23';
 import { DateRange } from 'react-day-picker';
+import { Button } from '@/components/ui/button';
 
 const AdminPaymentReports = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -157,6 +156,12 @@ const AdminPaymentReports = () => {
     { accessorKey: 'items', header: 'Items', cell: ({ row }) => row.original.items.join(', ') },
   ];
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setDateRange({ from: undefined, to: undefined });
+  };
+
   return (
     <div className="max-w-screen-2xl mx-auto space-y-6">
       {/* Header */}
@@ -169,50 +174,91 @@ const AdminPaymentReports = () => {
       </div>
 
       {/* Custom Filter Section */}
-      <Card className="shadow-lg rounded-lg">
-        <CardHeader className="p-6">
-          <CardTitle className="text-2xl font-semibold">Transaction Filters</CardTitle>
-          <CardDescription>Filter and search through payment records</CardDescription>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-              <Label htmlFor="search">Search Student</Label>
-              <Input
-                type="text"
-                id="search"
-                placeholder="Enter student name or ID"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Filter by Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Filter by Date Range</Label>
-              <Calendar23
-                selected={dateRange}
-                onSelect={setDateRange}
-                label={undefined}
-                placeholder="Select date range"
-              />
-            </div>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex flex-col lg:flex-row gap-4 items-center">
+          {/* Search Box */}
+          <div className="relative flex-1 w-full lg:w-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search by student name or ID..."
+              className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Status Filter */}
+          <div className="w-full lg:w-48">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                <SelectValue placeholder="Filter by payment status" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Date Range Picker */}
+          <div className="w-full lg:w-64">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500",
+                    !dateRange.from && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "MMM dd")} - {format(dateRange.to, "MMM dd, yyyy")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "MMM dd, yyyy")
+                    )
+                  ) : (
+                    "Select date range"
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  captionLayout="dropdown"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 w-full lg:w-auto">
+            <Button 
+              variant="outline" 
+              onClick={clearFilters}
+              className="h-11 px-4 border-gray-200 hover:border-gray-300"
+            >
+              Clear Filters
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-11 px-4 border-gray-200 hover:border-gray-300"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* DataTable Section */}
       <Card className="shadow-lg rounded-lg">
