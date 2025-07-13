@@ -44,35 +44,69 @@ const Settings = () => {
 
   const handleUpdateProfile = async () => {
     if (!profile) return;
-    if (!validName(formData.name)) {
-      toast({ title: "Name Required", description: "Please enter a valid name.", variant: "destructive" });
+    
+    // Check if any fields have been modified
+    const hasChanges = 
+      formData.name !== (profile.name || '') ||
+      formData.mobile_number !== (profile.mobile_number || '') ||
+      formData.department !== (profile.department || '');
+    
+    if (!hasChanges) {
+      toast({ 
+        title: "No Changes", 
+        description: "No changes detected. Please modify at least one field.", 
+        variant: "destructive" 
+      });
       return;
     }
-    if (!validPhone(formData.mobile_number)) {
-      toast({ title: "Invalid Phone", description: "Enter a valid mobile number.", variant: "destructive" });
-      return;
+
+    // Only validate fields that are being updated
+    const updateData: Record<string, string> = {};
+    
+    // Validate and include name if changed
+    if (formData.name !== (profile.name || '')) {
+      if (!validName(formData.name)) {
+        toast({ title: "Name Required", description: "Please enter a valid name.", variant: "destructive" });
+        return;
+      }
+      updateData.name = formData.name;
     }
-    if (!validDept(formData.department)) {
-      toast({ title: "Dept Missing", description: "Please provide your department.", variant: "destructive" });
-      return;
+    
+    // Validate and include mobile_number if changed
+    if (formData.mobile_number !== (profile.mobile_number || '')) {
+      if (formData.mobile_number.trim() !== '') { // Only validate if not empty
+        if (!validPhone(formData.mobile_number)) {
+          toast({ title: "Invalid Phone", description: "Enter a valid mobile number.", variant: "destructive" });
+          return;
+        }
+      }
+      updateData.mobile_number = formData.mobile_number;
     }
+    
+    // Validate and include department if changed
+    if (formData.department !== (profile.department || '')) {
+      if (!validDept(formData.department)) {
+        toast({ title: "Dept Missing", description: "Please provide your department.", variant: "destructive" });
+        return;
+      }
+      updateData.department = formData.department;
+    }
+    
+    // Add timestamp
+    updateData.updated_at = new Date().toISOString();
+    
     setLoading(true);
     try {
       const { error } = await supabase
         .from('users')
-        .update({
-          name: formData.name,
-          mobile_number: formData.mobile_number,
-          department: formData.department,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', profile.id);
 
       if (error) throw error;
 
       updateProfile({
         ...profile,
-        ...formData
+        ...updateData
       });
 
       toast({
