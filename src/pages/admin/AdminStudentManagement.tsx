@@ -40,7 +40,6 @@ interface UserStats {
 const AdminStudentManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
@@ -201,11 +200,6 @@ const AdminStudentManagement = () => {
 
     return matchesSearch && matchesDepartment && matchesShift && matchesRole;
   });
-
-  const handleViewProfile = (student: Student) => {
-    setSelectedStudent(student);
-    setIsViewDialogOpen(true);
-  };
 
   const handleEditProfile = (student: Student) => {
     setSelectedStudent(student);
@@ -390,15 +384,6 @@ const AdminStudentManagement = () => {
                       <div className="flex gap-1">
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => handleViewProfile(student)}
-                          className="text-xs h-7"
-                        >
-                          <Eye className="h-3 w-3 mr-1" />
-                          View
-                        </Button>
-                        <Button
-                          size="sm"
                           onClick={() => handleEditProfile(student)}
                           className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-xs h-7"
                         >
@@ -414,58 +399,6 @@ const AdminStudentManagement = () => {
           </Table>
         </CardContent>
       </Card>
-
-      {/* View Profile Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="text-sm">
-          <DialogHeader>
-            <DialogTitle>Student Profile</DialogTitle>
-            <DialogDescription>View student details</DialogDescription>
-          </DialogHeader>
-          {selectedStudent && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Student ID</label>
-                  <p className="text-sm">{selectedStudent.student_id}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Name</label>
-                  <p className="text-sm">{selectedStudent.name}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Email</label>
-                  <p className="text-sm">{selectedStudent.email}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Department</label>
-                  <p className="text-sm">{selectedStudent.department || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Shift</label>
-                  <p className="text-sm">{getShiftDisplay(selectedStudent.shift)}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Role</label>
-                  <p className="text-sm">{selectedStudent.role}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Points</label>
-                  <p className="text-sm">{selectedStudent.points}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Status</label>
-                  <p className="text-sm">{selectedStudent.status}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Mobile</label>
-                  <p className="text-sm">{selectedStudent.mobile_number || 'N/A'}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Profile Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

@@ -169,52 +169,41 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
 
     try {
       const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim());
-      const headers = lines[0].split(',');
+      const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
       const dataLines = lines.slice(1);
-      
       setProgress(prev => ({ ...prev, total: dataLines.length }));
 
-      // Use local variables to track results
       let successCount = 0;
       let errorCount = 0;
       const errors: { row: number; error: string; user: string }[] = [];
 
       for (let i = 0; i < dataLines.length; i++) {
-        // Skip comment lines
-        if (dataLines[i].startsWith('#')) continue;
-        
-        // Simple CSV parsing - split by comma and handle quoted values
         const values = dataLines[i].split(',').map(v => v.trim());
-        
-        // Parse based on actual CSV structure: student_id, name, department, shift, role, initial_points, password
+        const row: Record<string, string> = {};
+        headers.forEach((header, idx) => {
+          row[header] = values[idx] || '';
+        });
         const userData = {
-          student_id: values[0] || '',
-          name: values[1] || '',
-          email: `${values[0]}@shasuncollege.edu.in`, // Generate email from student ID
-          department: values[2] || '',
-          mobile_number: '', // Not in CSV, leave empty
-          shift: values[3] || 'Morning (1st Shift)',
-          role: values[4] || 'student',
-          initial_points: parseInt(values[5] || '100'),
-          password: values[6] || 'Temp@123'
+          student_id: row['student_id'] || '',
+          name: row['name'] || '',
+          email: (row['email'] || `${row['student_id']}@shasuncollege.edu.in`),
+          department: row['department'] || '',
+          mobile_number: row['mobile_number'] || '',
+          shift: row['shift'] || 'Morning (1st Shift)',
+          role: row['role'] || 'student',
+          initial_points: parseInt(row['initial_points'] || '100'),
+          password: row['password'] || 'Temp@123'
         };
-
-        // Update current user being processed
         setProgress(prev => ({ 
           ...prev, 
           current: i + 1,
           currentUser: userData.name || userData.student_id
         }));
-
         const result = await createUserViaEdgeFunction(userData, i + 2);
-
         if (result.success) {
           successCount++;
-          setProgress(prev => ({ 
-            ...prev, 
-            successCount: prev.successCount + 1 
-          }));
+          setProgress(prev => ({ ...prev, successCount: prev.successCount + 1 }));
         } else {
           errorCount++;
           errors.push({ row: result.row, error: result.error, user: result.user });

@@ -19,6 +19,7 @@ interface User {
   role: string;
   points: number | null;
   status: string;
+  shift?: string;
 }
 
 interface EditStudentModalProps {
@@ -39,7 +40,8 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
     password: '' ,
     role: '',
     points: '',
-    status: ''
+    status: '',
+    shift: ''
   });
 
   useEffect(() => {
@@ -51,8 +53,9 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
         mobile_number: student.mobile_number || '',
         role: student.role || 'student',
         points: (student.points || 0).toString(),
-         password: '' ,
-        status: student.status || 'active'
+        password: '' ,
+        status: student.status || 'active',
+        shift: student.shift || ''
       });
     }
   }, [student]);
@@ -182,6 +185,20 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
                 <SelectItem value="student">Student</SelectItem>
                 <SelectItem value="teacher">Teacher</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="shift">Shift</Label>
+            <Select value={formData.shift} onValueChange={(value) => setFormData({...formData, shift: value})}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Morning (1st Shift)</SelectItem>
+                <SelectItem value="2">Evening (2nd Shift)</SelectItem>
+                <SelectItem value="full">Full Day</SelectItem>
               </SelectContent>
             </Select>
           </div>
