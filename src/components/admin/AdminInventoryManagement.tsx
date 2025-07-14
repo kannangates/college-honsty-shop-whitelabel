@@ -5,6 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EditProductModal } from './EditProductModal';
 import { AddProductModal } from './AddProductModal';
+import { RestockModal } from './RestockModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Card,
   CardContent,
@@ -30,7 +41,8 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
-  Check
+  Check,
+  Package2
 } from 'lucide-react';
 import { InventoryFilters } from './InventoryFilters';
 
@@ -77,15 +89,30 @@ export const AdminInventoryManagement = () => {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'created_at', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalLowStock, setTotalLowStock] = useState(0);
   const itemsPerPage = 10;
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [showLowStock, setShowLowStock] = useState(false);
   const lowStockThreshold = 10;
+  const [restockingProduct, setRestockingProduct] = useState<Product | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // First, get total low stock count
+      const { count: lowStockCount } = await supabase
+        .from('products')
+        .select('*', { count: 'exact' })
+        .or(`shelf_stock.lt.${lowStockThreshold},warehouse_stock.lt.${lowStockThreshold}`);
+      
+      setTotalLowStock(lowStockCount || 0);
+
+      // Main query for products
       let query = supabase
         .from('products')
         .select('*', { count: 'exact' });
@@ -93,6 +120,11 @@ export const AdminInventoryManagement = () => {
       // Apply category filter
       if (selectedCategory !== 'all') {
         query = query.eq('category', selectedCategory);
+      }
+
+      // Apply status filter
+      if (selectedStatus !== 'all') {
+        query = query.eq('status', selectedStatus);
       }
 
       // Apply low stock filter
@@ -141,7 +173,7 @@ export const AdminInventoryManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast, currentPage, sortConfig, selectedCategory, showLowStock]);
+  }, [toast, currentPage, sortConfig, selectedCategory, selectedStatus, showLowStock]);
 
   useEffect(() => {
     fetchProducts();
@@ -300,6 +332,51 @@ export const AdminInventoryManagement = () => {
     }
   };
 
+  const handleRestock = async (productId: string, quantity: number) => {
+    try {
+      setLoading(true);
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+
+      const { error } = await supabase
+        .from('products')
+        .update({
+          warehouse_stock: product.warehouse_stock + quantity,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Added ${quantity} units to warehouse stock`,
+      });
+      fetchProducts();
+    } catch (error) {
+      console.error('Error restocking product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to restock product",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (productId: string) => {
+    setProductToDelete(productId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+    await deleteProduct(productToDelete);
+    setDeleteConfirmOpen(false);
+    setProductToDelete(null);
+  };
+
   const getSortIcon = (key: keyof Product) => {
     if (sortConfig.key !== key) return <ArrowUpDown className="h-4 w-4" />;
     return sortConfig.direction === 'asc' ? 
@@ -315,39 +392,81 @@ export const AdminInventoryManagement = () => {
           <CardDescription>Add, edit, and delete products</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl font-semibold">Products</h2>
-              {selectedProducts.length > 0 && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                  disabled={loading}
-                >
-                  Delete Selected ({selectedProducts.length})
-                </Button>
-              )}
-            </div>
-            <Button 
-              onClick={() => setAddModalOpen(true)} 
-              className="bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900"
-            >
-              Add Product
-            </Button>
-          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-4 items-center">
+                {/* Category Filter */}
+                <div className="flex items-center gap-2">
+                  <Label>Category:</Label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      setSelectedCategory(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="border rounded p-1"
+                  >
+                    <option value="all">All Categories</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <InventoryFilters
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            showLowStock={showLowStock}
-            onLowStockToggle={() => setShowLowStock(!showLowStock)}
-            categories={categories}
-            lowStockCount={products.filter(p => 
-              p.shelf_stock < lowStockThreshold || 
-              p.warehouse_stock < lowStockThreshold
-            ).length}
-          />
+                {/* Status Filter */}
+                <div className="flex items-center gap-2">
+                  <Label>Status:</Label>
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => {
+                      setSelectedStatus(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="border rounded p-1"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                {/* Low Stock Filter */}
+                <div className="flex items-center gap-2">
+                  <Label>
+                    Low Stock ({totalLowStock}):
+                  </Label>
+                  <input
+                    type="checkbox"
+                    checked={showLowStock}
+                    onChange={(e) => {
+                      setShowLowStock(e.target.checked);
+                      setCurrentPage(1);
+                    }}
+                    className="rounded border-gray-300"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setAddModalOpen(true)}
+                  className="bg-primary text-white"
+                >
+                  Add Product
+                </Button>
+                {selectedProducts.length > 0 && (
+                  <Button
+                    onClick={handleBulkDelete}
+                    variant="destructive"
+                  >
+                    Delete Selected ({selectedProducts.length})
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -446,9 +565,19 @@ export const AdminInventoryManagement = () => {
                             Edit
                           </Button>
                           <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setRestockingProduct(product);
+                            }}
+                            className="h-8 px-2"
+                          >
+                            <Package2 className="h-4 w-4" />
+                          </Button>
+                          <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => deleteProduct(product.id)}
+                            onClick={() => handleDeleteClick(product.id)}
                             disabled={loading}
                           >
                             {loading ? "Deleting..." : "Delete"}
@@ -499,12 +628,39 @@ export const AdminInventoryManagement = () => {
         </CardContent>
       </Card>
 
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the selected product.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Restock Modal */}
+      <RestockModal
+        isOpen={!!restockingProduct}
+        onClose={() => setRestockingProduct(null)}
+        product={restockingProduct}
+        onRestock={handleRestock}
+      />
+
+      {/* Edit Modal */}
       <EditProductModal
         isOpen={editModalOpen}
         onClose={() => { setEditModalOpen(false); setEditingProduct(null); }}
         product={editingProduct}
         onUpdate={handleUpdate}
       />
+
+      {/* Add Modal */}
       <AddProductModal
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
