@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { EditProductModal } from './EditProductModal';
 import {
   Card,
   CardContent,
@@ -21,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+
 
 interface Product {
   id: string;
@@ -52,6 +54,8 @@ export const AdminInventoryManagement = () => {
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -157,6 +161,49 @@ export const AdminInventoryManagement = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add this function to handle edit button click
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setEditModalOpen(true);
+  };
+
+  // Add this function to handle product update
+  const handleUpdate = async (updatedProduct: Product) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          name: updatedProduct.name,
+          unit_price: updatedProduct.price,
+          category: updatedProduct.category,
+          shelf_stock: updatedProduct.shelf_stock,
+          warehouse_stock: updatedProduct.warehouse_stock,
+          status: updatedProduct.status,
+          image_url: updatedProduct.image_url || null,
+          description: updatedProduct.description || '',
+        })
+        .eq('id', updatedProduct.id);
+      if (error) throw error;
+      toast({
+        title: 'Success',
+        description: 'Product updated successfully',
+      });
+      fetchProducts();
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update product',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+      setEditModalOpen(false);
+      setEditingProduct(null);
     }
   };
 
@@ -298,7 +345,15 @@ export const AdminInventoryManagement = () => {
                       <TableCell>{product.category}</TableCell>
                       <TableCell>{product.status}</TableCell>
                       <TableCell>{product.shelf_stock + product.warehouse_stock}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right flex gap-2 justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(product)}
+                          className="h-8 px-2"
+                        >
+                          Edit
+                        </Button>
                         <Button
                           variant="destructive"
                           size="sm"
@@ -316,6 +371,13 @@ export const AdminInventoryManagement = () => {
           )}
         </CardContent>
       </Card>
+      {/* EditProductModal for editing */}
+      <EditProductModal
+        isOpen={editModalOpen}
+        onClose={() => { setEditModalOpen(false); setEditingProduct(null); }}
+        product={editingProduct}
+        onUpdate={handleUpdate}
+      />
     </div>
   );
 };

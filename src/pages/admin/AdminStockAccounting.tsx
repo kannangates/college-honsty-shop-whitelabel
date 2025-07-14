@@ -354,34 +354,34 @@ const AdminStockAccounting = () => {
                 const stolenStock =
                   estimatedClosingStock - (operation.actual_closing_stock || 0) - (operation.wastage_stock || 0);
                 return (
-                  <TableRow key={`${operation.product_id}-${operation.created_at}`}> 
-                    <TableCell className="font-medium">
-                      {operation.product?.name || 'Unknown Product'}
-                    </TableCell>
+                <TableRow key={`${operation.product_id}-${operation.created_at}`}>
+                  <TableCell className="font-medium">
+                    {operation.product?.name || 'Unknown Product'}
+                  </TableCell>
                     <TableCell>{operation.opening_stock}</TableCell>
                     <TableCell>{operation.additional_stock}</TableCell>
                     <TableCell className="text-right font-medium">{estimatedClosingStock}</TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
                         value={operation.actual_closing_stock}
                         onChange={(e) => handleOperationChange(operation.product_id, 'actual_closing_stock', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={operation.wastage_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'wastage_stock', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
+                      className="text-right"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={operation.wastage_stock}
+                      onChange={(e) => handleOperationChange(operation.product_id, 'wastage_stock', Number(e.target.value))}
+                      className="text-right"
+                    />
+                  </TableCell>
                     <TableCell className="text-right font-medium">{stolenStock}</TableCell>
                     <TableCell>{sales}</TableCell>
-                  </TableRow>
+                </TableRow>
                 );
               })}
             </TableBody>
