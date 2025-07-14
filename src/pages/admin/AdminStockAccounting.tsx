@@ -100,8 +100,10 @@ const AdminStockAccounting = () => {
         ...item,
         current_stock: item.current_stock || 0,
       }));
+      console.log('Products:', transformedProducts); // Debug: log all products
 
       // Create or update operations for each product
+      // This ensures all products are shown, even if they have no stock operation today
       const mergedOperations: StockOperation[] = transformedProducts.map(product => {
         const existingOp = opsData.find(op => op.product_id === product.id);
         return {
@@ -120,6 +122,7 @@ const AdminStockAccounting = () => {
           updated_at: existingOp?.updated_at ?? null,
         };
       });
+      console.log('Merged Operations:', mergedOperations); // Debug: log merged operations
 
       setProducts(transformedProducts);
       setStockOperations(mergedOperations);
@@ -162,6 +165,7 @@ const AdminStockAccounting = () => {
   }, [loadStockOperations]);
 
   const filteredOperations = applyFilters();
+  console.log('Filtered Operations:', filteredOperations); // Debug: log filtered operations before rendering
 
   const handleFilterChange = (filterType: keyof Filters, value: string) => {
     setFilters(prev => ({ ...prev, [filterType]: value }));
@@ -326,11 +330,11 @@ const AdminStockAccounting = () => {
                 <TableCell>Product</TableCell>
                 <TableCell>Opening Stock</TableCell>
                 <TableCell>Additional Stock</TableCell>
-                <TableCell>Sales</TableCell>
                 <TableCell>Estimated Closing Stock</TableCell>
                 <TableCell>Actual Closing Stock</TableCell>
                 <TableCell>Wastage</TableCell>
                 <TableCell>Stolen Stock</TableCell>
+                <TableCell>Sales</TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -342,7 +346,7 @@ const AdminStockAccounting = () => {
                   (operation.opening_stock || 0) +
                   (operation.additional_stock || 0) -
                   sales;
-                // Calculate stolen stock
+                // Calculate stolen stock as estimated_closing_stock - actual_closing_stock - wastage_stock
                 const stolenStock =
                   estimatedClosingStock - (operation.actual_closing_stock || 0) - (operation.wastage_stock || 0);
                 return (
@@ -352,7 +356,6 @@ const AdminStockAccounting = () => {
                     </TableCell>
                     <TableCell>{operation.opening_stock}</TableCell>
                     <TableCell>{operation.additional_stock}</TableCell>
-                    <TableCell>{sales}</TableCell>
                     <TableCell className="text-right font-medium">{estimatedClosingStock}</TableCell>
                     <TableCell>
                       <Input
@@ -373,6 +376,7 @@ const AdminStockAccounting = () => {
                       />
                     </TableCell>
                     <TableCell className="text-right font-medium">{stolenStock}</TableCell>
+                    <TableCell>{sales}</TableCell>
                   </TableRow>
                 );
               })}
