@@ -31,9 +31,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface Product {
   id: string;
   name: string;
-  description: string;
-  price: number;
-  image_url: string;
+  description?: string;
+  price?: number;
+  image_url?: string;
   category: string;
   status: 'active' | 'inactive';
   shelf_stock: number;
@@ -42,6 +42,8 @@ interface Product {
   is_archived: boolean;
   updated_by?: string;
   updated_at?: string;
+  opening_stock?: number;
+  unit_price?: number;
 }
 
 const AdminInventory = () => {
@@ -115,6 +117,8 @@ const AdminInventory = () => {
         is_archived: item.is_archived ?? false,
         updated_by: item.updated_by ?? '',
         updated_at: item.updated_at ?? '',
+        opening_stock: item.opening_stock ?? 0,
+        unit_price: item.unit_price ?? 0,
       } as Product));
       setProducts(transformedProducts);
     } catch (error) {
@@ -174,6 +178,8 @@ const AdminInventory = () => {
         is_archived: data.is_archived ?? false,
         updated_by: data.updated_by ?? '',
         updated_at: data.updated_at ?? '',
+        opening_stock: data.opening_stock ?? 0,
+        unit_price: data.unit_price ?? 0,
       } as Product;
       setProducts(prev => [transformedProduct, ...prev]);
       setNewProduct({
@@ -260,6 +266,8 @@ const AdminInventory = () => {
         is_archived: data.is_archived ?? false,
         updated_by: data.updated_by ?? '',
         updated_at: data.updated_at ?? '',
+        opening_stock: data.opening_stock ?? 0,
+        unit_price: data.unit_price ?? 0,
       } as Product;
       setProducts(prev => prev.map(p => (p.id === selectedProduct.id ? transformedProduct : p)));
       setIsDialogOpen(false);
