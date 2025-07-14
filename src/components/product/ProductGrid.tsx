@@ -8,7 +8,8 @@ interface Product {
   id: string;
   name: string;
   unit_price: number;
-  opening_stock: number;
+  shelf_stock: number;
+  warehouse_stock: number;
   status: string;
   created_at: string;
 }
@@ -26,7 +27,7 @@ export const ProductGrid = ({ products, loading, searchTerm, addToCart }: Produc
   );
 
   const getStatusColor = (product: Product) => {
-    const stock = product.opening_stock || 0;
+    const stock = product.shelf_stock || 0;
     if (stock === 0) {
       return 'bg-red-100 text-red-800 border-red-200';
     } else if (stock <= 10) {
@@ -66,8 +67,8 @@ export const ProductGrid = ({ products, loading, searchTerm, addToCart }: Produc
                 <Package className="h-6 w-6 text-white" />
               </div>
               <Badge className={getStatusColor(product)}>
-                {product.opening_stock === 0 ? 'Out of Stock' : 
-                 product.opening_stock <= 10 ? 'Low Stock' : 'In Stock'}
+                {product.shelf_stock === 0 ? 'Out of Stock' : 
+                 product.shelf_stock <= 10 ? 'Low Stock' : 'In Stock'}
               </Badge>
             </div>
             <div>
@@ -86,9 +87,9 @@ export const ProductGrid = ({ products, loading, searchTerm, addToCart }: Produc
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Stock:</span>
                 <span className={`font-medium ${
-                  product.opening_stock <= 10 ? 'text-red-600' : 'text-gray-900'
+                  product.shelf_stock <= 10 ? 'text-red-600' : 'text-gray-900'
                 }`}>
-                  {product.opening_stock} units
+                  {product.shelf_stock} units
                 </span>
               </div>
             </div>
@@ -96,7 +97,7 @@ export const ProductGrid = ({ products, loading, searchTerm, addToCart }: Produc
             <div className="mt-4">
               <Button 
                 onClick={() => addToCart(product)}
-                disabled={product.opening_stock === 0}
+                disabled={product.shelf_stock === 0}
                 className="w-full bg-gradient-to-r from-[#202072] to-[#e66166] text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />

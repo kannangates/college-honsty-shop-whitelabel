@@ -37,7 +37,7 @@ export const createProductColumns = ({
       },
       cell: ({ row }) => {
         const product = row.original
-        const isOutOfStock = product.opening_stock <= 0
+        const isOutOfStock = product.shelf_stock <= 0
         
         return (
           <div className="flex flex-col">
@@ -91,7 +91,7 @@ export const createProductColumns = ({
       },
     },
     {
-      accessorKey: "opening_stock",
+      accessorKey: "shelf_stock",
       header: ({ column }) => {
         return (
           <Button
@@ -104,7 +104,7 @@ export const createProductColumns = ({
         )
       },
       cell: ({ row }) => {
-        const stock = row.getValue("opening_stock") as number
+        const stock = row.getValue("shelf_stock") as number
         return (
           <Badge variant={stock > 10 ? "default" : "secondary"}>
             {stock}
@@ -118,7 +118,7 @@ export const createProductColumns = ({
       cell: ({ row }) => {
         const product = row.original
         const quantity = getItemQuantity(product.id)
-        const isOutOfStock = product.opening_stock <= 0
+        const isOutOfStock = product.shelf_stock <= 0
         
         return (
           <div className="flex items-center gap-2">
@@ -136,7 +136,7 @@ export const createProductColumns = ({
               variant="outline"
               size="sm"
               onClick={() => handleAddToCart(product)}
-              disabled={isOutOfStock || quantity >= product.opening_stock}
+              disabled={isOutOfStock || quantity >= product.shelf_stock}
               className="h-8 w-8 p-0"
             >
               <Plus className="h-4 w-4" />
@@ -166,7 +166,7 @@ export const createProductColumns = ({
       header: "Actions",
       cell: ({ row }) => {
         const product = row.original
-        const isOutOfStock = product.opening_stock <= 0
+        const isOutOfStock = product.shelf_stock <= 0
         
         return (
           <Button

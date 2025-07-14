@@ -14,7 +14,8 @@ type ProductDB = {
   description?: string | null;
   price?: number | null;
   category: string;
-  current_stock: number;
+  shelf_stock: number;
+  warehouse_stock: number;
   created_at: string;
   created_by?: string | null;
   image_url?: string | null;
@@ -23,6 +24,7 @@ type ProductDB = {
   status?: string | null;
   unit_price?: number | null;
   updated_at?: string | null;
+  updated_by?: string | null;
 };
 
 type StockOperationDB = {
@@ -89,13 +91,13 @@ const AdminDailyStockOperations: React.FC = () => {
       const merged: StockOperationUI[] = products.map((product) => {
         const op = ops?.find((o) => o.product_id === product.id);
 
-        const opening = op?.opening_stock ?? product.current_stock ?? 0;
+        const opening = op?.opening_stock ?? product.shelf_stock ?? 0;
         const additional = op?.additional_stock ?? 0;
         const sales = op?.sales ?? 0;
         const stolen = op?.stolen_stock ?? 0;
         const wastage = op?.wastage_stock ?? 0;
         const estimated = opening + additional - sales - stolen - wastage;
-        const actual = op?.actual_closing_stock ?? product.current_stock ?? 0;
+        const actual = op?.actual_closing_stock ?? product.shelf_stock ?? 0;
 
         return {
           id: op?.id,
@@ -200,7 +202,7 @@ const AdminDailyStockOperations: React.FC = () => {
         supabase
           .from('products')
           .update({
-            current_stock: op.actual_closing_stock,
+            shelf_stock: op.actual_closing_stock,
             updated_at: now,
           })
           .eq('id', op.product_id)

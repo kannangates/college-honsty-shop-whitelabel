@@ -36,10 +36,12 @@ interface Product {
   image_url: string;
   category: string;
   status: 'active' | 'inactive';
-  current_stock: number; // Shelf stock (what students see)
-  warehouse_stock?: number; // Warehouse stock (admin only)
+  shelf_stock: number;
+  warehouse_stock: number;
   created_at: string;
   is_archived: boolean;
+  updated_by?: string;
+  updated_at?: string;
 }
 
 const AdminInventory = () => {
@@ -54,7 +56,7 @@ const AdminInventory = () => {
     image_url: '',
     category: '',
     status: 'active',
-    current_stock: 0,
+    shelf_stock: 0,
     warehouse_stock: 0,
   });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -63,6 +65,11 @@ const AdminInventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  // Add state for restock modal
+  const [isRestockOpen, setIsRestockOpen] = useState(false);
+  const [restockProduct, setRestockProduct] = useState<Product | null>(null);
+  const [restockAmount, setRestockAmount] = useState('');
+  const [restockError, setRestockError] = useState('');
 
   // Get unique categories from products
   const categoryOptions = React.useMemo(() => {
@@ -84,6 +91,7 @@ const AdminInventory = () => {
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'developer';
 
+  // In fetchProducts, map DB fields to Product type correctly
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
@@ -94,12 +102,20 @@ const AdminInventory = () => {
 
       if (error) throw error;
       const transformedProducts = (data || []).map(item => ({
-        ...item,
-        description: '',
-        price: item.unit_price,
+        id: item.id,
+        name: item.name,
+        description: item.description ?? '',
+        price: item.unit_price ?? 0,
+        image_url: item.image_url ?? '',
+        category: item.category ?? '',
         status: (item.status === 'active' || item.status === 'true') ? 'active' as const : 'inactive' as const,
-        warehouse_stock: Math.max(item.current_stock + Math.floor(Math.random() * 50), item.current_stock) // Mock warehouse stock for now
-      }));
+        shelf_stock: item.shelf_stock ?? 0,
+        warehouse_stock: item.warehouse_stock ?? 0,
+        created_at: item.created_at ?? '',
+        is_archived: item.is_archived ?? false,
+        updated_by: item.updated_by ?? '',
+        updated_at: item.updated_at ?? '',
+      } as Product));
       setProducts(transformedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -122,6 +138,7 @@ const AdminInventory = () => {
     setNewProduct(prev => ({ ...prev, [name]: value }));
   };
 
+  // In handleCreateProduct, use only valid Product fields
   const handleCreateProduct = async () => {
     try {
       setLoading(true);
@@ -131,11 +148,12 @@ const AdminInventory = () => {
           name: newProduct.name,
           unit_price: newProduct.price,
           category: newProduct.category,
-          current_stock: newProduct.current_stock,
-          opening_stock: 0,
+          shelf_stock: newProduct.shelf_stock,
+          warehouse_stock: newProduct.warehouse_stock,
           status: newProduct.status,
           image_url: newProduct.image_url || null,
-          created_by: null
+          description: newProduct.description || '',
+          created_by: profile?.id || null
         }])
         .select()
         .single();
@@ -143,12 +161,20 @@ const AdminInventory = () => {
       if (error) throw error;
 
       const transformedProduct = {
-        ...data,
-        description: '',
-        price: data.unit_price,
+        id: data.id,
+        name: data.name,
+        description: data.description ?? '',
+        price: data.unit_price ?? 0,
+        image_url: data.image_url ?? '',
+        category: data.category ?? '',
         status: (data.status === 'active' || data.status === 'true') ? 'active' as const : 'inactive' as const,
-        warehouse_stock: newProduct.warehouse_stock || newProduct.current_stock
-      };
+        shelf_stock: data.shelf_stock ?? 0,
+        warehouse_stock: data.warehouse_stock ?? 0,
+        created_at: data.created_at ?? '',
+        is_archived: data.is_archived ?? false,
+        updated_by: data.updated_by ?? '',
+        updated_at: data.updated_at ?? '',
+      } as Product;
       setProducts(prev => [transformedProduct, ...prev]);
       setNewProduct({
         name: '',
@@ -157,7 +183,7 @@ const AdminInventory = () => {
         image_url: '',
         category: '',
         status: 'active',
-        current_stock: 0,
+        shelf_stock: 0,
         warehouse_stock: 0,
       });
       setIsDialogOpen(false);
@@ -177,6 +203,7 @@ const AdminInventory = () => {
     }
   };
 
+  // In handleEditProduct, use only valid Product fields
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsEditMode(true);
@@ -187,12 +214,13 @@ const AdminInventory = () => {
       image_url: product.image_url,
       category: product.category,
       status: product.status,
-      current_stock: product.current_stock,
-      warehouse_stock: product.warehouse_stock || product.current_stock,
+      shelf_stock: product.shelf_stock,
+      warehouse_stock: product.warehouse_stock,
     });
     setIsDialogOpen(true);
   };
 
+  // In handleUpdateProduct, use only valid Product fields
   const handleUpdateProduct = async () => {
     if (!selectedProduct) return;
 
@@ -204,9 +232,13 @@ const AdminInventory = () => {
           name: newProduct.name,
           unit_price: newProduct.price,
           category: newProduct.category,
-          current_stock: newProduct.current_stock,
+          shelf_stock: newProduct.shelf_stock,
+          warehouse_stock: newProduct.warehouse_stock,
           status: newProduct.status,
-          image_url: newProduct.image_url || null
+          image_url: newProduct.image_url || null,
+          description: newProduct.description || '',
+          updated_by: profile?.id || null,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', selectedProduct.id)
         .select()
@@ -215,12 +247,20 @@ const AdminInventory = () => {
       if (error) throw error;
 
       const transformedProduct = {
-        ...data,
-        description: '',
-        price: data.unit_price,
+        id: data.id,
+        name: data.name,
+        description: data.description ?? '',
+        price: data.unit_price ?? 0,
+        image_url: data.image_url ?? '',
+        category: data.category ?? '',
         status: (data.status === 'active' || data.status === 'true') ? 'active' as const : 'inactive' as const,
-        warehouse_stock: newProduct.warehouse_stock
-      };
+        shelf_stock: data.shelf_stock ?? 0,
+        warehouse_stock: data.warehouse_stock ?? 0,
+        created_at: data.created_at ?? '',
+        is_archived: data.is_archived ?? false,
+        updated_by: data.updated_by ?? '',
+        updated_at: data.updated_at ?? '',
+      } as Product;
       setProducts(prev => prev.map(p => (p.id === selectedProduct.id ? transformedProduct : p)));
       setIsDialogOpen(false);
       setIsEditMode(false);
@@ -273,7 +313,7 @@ const AdminInventory = () => {
     { accessorKey: 'name', header: 'Name' },
     { accessorKey: 'category', header: 'Category' },
     { accessorKey: 'price', header: 'Price', cell: ({ row }) => `$${row.original.price}` },
-    { accessorKey: 'current_stock', header: isAdmin ? 'Shelf Stock' : 'Available' },
+    { accessorKey: 'shelf_stock', header: isAdmin ? 'Shelf Stock' : 'Available' },
     ...(isAdmin ? [{ accessorKey: 'warehouse_stock', header: 'Warehouse Stock' }] : []),
     { accessorKey: 'status', header: 'Status' },
     ...(isAdmin ? [{
@@ -283,6 +323,14 @@ const AdminInventory = () => {
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={() => handleEditProduct(row.original)}>
             <Edit className="mr-2 h-4 w-4" />Edit
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => {
+            setRestockProduct(row.original);
+            setIsRestockOpen(true);
+            setRestockAmount('');
+            setRestockError('');
+          }}>
+            <Warehouse className="mr-2 h-4 w-4" />Restock
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -309,6 +357,47 @@ const AdminInventory = () => {
       ),
     }] : []),
   ];
+
+  // 5. Implement restock logic: when admin adds to shelf_stock, check warehouse_stock, auto-debit, update updated_by/updated_at
+  const handleRestockShelf = async (productId: string, addlStock: number) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    if (addlStock <= 0) return;
+    if (product.warehouse_stock < addlStock) {
+      toast({
+        title: 'Insufficient Warehouse Stock',
+        description: 'Not enough warehouse stock to restock shelf.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const userId = profile?.id;
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('products')
+      .update({
+        shelf_stock: product.shelf_stock + addlStock,
+        warehouse_stock: product.warehouse_stock - addlStock,
+        updated_by: userId,
+        updated_at: now,
+      })
+      .eq('id', productId)
+      .select()
+      .single();
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to restock shelf.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, shelf_stock: data.shelf_stock, warehouse_stock: data.warehouse_stock, updated_by: data.updated_by, updated_at: data.updated_at } : p));
+    toast({
+      title: 'Restocked',
+      description: 'Shelf stock updated and warehouse debited.',
+    });
+  };
 
   return (
     <div className="max-w-screen-2xl mx-auto space-y-6">
@@ -441,12 +530,12 @@ const AdminInventory = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="current_stock">Shelf Stock</Label>
+                  <Label htmlFor="shelf_stock">Shelf Stock</Label>
                   <Input
                     type="number"
-                    id="current_stock"
-                    name="current_stock"
-                    value={newProduct.current_stock}
+                    id="shelf_stock"
+                    name="shelf_stock"
+                    value={newProduct.shelf_stock}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -497,7 +586,7 @@ const AdminInventory = () => {
                   image_url: '',
                   category: '',
                   status: 'active',
-                  current_stock: 0,
+                  shelf_stock: 0,
                   warehouse_stock: 0,
                 });
               }}>Cancel</AlertDialogCancel>
@@ -516,6 +605,71 @@ const AdminInventory = () => {
                 ) : (
                   <span>{isEditMode ? "Update Product" : "Create Product"}</span>
                 )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+      {/* Restock Modal/Dialog */}
+      {isAdmin && isRestockOpen && restockProduct && (
+        <AlertDialog open={isRestockOpen} onOpenChange={(open) => {
+          setIsRestockOpen(open);
+          if (!open) {
+            setRestockProduct(null);
+            setRestockAmount('');
+            setRestockError('');
+          }
+        }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Restock Shelf for {restockProduct.name}</AlertDialogTitle>
+              <AlertDialogDescription>
+                Enter the amount to add to shelf stock. This will be debited from warehouse stock.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="grid gap-2">
+              <div className="flex justify-between text-sm">
+                <span>Shelf Stock: <b>{restockProduct.shelf_stock}</b></span>
+                <span>Warehouse Stock: <b>{restockProduct.warehouse_stock}</b></span>
+              </div>
+              <Label htmlFor="restockAmount">Additional Shelf Stock</Label>
+              <Input
+                id="restockAmount"
+                type="number"
+                min="1"
+                value={restockAmount}
+                onChange={e => setRestockAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder="Enter quantity"
+              />
+              {restockError && <div className="text-red-500 text-xs mt-1">{restockError}</div>}
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setIsRestockOpen(false);
+                setRestockProduct(null);
+                setRestockAmount('');
+                setRestockError('');
+              }}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async () => {
+                  const qty = parseInt(restockAmount, 10);
+                  if (!qty || qty <= 0) {
+                    setRestockError('Enter a valid quantity');
+                    return;
+                  }
+                  if (qty > restockProduct.warehouse_stock) {
+                    setRestockError('Not enough warehouse stock');
+                    return;
+                  }
+                  setRestockError('');
+                  await handleRestockShelf(restockProduct.id, qty);
+                  setIsRestockOpen(false);
+                  setRestockProduct(null);
+                  setRestockAmount('');
+                }}
+                disabled={loading}
+              >
+                {loading ? 'Restocking...' : 'Restock'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

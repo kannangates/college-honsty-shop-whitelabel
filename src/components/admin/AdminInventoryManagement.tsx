@@ -25,14 +25,17 @@ import {
 interface Product {
   id: string;
   name: string;
-  description: string;
-  price: number;
-  image_url: string;
+  description?: string;
+  price?: number;
+  image_url?: string;
   category: string;
   status: 'active' | 'inactive';
-  current_stock: number;
+  shelf_stock: number;
+  warehouse_stock: number;
   created_at: string;
   is_archived: boolean;
+  updated_by?: string;
+  updated_at?: string;
 }
 
 export const AdminInventoryManagement = () => {
@@ -44,7 +47,8 @@ export const AdminInventoryManagement = () => {
     image_url: '',
     category: '',
     status: 'active',
-    current_stock: 0,
+    shelf_stock: 0,
+    warehouse_stock: 0,
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -95,8 +99,8 @@ export const AdminInventoryManagement = () => {
           name: newProduct.name,
           unit_price: newProduct.price,
           category: newProduct.category,
-          current_stock: newProduct.current_stock,
-          opening_stock: 0,
+          shelf_stock: newProduct.shelf_stock,
+          warehouse_stock: newProduct.warehouse_stock,
           status: newProduct.status,
           image_url: newProduct.image_url || null,
           created_by: null
@@ -114,7 +118,8 @@ export const AdminInventoryManagement = () => {
         image_url: '',
         category: '',
         status: 'active',
-        current_stock: 0,
+        shelf_stock: 0,
+        warehouse_stock: 0,
       });
       fetchProducts();
     } catch (error) {
@@ -235,12 +240,23 @@ export const AdminInventoryManagement = () => {
               </select>
             </div>
             <div>
-              <Label htmlFor="current_stock">Current Stock</Label>
+              <Label htmlFor="shelf_stock">Shelf Stock</Label>
               <Input
                 type="number"
-                id="current_stock"
-                name="current_stock"
-                value={newProduct.current_stock}
+                id="shelf_stock"
+                name="shelf_stock"
+                value={newProduct.shelf_stock}
+                onChange={handleInputChange}
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="warehouse_stock">Warehouse Stock</Label>
+              <Input
+                type="number"
+                id="warehouse_stock"
+                name="warehouse_stock"
+                value={newProduct.warehouse_stock}
                 onChange={handleInputChange}
                 disabled={loading}
               />
@@ -281,7 +297,7 @@ export const AdminInventoryManagement = () => {
                       <TableCell>${product.price}</TableCell>
                       <TableCell>{product.category}</TableCell>
                       <TableCell>{product.status}</TableCell>
-                      <TableCell>{product.current_stock}</TableCell>
+                      <TableCell>{product.shelf_stock + product.warehouse_stock}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="destructive"

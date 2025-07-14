@@ -567,7 +567,8 @@ export type Database = {
           category: string
           created_at: string | null
           created_by: string | null
-          current_stock: number | null
+          shelf_stock: number | null
+          warehouse_stock: number | null
           id: string
           image_url: string | null
           is_archived: boolean | null
@@ -575,12 +576,15 @@ export type Database = {
           opening_stock: number
           status: string | null
           unit_price: number
+          updated_by?: string | null
+          updated_at?: string | null
         }
         Insert: {
           category?: string
           created_at?: string | null
           created_by?: string | null
-          current_stock?: number | null
+          shelf_stock?: number | null
+          warehouse_stock?: number | null
           id?: string
           image_url?: string | null
           is_archived?: boolean | null
@@ -588,12 +592,15 @@ export type Database = {
           opening_stock?: number
           status?: string | null
           unit_price: number
+          updated_by?: string | null
+          updated_at?: string | null
         }
         Update: {
           category?: string
           created_at?: string | null
           created_by?: string | null
-          current_stock?: number | null
+          shelf_stock?: number | null
+          warehouse_stock?: number | null
           id?: string
           image_url?: string | null
           is_archived?: boolean | null
@@ -601,6 +608,8 @@ export type Database = {
           opening_stock?: number
           status?: string | null
           unit_price?: number
+          updated_by?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

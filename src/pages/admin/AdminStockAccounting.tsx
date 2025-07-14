@@ -17,7 +17,8 @@ interface Product {
   description?: string;
   price?: number;
   category: string;
-  current_stock: number;
+  shelf_stock: number;
+  warehouse_stock: number;
   created_at?: string;
   created_by?: string;
   image_url?: string;
@@ -25,6 +26,8 @@ interface Product {
   opening_stock?: number;
   status?: string;
   unit_price?: number;
+  updated_by?: string;
+  updated_at?: string;
   [key: string]: string | number | boolean | undefined;
 }
 
@@ -98,7 +101,8 @@ const AdminStockAccounting = () => {
       // Transform products and merge with operations
       const transformedProducts = (productsData ?? []).map(item => ({
         ...item,
-        current_stock: item.current_stock || 0,
+        shelf_stock: item.shelf_stock || 0,
+        warehouse_stock: item.warehouse_stock || 0,
       }));
       console.log('Products:', transformedProducts); // Debug: log all products
 
@@ -110,10 +114,10 @@ const AdminStockAccounting = () => {
           id: existingOp?.id,
           product_id: product.id,
           product,
-          opening_stock: existingOp?.opening_stock ?? product.current_stock,
+          opening_stock: existingOp?.opening_stock ?? product.shelf_stock,
           additional_stock: existingOp?.additional_stock ?? 0,
-          actual_closing_stock: existingOp?.actual_closing_stock ?? product.current_stock,
-          estimated_closing_stock: existingOp?.estimated_closing_stock ?? product.current_stock,
+          actual_closing_stock: existingOp?.actual_closing_stock ?? product.shelf_stock,
+          estimated_closing_stock: existingOp?.estimated_closing_stock ?? product.shelf_stock,
           stolen_stock: existingOp?.stolen_stock ?? 0,
           wastage_stock: existingOp?.wastage_stock ?? 0,
           sales: existingOp?.sales ?? 0,
@@ -230,7 +234,7 @@ const AdminStockAccounting = () => {
       const updates = stockOperations.map(op =>
         supabase
           .from('products')
-          .update({ current_stock: op.actual_closing_stock })
+          .update({ shelf_stock: op.actual_closing_stock })
           .eq('id', op.product_id)
       );
 
