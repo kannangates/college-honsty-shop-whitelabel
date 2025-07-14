@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EditProductModal } from './EditProductModal';
+import { AddProductModal } from './AddProductModal';
 import {
   Card,
   CardContent,
@@ -42,20 +43,11 @@ interface Product {
 
 export const AdminInventoryManagement = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [newProduct, setNewProduct] = useState<Omit<Product, 'id' | 'created_at' | 'is_archived'>>({
-    name: '',
-    description: '',
-    price: 0,
-    image_url: '',
-    category: '',
-    status: 'active',
-    shelf_stock: 0,
-    warehouse_stock: 0,
-  });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -89,88 +81,11 @@ export const AdminInventoryManagement = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setNewProduct(prev => ({ ...prev, [name]: value }));
-  };
-
-  const addProduct = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase
-        .from('products')
-        .insert([{
-          name: newProduct.name,
-          unit_price: newProduct.price,
-          category: newProduct.category,
-          shelf_stock: newProduct.shelf_stock,
-          warehouse_stock: newProduct.warehouse_stock,
-          status: newProduct.status,
-          image_url: newProduct.image_url || null,
-          created_by: null
-        }]);
-
-      if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Product added successfully",
-      });
-      setNewProduct({
-        name: '',
-        description: '',
-        price: 0,
-        image_url: '',
-        category: '',
-        status: 'active',
-        shelf_stock: 0,
-        warehouse_stock: 0,
-      });
-      fetchProducts();
-    } catch (error) {
-      console.error('Error adding product:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add product",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteProduct = async (id: string) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Product deleted successfully",
-      });
-      fetchProducts();
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete product",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Add this function to handle edit button click
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setEditModalOpen(true);
   };
 
-  // Add this function to handle product update
   const handleUpdate = async (updatedProduct: Product) => {
     setLoading(true);
     try {
@@ -207,6 +122,68 @@ export const AdminInventoryManagement = () => {
     }
   };
 
+  // Move addProduct logic to be used by the modal
+  const handleAddProduct = async (productInput) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('products')
+        .insert([{
+          name: productInput.name,
+          unit_price: productInput.price,
+          category: productInput.category,
+          shelf_stock: productInput.shelf_stock,
+          warehouse_stock: productInput.warehouse_stock,
+          status: productInput.status,
+          image_url: productInput.image_url || null,
+          description: productInput.description || '',
+          created_by: null
+        }]);
+      if (error) throw error;
+      toast({
+        title: 'Success',
+        description: 'Product added successfully',
+      });
+      fetchProducts();
+      setAddModalOpen(false);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add product',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+      fetchProducts();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8">
       <Card className="shadow-lg">
@@ -215,103 +192,10 @@ export const AdminInventoryManagement = () => {
           <CardDescription>Add, edit, and delete products</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Add New Product</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                type="text"
-                id="name"
-                name="name"
-                value={newProduct.name}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Input
-                type="text"
-                id="description"
-                name="description"
-                value={newProduct.description}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="price">Price</Label>
-              <Input
-                type="number"
-                id="price"
-                name="price"
-                value={newProduct.price}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="image_url">Image URL</Label>
-              <Input
-                type="text"
-                id="image_url"
-                name="image_url"
-                value={newProduct.image_url}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Input
-                type="text"
-                id="category"
-                name="category"
-                value={newProduct.category}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                name="status"
-                value={newProduct.status}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-                disabled={loading}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="shelf_stock">Shelf Stock</Label>
-              <Input
-                type="number"
-                id="shelf_stock"
-                name="shelf_stock"
-                value={newProduct.shelf_stock}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="warehouse_stock">Warehouse Stock</Label>
-              <Input
-                type="number"
-                id="warehouse_stock"
-                name="warehouse_stock"
-                value={newProduct.warehouse_stock}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Products</h2>
+            <Button onClick={() => setAddModalOpen(true)} className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white">Add Product</Button>
           </div>
-          <Button onClick={addProduct} disabled={loading}>
-            {loading ? "Adding..." : "Add Product"}
-          </Button>
         </CardContent>
       </Card>
 
@@ -377,6 +261,12 @@ export const AdminInventoryManagement = () => {
         onClose={() => { setEditModalOpen(false); setEditingProduct(null); }}
         product={editingProduct}
         onUpdate={handleUpdate}
+      />
+      <AddProductModal
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onAdd={handleAddProduct}
+        loading={loading}
       />
     </div>
   );
