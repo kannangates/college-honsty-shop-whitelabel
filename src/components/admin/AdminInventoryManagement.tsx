@@ -37,17 +37,18 @@ import { InventoryFilters } from './InventoryFilters';
 interface Product {
   id: string;
   name: string;
-  description?: string;
-  price?: number;
-  image_url?: string;
   category: string;
   status: 'active' | 'inactive';
   shelf_stock: number;
   warehouse_stock: number;
   created_at: string;
-  is_archived: boolean;
-  updated_by?: string;
-  updated_at?: string;
+  created_by: string | null;
+  image_url: string | null;
+  is_archived: boolean | null;
+  opening_stock: number;
+  unit_price: number;
+  updated_by?: string | null;
+  updated_at?: string | null;
 }
 
 interface SortConfig {
@@ -57,13 +58,12 @@ interface SortConfig {
 
 interface ProductInput {
   name: string;
-  price: number;
+  unit_price: number;
   category: string;
   shelf_stock: number;
   warehouse_stock: number;
   status: 'active' | 'inactive';
   image_url?: string;
-  description?: string;
 }
 
 export const AdminInventoryManagement = () => {
@@ -113,8 +113,6 @@ export const AdminInventoryManagement = () => {
 
       const transformedProducts = (data || []).map(item => ({
         ...item,
-        description: item.description || '',
-        price: item.unit_price,
         status: (item.status === 'active' || item.status === 'true') ? 'active' as const : 'inactive' as const
       }));
 
@@ -214,11 +212,10 @@ export const AdminInventoryManagement = () => {
         .from('products')
         .update({
           name: updates.name,
-          unit_price: updates.price,
+          unit_price: updates.unit_price,
           category: updates.category,
           status: updates.status,
           image_url: updates.image_url || null,
-          description: updates.description || '',
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -250,13 +247,12 @@ export const AdminInventoryManagement = () => {
         .from('products')
         .insert([{
           name: productInput.name,
-          unit_price: productInput.price,
+          unit_price: productInput.unit_price,
           category: productInput.category,
           shelf_stock: productInput.shelf_stock,
           warehouse_stock: productInput.warehouse_stock,
           status: productInput.status,
           image_url: productInput.image_url || null,
-          description: productInput.description || '',
           created_by: null
         }]);
       if (error) throw error;
@@ -383,10 +379,9 @@ export const AdminInventoryManagement = () => {
                         Name {getSortIcon('name')}
                       </div>
                     </TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead onClick={() => handleSort('price')} className="cursor-pointer">
+                    <TableHead onClick={() => handleSort('unit_price')} className="cursor-pointer">
                       <div className="flex items-center gap-2">
-                        Price {getSortIcon('price')}
+                        Price {getSortIcon('unit_price')}
                       </div>
                     </TableHead>
                     <TableHead onClick={() => handleSort('category')} className="cursor-pointer">
@@ -423,8 +418,7 @@ export const AdminInventoryManagement = () => {
                         />
                       </TableCell>
                       <TableCell>{product.name}</TableCell>
-                      <TableCell>{product.description}</TableCell>
-                      <TableCell>₹{product.price}</TableCell>
+                      <TableCell>₹{product.unit_price}</TableCell>
                       <TableCell>{product.category}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
