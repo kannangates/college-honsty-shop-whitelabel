@@ -2,9 +2,12 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Mail, CreditCard, Webhook } from 'lucide-react';
-import { IntegrationSettingsDisplay } from '@/components/admin/IntegrationSettingsDisplay';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const AdminIntegrations = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -13,7 +16,7 @@ const AdminIntegrations = () => {
           <Settings className="h-8 w-8" />
           <div>
             <h1 className="text-3xl font-bold">Integration Settings</h1>
-            <p className="text-purple-100">Configure payment gateways, email services, and other integrations</p>
+            <p className="text-purple-100">Configure payment gateways, email services, and automation workflows</p>
           </div>
         </div>
       </div>
@@ -34,17 +37,17 @@ const AdminIntegrations = () => {
             <div className="text-sm text-green-600">Gmail Integration</div>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+        <Card 
+          className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100 cursor-pointer hover:shadow-xl transition-shadow"
+          onClick={() => navigate('/admin/n8n')}
+        >
           <CardContent className="p-4 text-center">
             <Webhook className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-            <div className="text-lg font-bold text-purple-800">Webhooks</div>
-            <div className="text-sm text-purple-600">Event Notifications</div>
+            <div className="text-lg font-bold text-purple-800">n8n Automation</div>
+            <div className="text-sm text-purple-600">Workflow Automation</div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Integration Settings */}
-      <IntegrationSettingsDisplay />
 
       {/* Instructions */}
       <Card className="border-0 shadow-lg">
@@ -73,6 +76,21 @@ const AdminIntegrations = () => {
               <li>Create OAuth 2.0 credentials</li>
               <li>Add authorized redirect URIs</li>
               <li>Generate refresh token for server-to-server communication</li>
+            </ol>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-base mb-2">n8n Automation</h3>
+            <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+              <li>Click on the n8n Automation card above to access workflow settings</li>
+              <li>Configure automated workflows for:
+                <ul className="list-disc list-inside ml-4 mt-1 text-sm text-gray-600">
+                  <li>Points allocation based on payment timing</li>
+                  <li>Badge awarding based on points thresholds</li>
+                  <li>Gamification notifications and alerts</li>
+                  <li>Automated reporting and analytics</li>
+                </ul>
+              </li>
             </ol>
           </div>
 

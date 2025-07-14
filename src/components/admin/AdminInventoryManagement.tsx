@@ -562,7 +562,7 @@ export const AdminInventoryManagement = () => {
                       />
                     </TableCell>
                     <TableCell>{product.name}</TableCell>
-                    <TableCell>${product.unit_price.toFixed(2)}</TableCell>
+                    <TableCell>₹{product.unit_price.toFixed(2)}</TableCell>
                     <TableCell>{product.category}</TableCell>
                     <TableCell>
                       <Badge variant={product.shelf_stock < lowStockThreshold ? "destructive" : "default"}>
