@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
 
 interface UpdatePointsRequest {
   studentId: string;
@@ -132,6 +133,18 @@ Deno.serve(async (req) => {
       pointsAdded: points,
       newPoints: newPoints,
       reason,
+      timestamp: new Date().toISOString()
+    });
+
+    // Trigger n8n webhook for points update
+    await triggerN8nWebhook('points', {
+      studentId,
+      studentName: userData.name,
+      oldPoints: currentPoints,
+      pointsAdded: points,
+      newPoints: newPoints,
+      reason,
+      event: 'points_updated',
       timestamp: new Date().toISOString()
     });
 

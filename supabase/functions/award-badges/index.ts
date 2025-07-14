@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
 
 interface BadgeAwardResult {
   newBadges: string[];
@@ -127,6 +128,14 @@ async function awardBadge(supabase: SupabaseClient, userId: string, badgeId: str
     console.error('Failed to award badge:', badgeName, error)
   } else {
     console.log('✅ Awarded badge:', badgeName)
+    // Trigger n8n badge webhook
+    await triggerN8nWebhook('badge', {
+      userId,
+      badgeId,
+      badgeName,
+      event: 'badge_awarded',
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
@@ -231,13 +240,24 @@ async function checkPaymentStreaks(
 }
 
 async function createBadgeNotification(supabase: SupabaseClient, userId: string, badgeName: string) {
-  await supabase
+  const { error } = await supabase
     .from('notifications')
     .insert({
-      title: '🏆 Badge Unlocked!',
-      body: `Congratulations! You've earned the "${badgeName}" badge!`,
-      type: 'badge_unlock',
-      target_user_id: userId,
-      is_pinned: false
+      user_id: userId,
+      message: `You earned a new badge: ${badgeName}`,
+      created_at: new Date().toISOString(),
+      type: 'badge'
     })
+  if (error) {
+    console.error('Failed to create badge notification:', error)
+  } else {
+    // Trigger n8n notification webhook
+    await triggerN8nWebhook('notification', {
+      userId,
+      badgeName,
+      message: `You earned a new badge: ${badgeName}`,
+      event: 'notification',
+      timestamp: new Date().toISOString()
+    });
+  }
 }

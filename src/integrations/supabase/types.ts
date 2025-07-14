@@ -14,60 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      daily_stock_operations: {
-        Row: {
-          id: string
-          product_id: string
-          opening_stock: number
-          additional_stock: number
-          actual_closing_stock: number
-          estimated_closing_stock: number
-          stolen_stock: number
-          wastage_stock: number
-          sales: number
-          order_count: number
-          created_at: string
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          product_id: string
-          opening_stock: number
-          additional_stock?: number
-          actual_closing_stock: number
-          estimated_closing_stock: number
-          stolen_stock?: number
-          wastage_stock?: number
-          sales?: number
-          order_count?: number
-          created_at?: string
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          product_id?: string
-          opening_stock?: number
-          additional_stock?: number
-          actual_closing_stock?: number
-          estimated_closing_stock?: number
-          stolen_stock?: number
-          wastage_stock?: number
-          sales?: number
-          order_count?: number
-          created_at?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "daily_stock_operations_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          }
-        ]
-      },
-      
       badge_progress: {
         Row: {
           badge_id: string | null
@@ -182,7 +128,7 @@ export type Database = {
         }
         Relationships: []
       }
-      daily_inventory: {
+      daily_stock_operations: {
         Row: {
           actual_closing_stock: number | null
           additional_stock: number | null
@@ -307,6 +253,39 @@ export type Database = {
           razorpay_api_key_hash?: string | null
           razorpay_webhook_url?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      n8n_webhooks: {
+        Row: {
+          created_at: string
+          id: string
+          last_called_at: string | null
+          last_error: string | null
+          last_status: string | null
+          type: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_called_at?: string | null
+          last_error?: string | null
+          last_status?: string | null
+          type: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_called_at?: string | null
+          last_error?: string | null
+          last_status?: string | null
+          type?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
@@ -567,51 +546,59 @@ export type Database = {
           category: string
           created_at: string | null
           created_by: string | null
-          shelf_stock: number | null
-          warehouse_stock: number | null
           id: string
           image_url: string | null
           is_archived: boolean | null
           name: string
           opening_stock: number
+          shelf_stock: number | null
           status: string | null
           unit_price: number
-          updated_by?: string | null
-          updated_at?: string | null
+          updated_at: string | null
+          updated_by: string | null
+          warehouse_stock: number | null
         }
         Insert: {
           category?: string
           created_at?: string | null
           created_by?: string | null
-          shelf_stock?: number | null
-          warehouse_stock?: number | null
           id?: string
           image_url?: string | null
           is_archived?: boolean | null
           name: string
           opening_stock?: number
+          shelf_stock?: number | null
           status?: string | null
           unit_price: number
-          updated_by?: string | null
           updated_at?: string | null
+          updated_by?: string | null
+          warehouse_stock?: number | null
         }
         Update: {
           category?: string
           created_at?: string | null
           created_by?: string | null
-          shelf_stock?: number | null
-          warehouse_stock?: number | null
           id?: string
           image_url?: string | null
           is_archived?: boolean | null
           name?: string
           opening_stock?: number
+          shelf_stock?: number | null
           status?: string | null
           unit_price?: number
-          updated_by?: string | null
           updated_at?: string | null
+          updated_by?: string | null
+          warehouse_stock?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       top_departments: {
         Row: {
@@ -757,6 +744,24 @@ export type Database = {
           student_id?: string
           updated_at?: string | null
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      whitelabel_config: {
+        Row: {
+          config: Json
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          config: Json
+          id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json
+          id?: number
+          updated_at?: string | null
         }
         Relationships: []
       }

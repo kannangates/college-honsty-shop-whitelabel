@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -102,6 +103,17 @@ serve(async (req: Request) => {
           .select()
 
         if (error) throw error
+
+        // If payment_status is set to 'paid', trigger n8n webhook
+        if (updateData.payment_status === 'paid') {
+          await triggerN8nWebhook('points', {
+            orderId: id,
+            userId: data[0]?.user_id,
+            amount: data[0]?.total_amount,
+            event: 'payment_completed',
+            timestamp: new Date().toISOString()
+          });
+        }
 
         return new Response(
           JSON.stringify({ order: data[0] }),

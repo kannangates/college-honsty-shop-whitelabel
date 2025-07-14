@@ -1,6 +1,7 @@
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
 
 interface OrderRow { total_amount: number }
 interface ProductRow { name: string; current_stock: number; opening_stock: number }
@@ -161,6 +162,14 @@ Deno.serve(async (req: Request) => {
       userRank: userRank,
       stockData: formattedStockData
     };
+
+    // Trigger n8n analytics webhook
+    await triggerN8nWebhook('analytics', {
+      event: 'dashboard_data_generated',
+      stats: dashboardData.stats,
+      topStudents: dashboardData.topStudents,
+      timestamp: new Date().toISOString()
+    });
 
     console.log('✅ Optimized dashboard data fetched successfully');
     
