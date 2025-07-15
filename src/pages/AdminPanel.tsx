@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
-import { Shield, Users, Package, Settings, Mail, CreditCard, Award, University, Megaphone, ReceiptIndianRupee, ReceiptText } from 'lucide-react';
+import { Shield, Users, Package, Settings, Mail, CreditCard, Award, University, Megaphone, ReceiptIndianRupee, ReceiptText, Gamepad2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/useAuth';
@@ -76,6 +76,15 @@ const AdminPanel = () => {
       color: "from-gray-500 to-gray-600",
       bgColor: "bg-gray-200",
       path: "/admin/n8n",
+      roles: ['admin', 'developer'],
+    },
+    {
+      title: "Gamification Rules",
+      description: "Manage XP and badge rules for events",
+      icon: Gamepad2,
+      color: "from-pink-500 to-pink-600",
+      bgColor: "bg-pink-100",
+      path: "/admin/gamification",
       roles: ['admin', 'developer'],
     },
     {
