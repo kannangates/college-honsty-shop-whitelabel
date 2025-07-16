@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Award, Trophy, Plus } from 'lucide-react';
+import { Award, Trophy, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check } from 'lucide-react';
@@ -16,6 +16,7 @@ import { BadgeCreateCard, BADGE_PRESETS } from './BadgeCreateCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { ColumnDef, useReactTable, getCoreRowModel, flexRender, CellContext } from '@tanstack/react-table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Student {
   id: string;
@@ -254,7 +255,7 @@ const AdminPointsBadges = () => {
     setEditRule(rule);
     setRuleModalOpen(true);
     (Object.keys(ruleFormDefault) as (keyof typeof ruleFormDefault)[]).forEach(key => {
-      setRuleValue(key, (rule as Record<string, unknown>)[key] ?? ruleFormDefault[key]);
+      setRuleValue(key, ((rule as unknown) as Record<string, unknown>)[key] ?? ruleFormDefault[key]);
     });
   };
   const handleDeleteRule = async (id: string) => {
@@ -280,14 +281,14 @@ const AdminPointsBadges = () => {
 
   // Table columns for rules
   const ruleColumns: ColumnDef<GamificationRule>[] = [
-    { accessorKey: 'event_type' as const, header: 'Event Type' },
-    { accessorKey: 'condition_type' as const, header: 'Condition Type' },
-    { accessorKey: 'operator' as const, header: 'Operator' },
-    { accessorKey: 'condition_value' as const, header: 'Value' },
-    { accessorKey: 'label' as const, header: 'Label' },
-    { accessorKey: 'points_awarded' as const, header: 'Points' },
-    { accessorKey: 'cooldown_seconds' as const, header: 'Cooldown (s)' },
-    { accessorKey: 'active' as const, header: 'Active', cell: (cell: CellContext<GamificationRule, unknown>) => cell.row.original.active ? 'Yes' : 'No' },
+    { accessorKey: 'event_type', header: 'Event Type' },
+    { accessorKey: 'condition_type', header: 'Condition Type' },
+    { accessorKey: 'operator', header: 'Operator' },
+    { accessorKey: 'condition_value', header: 'Value' },
+    { accessorKey: 'label', header: 'Label' },
+    { accessorKey: 'points_awarded', header: 'Points' },
+    { accessorKey: 'cooldown_seconds', header: 'Cooldown (s)' },
+    { accessorKey: 'active', header: 'Active' },
     {
       id: 'actions',
       header: 'Actions',
@@ -295,8 +296,12 @@ const AdminPointsBadges = () => {
         const row = cell.row.original;
         return (
           <div className="flex gap-2 items-center">
-            <Button size="sm" variant="outline" onClick={() => handleEditRule(row)}>Edit</Button>
-            <Button size="sm" variant="destructive" onClick={() => handleDeleteRule(row.id)}>Delete</Button>
+            <Button size="icon" variant="outline" onClick={() => handleEditRule(row)} aria-label="Edit Rule">
+              <Pencil className="w-4 h-4" />
+            </Button>
+            <Button size="icon" variant="destructive" onClick={() => handleDeleteRule(row.id)} aria-label="Delete Rule">
+              <Trash2 className="w-4 h-4" />
+            </Button>
           </div>
         );
       }
@@ -322,76 +327,6 @@ const AdminPointsBadges = () => {
         </TabsList>
 
         <TabsContent value="points" className="space-y-4">
-          {/* Order-Based Points Configuration */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Trophy className="h-5 w-5" />
-                Order-Based Points Allocation
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xs text-gray-600 mb-4">Configure points based on payment timing after order creation</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="immediate" className="text-xs">Immediate Payment (Pay Now)</Label>
-                  <Input
-                    id="immediate"
-                    type="number"
-                    value={pointsConfig.immediate}
-                    onChange={(e) => handlePointsConfigChange('immediate', e.target.value)}
-                    className="text-sm h-8"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="within30h" className="text-xs">Within 30 hours</Label>
-                  <Input
-                    id="within30h"
-                    type="number"
-                    value={pointsConfig.within30h}
-                    onChange={(e) => handlePointsConfigChange('within30h', e.target.value)}
-                    className="text-sm h-8"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="within48h" className="text-xs">Within 48 hours</Label>
-                  <Input
-                    id="within48h"
-                    type="number"
-                    value={pointsConfig.within48h}
-                    onChange={(e) => handlePointsConfigChange('within48h', e.target.value)}
-                    className="text-sm h-8"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="within72h" className="text-xs">Within 72 hours</Label>
-                  <Input
-                    id="within72h"
-                    type="number"
-                    value={pointsConfig.within72h}
-                    onChange={(e) => handlePointsConfigChange('within72h', e.target.value)}
-                    className="text-sm h-8"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="after72h" className="text-xs">After 72 hours</Label>
-                  <Input
-                    id="after72h"
-                    type="number"
-                    value={pointsConfig.after72h}
-                    onChange={(e) => handlePointsConfigChange('after72h', e.target.value)}
-                    className="text-sm h-8"
-                  />
-                </div>
-              </div>
-
-              <Button onClick={handleSavePointsConfig} className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm">
-                Save Points Configuration
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* Manual Points Allocation */}
           <Card className="border-0 shadow-lg">
             <CardHeader>
@@ -601,8 +536,23 @@ const AdminPointsBadges = () => {
                   {ruleErrors.points_awarded && <span className="text-xs text-red-500">Required</span>}
                 </div>
                 <div>
-                  <label className="block text-xs mb-1">Cooldown (seconds)</label>
-                  <Input type="number" {...ruleRegister('cooldown_seconds', { valueAsNumber: true })} className="w-full" />
+                  <Label htmlFor="cooldown_seconds" className="text-xs flex items-center gap-1">
+                    Cooldown (seconds)
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="ml-1 cursor-pointer">🛈</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        The minimum time (in seconds) that must pass before this rule can be triggered again for the same user.
+                      </TooltipContent>
+                    </Tooltip>
+                  </Label>
+                  <Input
+                    id="cooldown_seconds"
+                    type="number"
+                    {...ruleRegister('cooldown_seconds')}
+                    className="text-sm h-8"
+                  />
                 </div>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" {...ruleRegister('active')} checked={!!(editRule ? editRule.active : true)} onChange={e => setRuleValue('active', e.target.checked)} />
