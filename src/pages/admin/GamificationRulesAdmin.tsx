@@ -250,22 +250,6 @@ export default function GamificationRulesAdmin() {
         </CardHeader>
         <CardContent>
           <Button onClick={() => { setOpen(true); setEditRule(null); reset(); }} className="mb-4">Add Rule</Button>
-          {/* Show a summary of default rules */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Default Gamification Rules</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-6 space-y-1 text-sm">
-                {DEFAULT_RULES.map((r, i) => (
-                  <li key={i}>
-                    <span className="font-medium">{r.label}</span> ({r.event_type}, {r.condition_type} {r.operator} {r.condition_value})
-                    {isPointsConfigRule(r) && <span className="ml-2 text-xs text-blue-600">(Points managed in Points & Badges page)</span>}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
           <div className="overflow-x-auto">
             <table className="min-w-full border text-sm">
               <thead>
@@ -337,8 +321,8 @@ export default function GamificationRulesAdmin() {
             </div>
             <div>
               <label className="block text-xs mb-1">Points Awarded</label>
-              <Input type="number" {...register('points_awarded', { required: true, valueAsNumber: true })} className="w-full" disabled />
-              <span className="text-xs text-blue-600">Points managed in Points & Badges page</span>
+              <Input type="number" {...register('points_awarded', { required: true, valueAsNumber: true })} className="w-full bg-gray-100 cursor-not-allowed" disabled />
+              <span className="text-xs text-blue-700 font-semibold block mt-1">Points managed in <b>Points & Badges</b> page</span>
               {errors.points_awarded && <span className="text-xs text-red-500">Required</span>}
             </div>
             <div>
