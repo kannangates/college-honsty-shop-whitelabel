@@ -337,8 +337,8 @@ export default function GamificationRulesAdmin() {
             </div>
             <div>
               <label className="block text-xs mb-1">Points Awarded</label>
-              <Input type="number" {...register('points_awarded', { required: true, valueAsNumber: true })} className="w-full" disabled={isPointsConfigRule(editRule)} />
-              {isPointsConfigRule(editRule) && <span className="text-xs text-blue-600">Points managed in Points & Badges page</span>}
+              <Input type="number" {...register('points_awarded', { required: true, valueAsNumber: true })} className="w-full" disabled />
+              <span className="text-xs text-blue-600">Points managed in Points & Badges page</span>
               {errors.points_awarded && <span className="text-xs text-red-500">Required</span>}
             </div>
             <div>
@@ -367,19 +367,24 @@ export default function GamificationRulesAdmin() {
       </Dialog>
       <Card className="mt-8">
         <CardHeader>
-          <CardTitle>Badge Definitions</CardTitle>
+          <CardTitle>Badge Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="list-disc pl-6 space-y-1 text-sm">
-            {BADGE_DEFINITIONS.map((b, i) => (
-              <li key={i}>
-                <span className="font-medium">{b.name}</span>: {b.description} (Criteria: {b.criteria_type} {b.criteria_value})
-              </li>
-            ))}
-          </ul>
+          <div className="mb-6">
+            <BadgeCreateCard />
+          </div>
+          <div>
+            <h3 className="font-semibold mb-2">Badge Definitions</h3>
+            <ul className="list-disc pl-6 space-y-1 text-sm">
+              {BADGE_DEFINITIONS.map((b, i) => (
+                <li key={i}>
+                  <span className="font-medium">{b.name}</span>: {b.description} (Criteria: {b.criteria_type} {b.criteria_value})
+                </li>
+              ))}
+            </ul>
+          </div>
         </CardContent>
       </Card>
-      <BadgeCreateCard />
     </div>
   );
 }
