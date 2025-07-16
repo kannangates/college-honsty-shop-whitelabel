@@ -89,34 +89,29 @@ export async function handleGamificationEvent(event: GamificationEvent) {
     });
 
     // 6. Check for badge unlocks (example: XP threshold)
-    const { data: badges } = await supabase
-      .from('badges')
-      .select('*')
-      .eq('is_active', true);
-    for (const badge of badges || []) {
-      if (badge.min_points && newPoints >= badge.min_points) {
-        // Check if user already has badge
-        const { data: existing } = await supabase
-          .from('user_badges')
-          .select('id')
-          .eq('user_id', event.user_id)
-          .eq('badge_id', badge.id)
-          .single();
-        if (!existing) {
-          await supabase.from('user_badges').insert({
-            user_id: event.user_id,
-            badge_id: badge.id,
-            earned_at: new Date().toISOString(),
-          });
-          // Log badge
-          await supabase.from('gamification_event_logs').insert({
-            user_id: event.user_id,
-            event_type: 'BADGE_AWARDED',
-            badge_id: badge.id,
-            payload: {},
-            created_at: new Date().toISOString(),
-          });
-        }
+    // If the rule has a linked badge, award it
+    if (rule.badge_id) {
+      // Check if user already has badge
+      const { data: existingBadge } = await supabase
+        .from('user_badges')
+        .select('id')
+        .eq('user_id', event.user_id)
+        .eq('badge_id', rule.badge_id)
+        .single();
+      if (!existingBadge) {
+        await supabase.from('user_badges').insert({
+          user_id: event.user_id,
+          badge_id: rule.badge_id,
+          earned_at: new Date().toISOString(),
+        });
+        // Log badge
+        await supabase.from('gamification_event_logs').insert({
+          user_id: event.user_id,
+          event_type: 'BADGE_AWARDED',
+          badge_id: rule.badge_id,
+          payload: {},
+          created_at: new Date().toISOString(),
+        });
       }
     }
   }
