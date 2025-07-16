@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { createClient } from '@supabase/supabase-js';
-import { ColumnDef, useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
+import { ColumnDef, useReactTable, getCoreRowModel, flexRender, CellContext } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -70,12 +70,32 @@ const BADGE_DEFINITIONS = [
   { name: "XP Achiever", criteria_type: "xp_threshold", criteria_value: 100, description: "Earned 100 XP total" }
 ];
 
+type Badge = {
+  id: string;
+  name: string;
+  icon_url?: string;
+  description?: string;
+};
+type GamificationRule = {
+  id: string;
+  event_type: string;
+  condition_type: string;
+  operator: string;
+  condition_value: string;
+  label?: string;
+  points_awarded: number;
+  cooldown_seconds?: number;
+  active: boolean;
+  badge_id?: string;
+  created_at?: string;
+};
+
 export default function GamificationRulesAdmin() {
-  const [rules, setRules] = useState<any[]>([]);
+  const [rules, setRules] = useState<GamificationRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [editRule, setEditRule] = useState<any | null>(null);
-  const [badges, setBadges] = useState<any[]>([]);
+  const [editRule, setEditRule] = useState<GamificationRule | null>(null);
+  const [badges, setBadges] = useState<Badge[]>([]);
 
   const fetchRules = async () => {
     setLoading(true);
@@ -109,20 +129,22 @@ export default function GamificationRulesAdmin() {
     fetchBadges();
   }, []);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
-    defaultValues: {
-      event_type: '',
-      condition_type: '',
-      operator: '',
-      condition_value: '',
-      label: '',
-      points_awarded: 0,
-      cooldown_seconds: undefined,
-      active: true,
-    }
+  const formDefaultValues = {
+    event_type: '',
+    condition_type: '',
+    operator: '',
+    condition_value: '',
+    label: '',
+    points_awarded: 0,
+    cooldown_seconds: undefined,
+    active: true,
+    badge_id: '',
+  };
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<typeof formDefaultValues>({
+    defaultValues: formDefaultValues
   });
 
-  const onSubmit = async (values: any) => {
+  const onSubmit: SubmitHandler<typeof formDefaultValues> = async (values) => {
     setLoading(true);
     if (editRule) {
       await supabase.from('gamification_rules').update(values).eq('id', editRule.id);
@@ -136,10 +158,13 @@ export default function GamificationRulesAdmin() {
     setLoading(false);
   };
 
-  const handleEdit = (rule: any) => {
+  const handleEdit = (rule: GamificationRule) => {
     setEditRule(rule);
     setOpen(true);
-    Object.keys(rule).forEach(key => setValue(key, rule[key]));
+    // Only set values for fields in formDefaultValues
+    (Object.keys(formDefaultValues) as (keyof typeof formDefaultValues)[]).forEach(key => {
+      setValue(key, (rule as Record<string, unknown>)[key] ?? formDefaultValues[key]);
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -150,20 +175,20 @@ export default function GamificationRulesAdmin() {
     setLoading(false);
   };
 
-  const columns: ColumnDef<any>[] = [
-    { accessorKey: 'event_type', header: 'Event Type' },
-    { accessorKey: 'condition_type', header: 'Condition Type' },
-    { accessorKey: 'operator', header: 'Operator' },
-    { accessorKey: 'condition_value', header: 'Value' },
-    { accessorKey: 'label', header: 'Label' },
-    { accessorKey: 'points_awarded', header: 'Points' },
-    { accessorKey: 'cooldown_seconds', header: 'Cooldown (s)' },
-    { accessorKey: 'active', header: 'Active', cell: ({ row }) => row.original.active ? 'Yes' : 'No' },
+  const columns: ColumnDef<GamificationRule>[] = [
+    { accessorKey: 'event_type' as const, header: 'Event Type' },
+    { accessorKey: 'condition_type' as const, header: 'Condition Type' },
+    { accessorKey: 'operator' as const, header: 'Operator' },
+    { accessorKey: 'condition_value' as const, header: 'Value' },
+    { accessorKey: 'label' as const, header: 'Label' },
+    { accessorKey: 'points_awarded' as const, header: 'Points' },
+    { accessorKey: 'cooldown_seconds' as const, header: 'Cooldown (s)' },
+    { accessorKey: 'active' as const, header: 'Active', cell: (cell: CellContext<GamificationRule, unknown>) => cell.row.original.active ? 'Yes' : 'No' },
     {
-      accessorKey: 'badge_id',
+      accessorKey: 'badge_id' as const,
       header: 'Linked Badge',
-      cell: ({ row }) => {
-        const badge = badges.find(b => b.id === row.original.badge_id);
+      cell: (cell: CellContext<GamificationRule, unknown>) => {
+        const badge = badges.find(b => b.id === cell.row.original.badge_id);
         return badge ? (
           <span className="flex items-center gap-1">
             {badge.icon_url && <img src={badge.icon_url} alt="icon" className="w-5 h-5 inline-block rounded-full" />}
@@ -175,17 +200,18 @@ export default function GamificationRulesAdmin() {
     {
       id: 'actions',
       header: 'Actions',
-      cell: ({ row }) => {
+      cell: (cell: CellContext<GamificationRule, unknown>) => {
+        const row = cell.row.original;
         const isDefault = DEFAULT_RULES.some(r =>
-          r.event_type === row.original.event_type &&
-          r.condition_type === row.original.condition_type &&
-          r.operator === row.original.operator &&
-          r.condition_value === row.original.condition_value
+          r.event_type === row.event_type &&
+          r.condition_type === row.condition_type &&
+          r.operator === row.operator &&
+          r.condition_value === row.condition_value
         );
         return (
           <div className="flex gap-2 items-center">
-            <Button size="sm" variant="outline" onClick={() => handleEdit(row.original)}>Edit</Button>
-            <Button size="sm" variant="destructive" onClick={() => handleDelete(row.original.id)} disabled={isDefault}>Delete</Button>
+            <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>Edit</Button>
+            <Button size="sm" variant="destructive" onClick={() => handleDelete(row.id)} disabled={isDefault}>Delete</Button>
             {isDefault && <span className="text-xs text-blue-600 ml-1">System Rule</span>}
           </div>
         );
@@ -199,8 +225,8 @@ export default function GamificationRulesAdmin() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const isPointsConfigRule = (rule: any) =>
-    rule.event_type === 'PAYMENT_RECORDED' &&
+  const isPointsConfigRule = (rule: Partial<GamificationRule> | null) =>
+    rule && rule.event_type === 'PAYMENT_RECORDED' &&
     (rule.condition_type === 'delay_minutes' || rule.condition_type === 'delay_hours');
 
   const handleBulkAdd = async () => {
@@ -311,8 +337,8 @@ export default function GamificationRulesAdmin() {
             </div>
             <div>
               <label className="block text-xs mb-1">Points Awarded</label>
-              <Input type="number" {...register('points_awarded', { required: true, valueAsNumber: true })} className="w-full" disabled={isPointsConfigRule(editRule || {})} />
-              {isPointsConfigRule(editRule || {}) && <span className="text-xs text-blue-600">Points managed in Points & Badges page</span>}
+              <Input type="number" {...register('points_awarded', { required: true, valueAsNumber: true })} className="w-full" disabled={isPointsConfigRule(editRule)} />
+              {isPointsConfigRule(editRule) && <span className="text-xs text-blue-600">Points managed in Points & Badges page</span>}
               {errors.points_awarded && <span className="text-xs text-red-500">Required</span>}
             </div>
             <div>
@@ -369,11 +395,18 @@ const badgeColors = [
 function getRandomColor() {
   return badgeColors[Math.floor(Math.random() * badgeColors.length)];
 }
+type BadgeForm = {
+  name: string;
+  description?: string;
+  icon_url?: string;
+  criteria_type: string;
+  criteria_value: string;
+};
 function BadgeCreateCard() {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset } = useForm<BadgeForm>();
   const [color, setColor] = useState(getRandomColor());
   const [loading, setLoading] = useState(false);
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: BadgeForm) => {
     setLoading(true);
     await supabase.from('badges').insert({
       name: values.name,

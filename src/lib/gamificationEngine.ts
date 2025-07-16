@@ -2,10 +2,31 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
+export type GamificationRule = {
+  id: string;
+  event_type: string;
+  condition_type: string;
+  operator: string;
+  condition_value: string;
+  label?: string;
+  points_awarded: number;
+  cooldown_seconds?: number;
+  active: boolean;
+  badge_id?: string;
+  created_at?: string;
+};
+
+export type Badge = {
+  id: string;
+  name: string;
+  icon_url?: string;
+  description?: string;
+};
+
 export type GamificationEvent = {
   event_type: string;
   user_id: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
 };
 
 export async function handleGamificationEvent(event: GamificationEvent) {
@@ -19,7 +40,7 @@ export async function handleGamificationEvent(event: GamificationEvent) {
   if (rulesError) throw rulesError;
   if (!rules) return;
 
-  for (const rule of rules) {
+  for (const rule of rules as GamificationRule[]) {
     // 2. Check cooldown (optional)
     if (rule.cooldown_seconds) {
       const { data: recentLog } = await supabase
