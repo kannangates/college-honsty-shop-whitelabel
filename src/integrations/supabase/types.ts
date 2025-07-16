@@ -88,7 +88,49 @@ export type Database = {
           name?: string
         }
         Relationships: []
-      }
+      },
+      gamification_rules: {
+        Row: {
+          id: string;
+          event_type: string;
+          condition_type: string;
+          operator: string;
+          condition_value: string;
+          label: string | null;
+          points_awarded: number;
+          cooldown_seconds: number | null;
+          active: boolean;
+          badge_id: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          event_type: string;
+          condition_type: string;
+          operator: string;
+          condition_value: string;
+          label?: string | null;
+          points_awarded: number;
+          cooldown_seconds?: number | null;
+          active?: boolean;
+          badge_id?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          event_type?: string;
+          condition_type?: string;
+          operator?: string;
+          condition_value?: string;
+          label?: string | null;
+          points_awarded?: number;
+          cooldown_seconds?: number | null;
+          active?: boolean;
+          badge_id?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      },
       college_settings: {
         Row: {
           address: string | null

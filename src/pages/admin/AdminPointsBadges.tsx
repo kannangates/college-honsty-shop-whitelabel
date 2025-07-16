@@ -12,6 +12,10 @@ import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { BadgeCreateCard, BADGE_PRESETS } from './BadgeCreateCard';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { ColumnDef, useReactTable, getCoreRowModel, flexRender, CellContext } from '@tanstack/react-table';
 
 interface Student {
   id: string;
@@ -20,6 +24,37 @@ interface Student {
   department?: string;
   points: number;
 }
+
+// Add types for rules
+interface GamificationRule {
+  id: string;
+  event_type: string;
+  condition_type: string;
+  operator: string;
+  condition_value: string;
+  label?: string;
+  points_awarded: number;
+  cooldown_seconds?: number;
+  active: boolean;
+  badge_id?: string;
+  created_at?: string;
+}
+
+const EVENT_TYPES = [
+  'PAYMENT_RECORDED',
+  'ORDER_PAID',
+  'MANUAL_REWARD',
+  // Add more as needed
+];
+const CONDITION_TYPES = [
+  'delay_minutes',
+  'delay_hours',
+  'streak_paid_orders',
+  'amount_paid',
+  'reason',
+  // Add more as needed
+];
+const OPERATORS = ['<=', '>=', '==', '>', '<'];
 
 const AdminPointsBadges = () => {
   const [pointsConfig, setPointsConfig] = useState({
@@ -47,6 +82,12 @@ const AdminPointsBadges = () => {
   const [loading, setLoading] = useState(false);
   const [studentPopoverOpen, setStudentPopoverOpen] = useState(false);
   const [reasonPopoverOpen, setReasonPopoverOpen] = useState(false);
+
+  // Gamification rules state
+  const [rules, setRules] = useState<GamificationRule[]>([]);
+  const [rulesLoading, setRulesLoading] = useState(false);
+  const [ruleModalOpen, setRuleModalOpen] = useState(false);
+  const [editRule, setEditRule] = useState<GamificationRule | null>(null);
 
   const { toast } = useToast();
 
@@ -87,6 +128,18 @@ const AdminPointsBadges = () => {
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
+
+  // Fetch rules
+  const fetchRules = useCallback(async () => {
+    setRulesLoading(true);
+    const { data, error } = await supabase.from('gamification_rules').select('*').order('created_at', { ascending: false });
+    if (!error) setRules(data || []);
+    setRulesLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchRules();
+  }, [fetchRules]);
 
   const handlePointsConfigChange = (field: string, value: string) => {
     setPointsConfig(prev => ({ ...prev, [field]: parseInt(value) || 0 }));
@@ -175,6 +228,85 @@ const AdminPointsBadges = () => {
     // Implementation for adding badge
     setBadgeConfig({ imageUrl: '', name: '', minPoints: '', maxPoints: '' });
   };
+
+  // Add/Edit Rule form
+  const ruleFormDefault = {
+    event_type: '',
+    condition_type: '',
+    operator: '',
+    condition_value: '',
+    label: '',
+    points_awarded: 0,
+    cooldown_seconds: undefined,
+    active: true,
+    badge_id: '',
+  };
+  const { register: ruleRegister, handleSubmit: handleRuleSubmit, reset: resetRuleForm, setValue: setRuleValue, formState: { errors: ruleErrors } } = useForm<typeof ruleFormDefault>({
+    defaultValues: ruleFormDefault
+  });
+
+  const handleOpenAddRule = () => {
+    setEditRule(null);
+    resetRuleForm();
+    setRuleModalOpen(true);
+  };
+  const handleEditRule = (rule: GamificationRule) => {
+    setEditRule(rule);
+    setRuleModalOpen(true);
+    (Object.keys(ruleFormDefault) as (keyof typeof ruleFormDefault)[]).forEach(key => {
+      setRuleValue(key, (rule as Record<string, unknown>)[key] ?? ruleFormDefault[key]);
+    });
+  };
+  const handleDeleteRule = async (id: string) => {
+    if (!window.confirm('Delete this rule?')) return;
+    setRulesLoading(true);
+    await supabase.from('gamification_rules').delete().eq('id', id);
+    await fetchRules();
+    setRulesLoading(false);
+  };
+  const onSubmitRule: SubmitHandler<typeof ruleFormDefault> = async (values) => {
+    setRulesLoading(true);
+    if (editRule) {
+      await supabase.from('gamification_rules').update(values).eq('id', editRule.id);
+    } else {
+      await supabase.from('gamification_rules').insert(values);
+    }
+    setRuleModalOpen(false);
+    setEditRule(null);
+    resetRuleForm();
+    await fetchRules();
+    setRulesLoading(false);
+  };
+
+  // Table columns for rules
+  const ruleColumns: ColumnDef<GamificationRule>[] = [
+    { accessorKey: 'event_type' as const, header: 'Event Type' },
+    { accessorKey: 'condition_type' as const, header: 'Condition Type' },
+    { accessorKey: 'operator' as const, header: 'Operator' },
+    { accessorKey: 'condition_value' as const, header: 'Value' },
+    { accessorKey: 'label' as const, header: 'Label' },
+    { accessorKey: 'points_awarded' as const, header: 'Points' },
+    { accessorKey: 'cooldown_seconds' as const, header: 'Cooldown (s)' },
+    { accessorKey: 'active' as const, header: 'Active', cell: (cell: CellContext<GamificationRule, unknown>) => cell.row.original.active ? 'Yes' : 'No' },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: (cell: CellContext<GamificationRule, unknown>) => {
+        const row = cell.row.original;
+        return (
+          <div className="flex gap-2 items-center">
+            <Button size="sm" variant="outline" onClick={() => handleEditRule(row)}>Edit</Button>
+            <Button size="sm" variant="destructive" onClick={() => handleDeleteRule(row.id)}>Delete</Button>
+          </div>
+        );
+      }
+    }
+  ];
+  const ruleTable = useReactTable({
+    data: rules,
+    columns: ruleColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
     <div className="space-y-4 text-sm">
@@ -381,6 +513,108 @@ const AdminPointsBadges = () => {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Gamification Rules Table & Add Rule Button */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Trophy className="h-5 w-5" />
+                Gamification Rules
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleOpenAddRule} className="mb-4">Add Rule</Button>
+              <div className="overflow-x-auto">
+                <table className="min-w-full border text-sm">
+                  <thead>
+                    {ruleTable.getHeaderGroups().map(headerGroup => (
+                      <tr key={headerGroup.id}>
+                        {headerGroup.headers.map(header => (
+                          <th key={header.id} className="border px-2 py-1 bg-gray-50 text-left">
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
+                  </thead>
+                  <tbody>
+                    {ruleTable.getRowModel().rows.map(row => (
+                      <tr key={row.id} className="hover:bg-gray-50">
+                        {row.getVisibleCells().map(cell => (
+                          <td key={cell.id} className="border px-2 py-1">
+                            {flexRender(cell.column.columnDef.cell || cell.column.columnDef.header, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {rulesLoading && <div className="text-center py-4">Loading...</div>}
+                {!rulesLoading && rules.length === 0 && <div className="text-center py-4">No rules found.</div>}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Add/Edit Rule Modal */}
+          <Dialog open={ruleModalOpen} onOpenChange={setRuleModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editRule ? 'Edit Rule' : 'Add Rule'}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleRuleSubmit(onSubmitRule)} className="space-y-4">
+                <div>
+                  <label className="block text-xs mb-1">Event Type</label>
+                  <select {...ruleRegister('event_type', { required: true })} className="w-full border rounded px-2 py-1">
+                    <option value="">Select event</option>
+                    {EVENT_TYPES.map(e => <option key={e} value={e}>{e}</option>)}
+                  </select>
+                  {ruleErrors.event_type && <span className="text-xs text-red-500">Required</span>}
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Condition Type</label>
+                  <select {...ruleRegister('condition_type', { required: true })} className="w-full border rounded px-2 py-1">
+                    <option value="">Select condition</option>
+                    {CONDITION_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  {ruleErrors.condition_type && <span className="text-xs text-red-500">Required</span>}
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Operator</label>
+                  <select {...ruleRegister('operator', { required: true })} className="w-full border rounded px-2 py-1">
+                    <option value="">Select operator</option>
+                    {OPERATORS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                  {ruleErrors.operator && <span className="text-xs text-red-500">Required</span>}
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Condition Value</label>
+                  <Input {...ruleRegister('condition_value', { required: true })} className="w-full" />
+                  {ruleErrors.condition_value && <span className="text-xs text-red-500">Required</span>}
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Label</label>
+                  <Input {...ruleRegister('label')} className="w-full" />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Points Awarded</label>
+                  <Input type="number" {...ruleRegister('points_awarded', { required: true, valueAsNumber: true })} className="w-full" />
+                  {ruleErrors.points_awarded && <span className="text-xs text-red-500">Required</span>}
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Cooldown (seconds)</label>
+                  <Input type="number" {...ruleRegister('cooldown_seconds', { valueAsNumber: true })} className="w-full" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" {...ruleRegister('active')} checked={!!(editRule ? editRule.active : true)} onChange={e => setRuleValue('active', e.target.checked)} />
+                  <span>Active</span>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" disabled={rulesLoading}>{editRule ? 'Update' : 'Create'}</Button>
+                  <Button type="button" variant="outline" onClick={() => { setRuleModalOpen(false); setEditRule(null); resetRuleForm(); }}>Cancel</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="badges">
@@ -470,6 +704,26 @@ const AdminPointsBadges = () => {
               </div>
             </CardContent>
           </Card>
+          <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Badge Creation</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-6">
+            <BadgeCreateCard />
+          </div>
+          <div>
+            <h3 className="font-semibold mb-2">Badge Presets</h3>
+            <ul className="list-disc pl-6 space-y-1 text-sm">
+              {BADGE_PRESETS.map((b, i) => (
+                <li key={i}>
+                  <span className="font-medium">{b.name}</span>: {b.description} (Criteria: {b.criteria_type} {b.criteria_value})
+                </li>
+              ))}
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
         </TabsContent>
       </Tabs>
     </div>

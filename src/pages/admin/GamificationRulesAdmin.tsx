@@ -53,7 +53,7 @@ const DEFAULT_RULES = [
   { event_type: "PAYMENT_RECORDED", condition_type: "delay_hours", operator: ">", condition_value: "72", label: "Paid after 3 days", points_awarded: 1 }
 ];
 
-const BADGE_DEFINITIONS = [
+export const BADGE_DEFINITIONS = [
   { name: "Honest Rookie", criteria_type: "xp_threshold", criteria_value: 50, description: "Earn 50 XP total" },
   { name: "Consistent Champ", criteria_type: "streak_paid_orders", criteria_value: 3, description: "3+ paid orders in a row" },
   { name: "Timely Titan", criteria_type: "early_payments", criteria_value: 5, description: "Paid within 30 mins, 5 times" },
@@ -88,6 +88,14 @@ type GamificationRule = {
   active: boolean;
   badge_id?: string;
   created_at?: string;
+};
+
+type BadgeForm = {
+  name: string;
+  description?: string;
+  icon_url?: string;
+  criteria_type: string;
+  criteria_value: string;
 };
 
 export default function GamificationRulesAdmin() {
@@ -349,26 +357,7 @@ export default function GamificationRulesAdmin() {
           </form>
         </DialogContent>
       </Dialog>
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Badge Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-6">
-            <BadgeCreateCard />
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Badge Definitions</h3>
-            <ul className="list-disc pl-6 space-y-1 text-sm">
-              {BADGE_DEFINITIONS.map((b, i) => (
-                <li key={i}>
-                  <span className="font-medium">{b.name}</span>: {b.description} (Criteria: {b.criteria_type} {b.criteria_value})
-                </li>
-              ))}
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+
     </div>
   );
 }
@@ -384,14 +373,7 @@ const badgeColors = [
 function getRandomColor() {
   return badgeColors[Math.floor(Math.random() * badgeColors.length)];
 }
-type BadgeForm = {
-  name: string;
-  description?: string;
-  icon_url?: string;
-  criteria_type: string;
-  criteria_value: string;
-};
-function BadgeCreateCard() {
+export function BadgeCreateCard() {
   const { register, handleSubmit, reset } = useForm<BadgeForm>();
   const [color, setColor] = useState(getRandomColor());
   const [loading, setLoading] = useState(false);
