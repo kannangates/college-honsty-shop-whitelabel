@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Crown, Medal, Star, Trophy, TrendingUp } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/features/gamification/components/badge';
 
 interface Student {
   id: string;

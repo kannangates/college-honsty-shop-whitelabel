@@ -1,8 +1,6 @@
-
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Trophy, Star } from 'lucide-react';
-import { useBadgeService } from '@/hooks/useBadgeService';
+import { Badge } from '@/features/gamification/components/badge';
+import { useBadgeService } from '@/features/gamification/hooks/useBadgeService';
 import { useAuth } from '@/contexts/useAuth';
 
 export const BadgeDisplay = () => {
@@ -33,9 +31,8 @@ export const BadgeDisplay = () => {
         {badgeProgress.currentTier.name}
       </Badge>
       <div className="flex items-center gap-1 text-xs text-gray-600">
-        <Trophy className="h-3 w-3" />
         <span>{profile.points} pts</span>
       </div>
     </div>
   );
-};
+}; 

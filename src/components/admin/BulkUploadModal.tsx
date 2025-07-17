@@ -118,7 +118,7 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
   }, rowIndex: number) => {
     try {
       const payload = {
-        studentId: userData.student_id,
+        student_id: userData.student_id,
         name: userData.name,
         email: userData.email,
         department: userData.department,
@@ -126,7 +126,7 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
         role: userData.role,
         shift: userData.shift,
         points: userData.initial_points,
-        userMetadata: { must_change_password: true }
+        user_metadata: { must_change_password: true }
       };
 
       console.log(`🔍 Sending payload for row ${rowIndex}:`, payload);

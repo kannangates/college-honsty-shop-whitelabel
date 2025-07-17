@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useBadgeService } from '@/hooks/useBadgeService';
+import { useBadgeService } from '@/features/gamification/hooks/useBadgeService';
 
 interface Product {
   id: string;

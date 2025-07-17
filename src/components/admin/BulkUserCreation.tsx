@@ -40,7 +40,7 @@ export const BulkUserCreation = () => {
       });
       
       return {
-        studentId: student.student_id as string || student.id as string || '',
+        student_id: student.student_id as string || student.id as string || '',
         name: student.name as string || student.full_name as string || '',
         department: student.department as string || '',
         shift: student.shift as string || '1',
@@ -60,16 +60,15 @@ export const BulkUserCreation = () => {
 
       for (const student of students) {
         const signupData = {
-          email: `${student.studentId}@shasuncollege.edu.in`,
+          email: `${student.student_id}@shasuncollege.edu.in`,
           password: student.password,
-          studentId: student.studentId,
+          student_id: student.student_id,
           name: student.name,
           department: student.department,
-          // Cast to allowed enum type
           role: student.role as Database['public']['Enums']['user_role'],
           shift: student.shift,
           points: student.points,
-          userMetadata: { must_change_password: true }
+          user_metadata: { must_change_password: true }
         };
 
         const signupResult = await AuthService.signup(signupData);

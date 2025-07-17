@@ -5,66 +5,74 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG } from '@/config';
-import { PersonalInfoFields } from './forms/PersonalInfoFields';
-import { PasswordFields } from './forms/PasswordFields';
-import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
-import type { SignupFormData } from '@/types/forms';
+
+// ✅ Locally defined form type (no need to import from types/forms.ts)
+type SignupFormData = {
+  student_id: string;
+  full_name: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+  department: string;
+  role: string;
+  shift: string;
+  mobile_number?: string;
+};
 
 export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) => {
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState<SignupFormData>({
-    studentId: '',
-    name: '',
+    student_id: '',
+    full_name: '',
     email: '',
     password: '',
-    confirmPassword: '',
+    confirm_password: '',
     department: '',
     role: 'student',
     shift: '1',
+    mobile_number: '',
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<HCaptcha>(null);
   const [loading, setLoading] = useState(false);
   const [studentIdError, setStudentIdError] = useState('');
-  
+
   const { signUp } = useAuth();
   const { toast } = useToast();
   const config = WHITELABEL_CONFIG;
-  const labels = WHITELABEL_CONFIG.forms.labels;
-  const placeholders = WHITELABEL_CONFIG.forms.placeholders;
-  const messages = WHITELABEL_CONFIG.messages.auth;
-  const errorMessages = WHITELABEL_CONFIG.messages.errors;
-
+  const labels = config.forms.labels;
+  const placeholders = config.forms.placeholders;
+  const errorMessages = config.messages.errors;
   const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
 
   const handleInputChange = (field: keyof SignupFormData, value: string) => {
-    if (field === 'studentId') {
+    if (field === 'student_id') {
       const alphanumericOnly = value.replace(/[^a-zA-Z0-9]/g, '');
       if (value !== alphanumericOnly) {
         setStudentIdError(errorMessages?.student_id_alphanumeric || 'Only letters and numbers allowed');
       } else {
         setStudentIdError('');
       }
-      
-      // Auto-generate email with the cleaned student ID
+
       const email = alphanumericOnly ? `${alphanumericOnly}@shasuncollege.edu.in` : '';
-      setFormData(prev => ({ 
-        ...prev, 
-        studentId: alphanumericOnly,
-        email 
+      setFormData(prev => ({
+        ...prev,
+        student_id: alphanumericOnly,
+        email,
       }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
   };
 
-  // Auto-adjust role based on department and shift
   useEffect(() => {
     const isDeptAll = formData.department.toLowerCase() === 'all department';
     const isShiftFull = formData.shift === 'full';
@@ -78,8 +86,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   }, [formData.department, formData.shift, formData.role]);
 
   const validateForm = () => {
-    if (!formData.studentId || !formData.name || !formData.email || !formData.password || 
-        !formData.department) {
+    if (!formData.student_id || !formData.full_name || !formData.email || !formData.password || !formData.department) {
       toast({
         title: errorMessages?.all_fields_required || 'All fields required',
         description: errorMessages?.fill_all_fields || 'Please fill in all required fields',
@@ -88,7 +95,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
       return false;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirm_password) {
       toast({
         title: 'Password Mismatch',
         description: 'Passwords do not match. Please try again.',
@@ -122,26 +129,25 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
       await signUp(
         formData.email,
         formData.password,
-        formData.studentId,
-        formData.name,
+        formData.student_id,
+        formData.full_name,
         formData.department,
-        formData.role as string,
-        formData.shift as string,
+        formData.role,
+        formData.shift,
         WHITELABEL_CONFIG.app.welcome_points || 100,
         captchaToken || undefined
       );
-      
-      // Clear form only on success
+
       setFormData({
-        studentId: '',
-        name: '',
+        student_id: '',
+        full_name: '',
         email: '',
         password: '',
-        confirmPassword: '',
+        confirm_password: '',
         department: '',
         role: 'student',
         shift: '1',
-     // captchaToken not persisted in formData
+        mobile_number: '',
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Signup failed';
@@ -150,7 +156,6 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         description: errorMessage,
         variant: 'destructive',
       });
-      // Keep form data on error - don't clear
     } finally {
       setLoading(false);
     }
@@ -168,13 +173,48 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
       </CardHeader>
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <PersonalInfoFields
-            formData={formData}
-            studentIdError={studentIdError}
-            loading={loading}
-            onInputChange={handleInputChange}
+          {/* Student ID */}
+          <div className="space-y-2">
+            <Label htmlFor="student_id" className="text-sm font-medium text-gray-700 text-left block">
+              {labels.student_id || 'Student ID'} *
+            </Label>
+            <Input
+              id="student_id"
+              type="text"
+              placeholder={placeholders.student_id || 'Enter your Student ID'}
+              value={formData.student_id}
+              onChange={(e) => handleInputChange('student_id', e.target.value)}
+              required
+              disabled={loading}
+              className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
+            />
+            {studentIdError && (
+              <p className="text-sm text-red-500">{studentIdError}</p>
+            )}
+          </div>
+          {/* Full Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-medium text-gray-700 text-left block">
+              {labels.full_name || 'Full Name'} *
+            </Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder={placeholders.full_name || 'Enter your full name'}
+              value={formData.full_name}
+              onChange={(e) => handleInputChange('full_name', e.target.value)}
+              required
+              disabled={loading}
+              className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
+            />
+          </div>
+          {/* Email field hidden - auto-generated from Student ID */}
+          <input
+            type="hidden"
+            value={formData.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
           />
-          
+
           <PasswordFields
             formData={formData}
             showPassword={showPassword}
@@ -185,19 +225,28 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
           />
 
-          {/* Department Selection */}
           <div className="space-y-2">
             <Label htmlFor="department" className="text-sm font-medium text-gray-700 text-left block">
               {labels?.department || 'Department'} *
             </Label>
-            <DepartmentCombobox
+            <Select
               value={formData.department}
-              onChange={(value) => handleInputChange('department', value)}
+              onValueChange={(value) => handleInputChange('department', value)}
               disabled={loading}
-            />
+            >
+              <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl">
+                <SelectValue placeholder={placeholders?.department || 'Select your department'} />
+              </SelectTrigger>
+              <SelectContent>
+                {WHITELABEL_CONFIG.forms.department_options.map((dept) => (
+                  <SelectItem key={dept.value} value={dept.value}>
+                    {dept.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Shift Selection */}
           <div className="space-y-2">
             <Label htmlFor="shift" className="text-sm font-medium text-gray-700 text-left block">
               {labels?.shift || 'Shift'} *
@@ -220,7 +269,6 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             </Select>
           </div>
 
-          {/* Role Selection */}
           <div className="space-y-2">
             <Label htmlFor="role" className="text-sm font-medium text-gray-700 text-left block">
               {labels?.role || 'Role'} *
@@ -248,7 +296,6 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             )}
           </div>
 
-          {/* hCaptcha */}
           <div className="mt-4 flex w-full justify-center">
             <HCaptcha
               ref={captchaRef}
@@ -256,6 +303,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
               onVerify={token => setCaptchaToken(token)}
             />
           </div>
+
           <Button
             type="submit"
             className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
@@ -274,9 +322,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
           </Button>
 
           <div className="text-center mt-6">
-            <p className="text-gray-600 mb-4">
-              Already have an account? 😊
-            </p>
+            <p className="text-gray-600 mb-4">Already have an account? 😊</p>
             <Button
               variant="outline"
               type="button"

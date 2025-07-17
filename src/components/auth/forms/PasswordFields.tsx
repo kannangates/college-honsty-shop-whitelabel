@@ -1,10 +1,20 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { WHITELABEL_CONFIG } from '@/config';
-import type { SignupFormData } from '@/types/forms';
+
+type SignupFormData = {
+  student_id: string;
+  name: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+  department: string;
+  role: string;
+  shift: string;
+  mobile_number?: string;
+};
 
 interface PasswordFieldsProps {
   formData: SignupFormData;
@@ -23,7 +33,7 @@ export const PasswordFields = ({
   loading,
   onInputChange,
   onTogglePassword,
-  onToggleConfirmPassword
+  onToggleConfirmPassword,
 }: PasswordFieldsProps) => {
   const labels = WHITELABEL_CONFIG.forms.labels;
   const placeholders = WHITELABEL_CONFIG.forms.placeholders;
@@ -57,16 +67,16 @@ export const PasswordFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 text-left block">
+        <Label htmlFor="confirm_password" className="text-sm font-medium text-gray-700 text-left block">
           {labels.confirm_password || 'Confirm Password'} *
         </Label>
         <div className="relative">
           <Input
-            id="confirmPassword"
+            id="confirm_password"
             type={showConfirmPassword ? 'text' : 'password'}
             placeholder={placeholders.confirm_password || 'Confirm your password'}
-            value={formData.confirmPassword}
-            onChange={(e) => onInputChange('confirmPassword', e.target.value)}
+            value={formData.confirm_password}
+            onChange={(e) => onInputChange('confirm_password', e.target.value)}
             required
             disabled={loading}
             className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl pr-10"

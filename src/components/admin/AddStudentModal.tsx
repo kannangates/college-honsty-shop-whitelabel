@@ -59,7 +59,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
 
     try {
       const payload = {
-        studentId: formData.student_id,
+        student_id: formData.student_id,
         name: formData.name,
         email: formData.email,
         password: formData.password,
@@ -67,7 +67,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
         shift: formData.shift,
         role: formData.role,
         points: parseInt(formData.points),
-        userMetadata: { must_change_password: true }
+        user_metadata: { must_change_password: true }
       };
       
       console.log('📤 Sending payload to auth-signup:', payload);

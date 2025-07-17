@@ -72,9 +72,10 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
         email: formData.email,
         department: formData.department,
         mobile_number: formData.mobile_number,
-        role: formData.role as 'admin' | 'student' | 'teacher' | 'developer',
+        role: formData.role,
         points: parseInt(formData.points) || 0,
         status: formData.status,
+        shift: formData.shift,
         updated_at: new Date().toISOString()
       };
       if (formData.password.trim()) {

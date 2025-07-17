@@ -8,14 +8,14 @@ import type { SignupResult, LoginResult, AuthSession, UserProfile } from '@/type
 interface SignupData {
   email: string;
   password: string;
-  studentId: string;
+  student_id: string;
   name: string;
   department: string;
   role: Database["public"]["Enums"]["user_role"] | null;
   shift: string;
   points: number;
   captchaToken?: string;
-  userMetadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
 }
 
 export class AuthService {
@@ -35,7 +35,7 @@ export class AuthService {
     const messages = WHITELABEL_CONFIG.messages.auth;
 
     // Validate student ID
-    const studentIdValidation = validateStudentId(data.studentId);
+    const studentIdValidation = validateStudentId(data.student_id);
     if (!studentIdValidation.isValid) {
       errors.push(studentIdValidation.error!);
     }
@@ -67,7 +67,7 @@ export class AuthService {
       console.log('📦 Payload to Supabase Auth:', {
         email: data.email,
         passwordLength: data.password.length,
-        studentId: data.studentId,
+        student_id: data.student_id,
         name: data.name,
         department: data.department,
         role: data.role,
@@ -91,13 +91,13 @@ export class AuthService {
           emailRedirectTo: undefined, // No email confirmation needed
           data: {
             name: data.name,
-            student_id: data.studentId,
+            student_id: data.student_id,
             department: data.department,
             
             role: data.role  as Database["public"]["Enums"]["user_role"],
             shift: data.shift,
             points: data.points,
-            ...(data.userMetadata || {})
+            ...(data.user_metadata || {})
           },
           captchaToken: data.captchaToken
         }
@@ -121,7 +121,7 @@ export class AuthService {
         .from('users')
         .insert({
           id: authData.user.id,
-          student_id: data.studentId,
+          student_id: data.student_id,
           name: data.name,
           email: data.email,
           department: data.department,
