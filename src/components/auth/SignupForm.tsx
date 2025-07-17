@@ -18,9 +18,9 @@ type SignupFormData = {
   password: string;
   confirm_password: string;
   department: string;
-  role: string;
   shift: string;
-  mobile_number?: string;
+  role: string;
+  mobile_number: string;
 };
 
 export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) => {
@@ -33,8 +33,8 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
     password: '',
     confirm_password: '',
     department: '',
+    shift: '',
     role: 'student',
-    shift: '1',
     mobile_number: '',
   });
 
@@ -49,7 +49,17 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   const { toast } = useToast();
   const config = WHITELABEL_CONFIG;
   const labels = config.forms.labels;
-  const placeholders = config.forms.placeholders;
+  const defaultPlaceholders = {
+    student_id: 'Enter your Student ID',
+    full_name: 'Enter your full name',
+    password: 'Enter your password',
+    confirm_password: 'Confirm your password',
+    department: 'Select your department',
+    shift: 'Select your shift',
+    role: 'Select your role',
+  };
+
+  const placeholders = { ...defaultPlaceholders, ...config.forms.placeholders };
   const errorMessages = config.messages.errors;
   const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
 
@@ -145,8 +155,8 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         password: '',
         confirm_password: '',
         department: '',
+        shift: '',
         role: 'student',
-        shift: '1',
         mobile_number: '',
       });
     } catch (error: unknown) {
@@ -160,6 +170,15 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
       setLoading(false);
     }
   };
+
+  // Replace department select with a static list (customize as needed)
+  const departmentOptions = [
+    { value: 'Computer Science', label: 'Computer Science' },
+    { value: 'Commerce', label: 'Commerce' },
+    { value: 'Management', label: 'Management' },
+    { value: 'Humanities', label: 'Humanities' },
+    { value: 'Science', label: 'Science' },
+  ];
 
   return (
     <Card className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-lg border border-white/20 shadow-xl rounded-2xl overflow-hidden animate-fade-in">
@@ -215,15 +234,54 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             onChange={(e) => handleInputChange('email', e.target.value)}
           />
 
-          <PasswordFields
-            formData={formData}
-            showPassword={showPassword}
-            showConfirmPassword={showConfirmPassword}
-            loading={loading}
-            onInputChange={handleInputChange}
-            onTogglePassword={() => setShowPassword(!showPassword)}
-            onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
-          />
+          {/* Password */}
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-sm font-medium text-gray-700 text-left block">
+              {labels.password || 'Password'} *
+            </Label>
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder={placeholders.password || 'Enter your password'}
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              required
+              disabled={loading}
+              className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
+            />
+            <button
+              type="button"
+              className="text-xs text-purple-600 hover:underline mt-1"
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex={-1}
+            >
+              {showPassword ? 'Hide' : 'Show'} Password
+            </button>
+          </div>
+          {/* Confirm Password */}
+          <div className="space-y-2">
+            <Label htmlFor="confirm_password" className="text-sm font-medium text-gray-700 text-left block">
+              {labels.confirm_password || 'Confirm Password'} *
+            </Label>
+            <Input
+              id="confirm_password"
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder={placeholders.confirm_password || 'Confirm your password'}
+              value={formData.confirm_password}
+              onChange={(e) => handleInputChange('confirm_password', e.target.value)}
+              required
+              disabled={loading}
+              className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
+            />
+            <button
+              type="button"
+              className="text-xs text-purple-600 hover:underline mt-1"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              tabIndex={-1}
+            >
+              {showConfirmPassword ? 'Hide' : 'Show'} Confirm Password
+            </button>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="department" className="text-sm font-medium text-gray-700 text-left block">
@@ -238,7 +296,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
                 <SelectValue placeholder={placeholders?.department || 'Select your department'} />
               </SelectTrigger>
               <SelectContent>
-                {WHITELABEL_CONFIG.forms.department_options.map((dept) => (
+                {departmentOptions.map((dept) => (
                   <SelectItem key={dept.value} value={dept.value}>
                     {dept.label}
                   </SelectItem>
