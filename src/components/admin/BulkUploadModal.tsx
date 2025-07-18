@@ -9,6 +9,13 @@ import { Upload, Download, AlertCircle, CheckCircle, FileIcon, User, Users } fro
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { AuthService } from '@/services/authService';
+
+function toUserRole(role: string): 'admin' | 'student' | 'teacher' | 'developer' {
+  const r = role.toLowerCase();
+  if (r === 'admin' || r === 'student' || r === 'teacher' || r === 'developer') return r;
+  return 'student';
+}
 
 interface BulkUploadModalProps {
   open: boolean;
@@ -105,47 +112,19 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
     window.URL.revokeObjectURL(url);
   };
 
-  const createUserViaEdgeFunction = async (userData: {
-    student_id: string;
-    name: string;
-    email: string;
-    department: string;
-    mobile_number: string;
-    shift: string;
-    role: string;
-    initial_points: number;
-    password: string;
-  }, rowIndex: number) => {
+  const createUserDirectly = async (userData: Parameters<typeof AuthService.signup>[0], rowIndex: number) => {
     try {
-      const payload = {
-        student_id: userData.student_id,
-        name: userData.name,
-        email: userData.email,
-        department: userData.department,
-        password: userData.password,
-        role: userData.role,
-        shift: userData.shift,
-        points: userData.initial_points,
+      const signupResult = await AuthService.signup({
+        ...userData,
         user_metadata: { must_change_password: true }
-      };
-
-      console.log(`🔍 Sending payload for row ${rowIndex}:`, payload);
-
-      const { data, error } = await supabase.functions.invoke('auth-signup', {
-        body: payload
       });
-
-      if (error || data.error) {
-        console.error(`❌ Error for row ${rowIndex}:`, error || data.error);
-        throw new Error(error?.message || data.error || 'Failed to create user');
+      if (!signupResult.success) {
+        throw new Error(signupResult.error || 'Failed to create user');
       }
-
-      console.log(`✅ Success for row ${rowIndex}:`, data);
       return { success: true };
     } catch (error) {
-      console.error(`❌ Exception for row ${rowIndex}:`, error);
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         row: rowIndex,
         user: userData.name || userData.student_id
@@ -184,23 +163,22 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
         headers.forEach((header, idx) => {
           row[header] = values[idx] || '';
         });
-        const userData = {
+        const userData: Parameters<typeof AuthService.signup>[0] = {
           student_id: row['student_id'] || '',
           name: row['name'] || '',
           email: (row['email'] || `${row['student_id']}@shasuncollege.edu.in`),
           department: row['department'] || '',
-          mobile_number: row['mobile_number'] || '',
           shift: row['shift'] || 'Morning (1st Shift)',
-          role: row['role'] || 'student',
-          initial_points: parseInt(row['initial_points'] || '100'),
-          password: row['password'] || 'Temp@123'
+          role: toUserRole(row['role'] || 'student'),
+          points: parseInt(row['initial_points'] || '100'),
+          password: row['password'] || 'Temp@123',
         };
         setProgress(prev => ({ 
           ...prev, 
           current: i + 1,
           currentUser: userData.name || userData.student_id
         }));
-        const result = await createUserViaEdgeFunction(userData, i + 2);
+        const result = await createUserDirectly(userData, i + 2);
         if (result.success) {
           successCount++;
           setProgress(prev => ({ ...prev, successCount: prev.successCount + 1 }));
