@@ -23,7 +23,8 @@ export interface AuthContextType {
     role: string,
     shift: string,
     points: number,
-    captchaToken?: string
+    captchaToken?: string,
+    mustChangePassword?: boolean // add optional argument
   ) => Promise<void>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session: authState.session,
     loading: authState.loading,
     signIn: authActions.signIn,
-    signUp: authActions.signUp,
+    signUp: authActions.signUp, // already supports extra args
     signOut: authActions.signOut,
     isAdmin,
     updateProfile,

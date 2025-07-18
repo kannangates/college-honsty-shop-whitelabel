@@ -52,7 +52,7 @@ export class AuthService {
     }
 
     // Validate shift
-    if (!['1', '2', 'full'].includes(data.shift)) {
+    if (!data.shift || typeof data.shift !== 'string' || !data.shift.trim()) {
       errors.push('Invalid shift value');
     }
 

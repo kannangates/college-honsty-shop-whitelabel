@@ -146,7 +146,8 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
         formData.role,
         formData.shift,
         WHITELABEL_CONFIG.app.welcome_points || 100,
-        captchaToken || undefined
+        captchaToken || undefined,
+        false // mustChangePassword: false for signup form
       );
 
       setFormData({

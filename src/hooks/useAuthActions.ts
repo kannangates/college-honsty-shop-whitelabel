@@ -74,7 +74,8 @@ export const useAuthActions = ({
     role: string,
     shift: string,
     points: number,
-    captchaToken?: string
+    captchaToken?: string,
+    mustChangePassword: boolean = true // NEW ARGUMENT, default true for admin/bulk
   ) => {
     cleanupAuthState();
     setLoading(true);
@@ -92,7 +93,7 @@ export const useAuthActions = ({
         shift,
         points,
         captchaToken,
-        user_metadata: { must_change_password: true } // FIX: use user_metadata
+        user_metadata: { must_change_password: mustChangePassword } // USE ARGUMENT
       });
 
       if (!signupResult.success) {
