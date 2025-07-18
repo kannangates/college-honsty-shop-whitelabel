@@ -7,7 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG } from '@/config';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Eye, EyeOff } from 'lucide-react';
+import { DepartmentCombobox } from '@/components/ui/DepartmentCombobox';
 import { useNavigate } from 'react-router-dom';
 
 // ✅ Locally defined form type (no need to import from types/forms.ts)
@@ -171,15 +172,6 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
     }
   };
 
-  // Replace department select with a static list (customize as needed)
-  const departmentOptions = [
-    { value: 'Computer Science', label: 'Computer Science' },
-    { value: 'Commerce', label: 'Commerce' },
-    { value: 'Management', label: 'Management' },
-    { value: 'Humanities', label: 'Humanities' },
-    { value: 'Science', label: 'Science' },
-  ];
-
   return (
     <Card className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-lg border border-white/20 shadow-xl rounded-2xl overflow-hidden animate-fade-in">
       <CardHeader className="text-center bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b border-purple-100/20">
@@ -239,114 +231,101 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             <Label htmlFor="password" className="text-sm font-medium text-gray-700 text-left block">
               {labels.password || 'Password'} *
             </Label>
-            <Input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              placeholder={placeholders.password || 'Enter your password'}
-              value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              required
-              disabled={loading}
-              className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
-            />
-            <button
-              type="button"
-              className="text-xs text-purple-600 hover:underline mt-1"
-              onClick={() => setShowPassword(!showPassword)}
-              tabIndex={-1}
-            >
-              {showPassword ? 'Hide' : 'Show'} Password
-            </button>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder={placeholders.password || 'Enter your password'}
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                required
+                disabled={loading}
+                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
           {/* Confirm Password */}
           <div className="space-y-2">
             <Label htmlFor="confirm_password" className="text-sm font-medium text-gray-700 text-left block">
               {labels.confirm_password || 'Confirm Password'} *
             </Label>
-            <Input
-              id="confirm_password"
-              type={showConfirmPassword ? 'text' : 'password'}
-              placeholder={placeholders.confirm_password || 'Confirm your password'}
-              value={formData.confirm_password}
-              onChange={(e) => handleInputChange('confirm_password', e.target.value)}
-              required
-              disabled={loading}
-              className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl"
-            />
-            <button
-              type="button"
-              className="text-xs text-purple-600 hover:underline mt-1"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              tabIndex={-1}
-            >
-              {showConfirmPassword ? 'Hide' : 'Show'} Confirm Password
-            </button>
+            <div className="relative">
+              <Input
+                id="confirm_password"
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder={placeholders.confirm_password || 'Confirm your password'}
+                value={formData.confirm_password}
+                onChange={(e) => handleInputChange('confirm_password', e.target.value)}
+                required
+                disabled={loading}
+                className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
 
+          {/* Department */}
           <div className="space-y-2">
             <Label htmlFor="department" className="text-sm font-medium text-gray-700 text-left block">
               {labels?.department || 'Department'} *
             </Label>
-            <Select
+            <DepartmentCombobox
               value={formData.department}
-              onValueChange={(value) => handleInputChange('department', value)}
+              onChange={(value) => handleInputChange('department', value)}
               disabled={loading}
-            >
-              <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl">
-                <SelectValue placeholder={placeholders?.department || 'Select your department'} />
-              </SelectTrigger>
-              <SelectContent>
-                {departmentOptions.map((dept) => (
-                  <SelectItem key={dept.value} value={dept.value}>
-                    {dept.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder={placeholders?.department || 'Select your department'}
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="shift" className="text-sm font-medium text-gray-700 text-left block">
               {labels?.shift || 'Shift'} *
             </Label>
-            <Select
+            <select
+              id="shift"
               value={formData.shift}
-              onValueChange={(value) => handleInputChange('shift', value)}
+              onChange={e => handleInputChange('shift', e.target.value)}
               disabled={loading}
+              className="border border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl w-full p-2"
             >
-              <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl">
-                <SelectValue placeholder={placeholders?.shift || 'Select your shift'} />
-              </SelectTrigger>
-              <SelectContent>
-                {WHITELABEL_CONFIG.forms.shift_options.map((shift) => (
-                  <SelectItem key={shift.value} value={shift.value}>
-                    {shift.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="" disabled>{placeholders?.shift || 'Select your shift'}</option>
+              {WHITELABEL_CONFIG.forms.shift_options.map((shift: { value: string, label: string }) => (
+                <option key={shift.value} value={shift.value}>{shift.label}</option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="role" className="text-sm font-medium text-gray-700 text-left block">
               {labels?.role || 'Role'} *
             </Label>
-            <Select
+            <select
+              id="role"
               value={formData.role}
-              onValueChange={(value) => handleInputChange('role', value)}
+              onChange={e => handleInputChange('role', e.target.value)}
               disabled={loading || (formData.department.toLowerCase() === 'all department' || formData.shift === 'full')}
+              className="border border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl w-full p-2"
             >
-              <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl">
-                <SelectValue placeholder={placeholders?.role || 'Select your role'} />
-              </SelectTrigger>
-              <SelectContent>
-                {WHITELABEL_CONFIG.forms.role_options.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>
-                    {role.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="" disabled>{placeholders?.role || 'Select your role'}</option>
+              {WHITELABEL_CONFIG.forms.role_options.map((role: { value: string, label: string }) => (
+                <option key={role.value} value={role.value}>{role.label}</option>
+              ))}
+            </select>
             {(formData.department.toLowerCase() === 'all department' || formData.shift === 'full') && (
               <p className="text-xs text-gray-500">
                 Role automatically set based on department/shift selection
