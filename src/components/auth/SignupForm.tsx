@@ -63,7 +63,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
   const placeholders = { ...defaultPlaceholders, ...config.forms.placeholders };
   const errorMessages = config.messages.errors;
   const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
-  // Use the correct Supabase edge function URL
+  // Use the correct Supabase edge function URL for public signup
   const SUPABASE_FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL || 'https://vkuagjkrpbagrchsqmsf.functions.supabase.co';
 
   const handleInputChange = (field: keyof SignupFormData, value: string) => {
@@ -139,7 +139,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
     }
 
     try {
-      const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/auth-signup`, {
+      const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/public-signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
