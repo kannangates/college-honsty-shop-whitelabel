@@ -2,7 +2,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ShoppingCart, Calendar, DollarSign, User } from 'lucide-react';
 

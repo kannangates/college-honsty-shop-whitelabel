@@ -80,15 +80,16 @@ const AdminDailyStockOperations: React.FC = () => {
       if (!products) throw new Error('No products found');
 
       // Fetch today's stock operations
-      const { data: ops, error: opsError } = await supabase
+      const { data: opsRaw, error: opsError } = await supabase
         .from('daily_stock_operations')
         .select('*')
         .eq('created_at', today);
+      const ops: StockOperationDB[] = opsRaw || [];
 
       if (opsError) throw opsError;
 
       // Merge into UI operations
-      const merged: StockOperationUI[] = products.map((product) => {
+      const merged: StockOperationUI[] = products.map((product): StockOperationUI => {
         const op = ops?.find((o) => o.product_id === product.id);
 
         const opening = op?.opening_stock ?? product.shelf_stock ?? 0;
@@ -100,7 +101,7 @@ const AdminDailyStockOperations: React.FC = () => {
         const actual = op?.actual_closing_stock ?? product.shelf_stock ?? 0;
 
         return {
-          id: op?.id,
+          id: op?.id ?? '',
           product_id: product.id,
           opening_stock: opening,
           additional_stock: additional,
@@ -113,7 +114,7 @@ const AdminDailyStockOperations: React.FC = () => {
           created_at: op?.created_at ?? today,
           updated_at: op?.updated_at ?? null,
           product,
-        };
+        } as StockOperationUI;
       });
 
       setOperations(merged);

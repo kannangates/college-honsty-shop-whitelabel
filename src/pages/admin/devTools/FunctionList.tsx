@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Zap } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/features/gamification/components/badge';
 
 interface FunctionInfo {
   function_name: string;

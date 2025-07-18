@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Server } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/features/gamification/components/badge';
 
 export const EdgeFunctionsList = ({ edgeFunctions }: { edgeFunctions: string[] }) => (
   <Card>

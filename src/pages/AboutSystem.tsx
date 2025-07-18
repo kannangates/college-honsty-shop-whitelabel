@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/features/gamification/components/badge';
 import { SystemHeader } from '@/components/system/SystemHeader';
 import { SystemOverview } from '@/components/system/SystemOverview';
 import { PerformanceMetrics } from '@/components/system/PerformanceMetrics';

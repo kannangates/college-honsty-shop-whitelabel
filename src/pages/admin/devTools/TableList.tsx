@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Table as TableIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/features/gamification/components/badge';
 
 interface ColumnInfo {
   column_name: string;

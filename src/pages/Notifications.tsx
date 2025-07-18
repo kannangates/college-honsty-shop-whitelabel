@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { Bell, CheckCheck, Trash2 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
