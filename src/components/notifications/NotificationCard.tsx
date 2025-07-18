@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { Share2, Pin } from 'lucide-react';
 import html2canvas from 'html2canvas';

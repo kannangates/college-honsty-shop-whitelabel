@@ -49,7 +49,7 @@ import {
 } from 'lucide-react';
 import { InventoryFilters } from './InventoryFilters';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/features/gamification/components/badge';
 
 interface Product {
   id: string;
