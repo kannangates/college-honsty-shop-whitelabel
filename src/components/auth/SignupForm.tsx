@@ -137,30 +137,48 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
     }
 
     try {
-      await signUp(
-        formData.email,
-        formData.password,
-        formData.student_id,
-        formData.full_name,
-        formData.department,
-        formData.role,
-        formData.shift,
-        WHITELABEL_CONFIG.app.welcome_points || 100,
-        captchaToken || undefined,
-        false // mustChangePassword: false for signup form
-      );
-
-      setFormData({
-        student_id: '',
-        full_name: '',
-        email: '',
-        password: '',
-        confirm_password: '',
-        department: '',
-        shift: '',
-        role: 'student',
-        mobile_number: '',
+      const response = await fetch('/functions/v1/auth-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: formData.student_id,
+          name: formData.full_name,
+          department: formData.department,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+          shift: formData.shift,
+          points: WHITELABEL_CONFIG.app.welcome_points || 100,
+          mobile_number: null, // Not collected in form
+          userMetadata: { must_change_password: false },
+          captchaToken: captchaToken || undefined
+        })
       });
+      const result = await response.json();
+      if (response.ok) {
+        toast({
+          title: 'Signup Successful',
+          description: 'Your account has been created. You can now log in!',
+        });
+        setFormData({
+          student_id: '',
+          full_name: '',
+          email: '',
+          password: '',
+          confirm_password: '',
+          department: '',
+          shift: '',
+          role: 'student',
+          mobile_number: '',
+        });
+        navigate('/login');
+      } else {
+        toast({
+          title: 'Signup Failed',
+          description: result.error || 'Unknown error',
+          variant: 'destructive',
+        });
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Signup failed';
       toast({
