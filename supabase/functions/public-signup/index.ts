@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("[public-signup] Function handler started (should be public)");
   const traceId = crypto.randomUUID();
   const log = (...args: unknown[]) => console.log(`[trace:${traceId}]`, ...args);
 
