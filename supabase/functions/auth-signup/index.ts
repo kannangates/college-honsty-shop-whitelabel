@@ -64,7 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
       email,
       password,
       role = "student",
-      shift = "1",
+      shift = "Morning (1st Shift)",
       points = 100,
       userMetadata = {}
     } = bodyData;

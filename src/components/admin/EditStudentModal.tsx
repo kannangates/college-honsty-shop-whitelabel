@@ -197,9 +197,9 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Morning (1st Shift)</SelectItem>
-                <SelectItem value="2">Evening (2nd Shift)</SelectItem>
-                <SelectItem value="full">Full Day</SelectItem>
+                <SelectItem value="Morning (1st Shift)">Morning (1st Shift)</SelectItem>
+                <SelectItem value="Evening (2nd Shift)">Evening (2nd Shift)</SelectItem>
+                <SelectItem value="Full Shift">Full Shift</SelectItem>
               </SelectContent>
             </Select>
           </div>
