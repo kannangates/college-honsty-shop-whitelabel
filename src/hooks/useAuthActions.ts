@@ -85,14 +85,14 @@ export const useAuthActions = ({
       const signupResult = await AuthService.signup({
         email,
         password,
-        studentId,
+        student_id: studentId, // FIX: use student_id
         name,
         department,
         role: role as Database["public"]["Enums"]["user_role"],
         shift,
         points,
         captchaToken,
-        userMetadata: { must_change_password: true }
+        user_metadata: { must_change_password: true } // FIX: use user_metadata
       });
 
       if (!signupResult.success) {
