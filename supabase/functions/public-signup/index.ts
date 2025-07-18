@@ -18,12 +18,15 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  log("🔍 Received POST request, proceeding...");
+
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
     if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
       log("❌ Missing env vars for Supabase");
+      log("🔍 About to return env error");
       return new Response(
         JSON.stringify({ error: "Internal server error: misconfigured env vars." }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -33,6 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
     const contentType = req.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) {
       log("❌ Invalid content-type:", contentType);
+      log("🔍 About to return content-type error");
       return new Response(JSON.stringify({ error: "Content-Type must be application/json" }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders }
@@ -49,6 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
       bodyData = JSON.parse(rawBody);
     } catch (err) {
       log("❌ Failed to parse JSON body:", err);
+      log("🔍 About to return JSON parse error");
       return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders }
@@ -84,6 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!studentId || !name || !department || !email || !password) {
       log("❌ Missing required fields");
+      log("🔍 About to return missing fields error");
       return new Response(
         JSON.stringify({ error: "Missing required fields." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -93,13 +99,14 @@ const handler = async (req: Request): Promise<Response> => {
     const validShifts = ['Morning (1st Shift)', 'Evening (2nd Shift)', 'Full Shift'];
     if (shift && !validShifts.includes(shift)) {
       log("❌ Invalid shift value:", shift);
+      log("🔍 About to return invalid shift error");
       return new Response(
         JSON.stringify({ error: "Invalid shift value." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Check for existing user in users table
+    log("🔍 Checking for existing user in users table...");
     const { data: existingUser, error: existingError } = await supabase
       .from("users")
       .select("student_id")
@@ -108,6 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (existingError) {
       log("❌ DB check failed:", existingError);
+      log("🔍 About to return DB check error");
       return new Response(
         JSON.stringify({ error: "Database error checking student ID." }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -116,16 +124,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (existingUser) {
       log("❌ Duplicate student ID:", studentId);
+      log("🔍 About to return duplicate student ID error");
       return new Response(
         JSON.stringify({ error: "Student ID already exists." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Check for existing email in auth
+    log("🔍 Checking for existing email in auth...");
     const { data: existingAuthUsers, error: authListError } = await supabase.auth.admin.listUsers();
     if (authListError) {
       log("❌ Auth listing error:", authListError);
+      log("🔍 About to return auth listing error");
       return new Response(
         JSON.stringify({ error: "Auth validation failed." }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -135,6 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailExists = existingAuthUsers.users.some((u) => u.email === email);
     if (emailExists) {
       log("❌ Email already in use:", email);
+      log("🔍 About to return duplicate email error");
       return new Response(
         JSON.stringify({ error: "Email already exists." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -157,6 +168,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (authError || !authData?.user?.id) {
       log("❌ Auth user creation failed:", authError);
+      log("🔍 About to return auth user creation error");
       return new Response(
         JSON.stringify({ error: authError?.message || "Auth creation failed." }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -165,7 +177,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     log("✅ Auth user created:", authData.user.id);
 
-    // Check for existing user in users table by id
+    log("🔍 Checking for existing user in users table by id...");
     const { data: existingPublicUser } = await supabase
       .from("users")
       .select("id")
@@ -174,6 +186,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (existingPublicUser) {
       log("⚠️ User already exists in users table");
+      log("🔍 About to return user already exists message");
       return new Response(
         JSON.stringify({ message: "User already exists", user: { id: authData.user.id } }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -209,6 +222,7 @@ const handler = async (req: Request): Promise<Response> => {
         hint: insertError.hint,
         code: insertError.code
       });
+      log("🔍 About to return insert error");
       try {
         await supabase.auth.admin.deleteUser(authData.user.id);
         log("🗑️ Rolled back auth user");
@@ -225,6 +239,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     log("🎉 User signup complete:", authData.user.id);
+    log("🔍 About to return signup success");
 
     return new Response(
       JSON.stringify({
@@ -235,6 +250,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (err) {
     console.error("❌ Fatal error in signup function:", err);
+    log("🔍 About to return fatal error");
     return new Response(
       JSON.stringify({ error: "Unexpected server error." }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
