@@ -88,49 +88,7 @@ export type Database = {
           name?: string
         }
         Relationships: []
-      },
-      gamification_rules: {
-        Row: {
-          id: string;
-          event_type: string;
-          condition_type: string;
-          operator: string;
-          condition_value: string;
-          label: string | null;
-          points_awarded: number;
-          cooldown_seconds: number | null;
-          active: boolean;
-          badge_id: string | null;
-          created_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          event_type: string;
-          condition_type: string;
-          operator: string;
-          condition_value: string;
-          label?: string | null;
-          points_awarded: number;
-          cooldown_seconds?: number | null;
-          active?: boolean;
-          badge_id?: string | null;
-          created_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          event_type?: string;
-          condition_type?: string;
-          operator?: string;
-          condition_value?: string;
-          label?: string | null;
-          points_awarded?: number;
-          cooldown_seconds?: number | null;
-          active?: boolean;
-          badge_id?: string | null;
-          created_at?: string | null;
-        };
-        Relationships: [];
-      },
+      }
       college_settings: {
         Row: {
           address: string | null
@@ -219,6 +177,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gamification_event_logs: {
+        Row: {
+          badge_id: string | null
+          created_at: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          points_awarded: number | null
+          rule_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          badge_id?: string | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          points_awarded?: number | null
+          rule_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          badge_id?: string | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          points_awarded?: number | null
+          rule_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gamification_event_logs_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gamification_event_logs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "gamification_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gamification_rules: {
+        Row: {
+          active: boolean
+          condition_type: string
+          condition_value: string
+          cooldown_seconds: number | null
+          created_at: string | null
+          event_type: string
+          id: string
+          label: string | null
+          operator: string
+          points_awarded: number
+        }
+        Insert: {
+          active?: boolean
+          condition_type: string
+          condition_value: string
+          cooldown_seconds?: number | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          label?: string | null
+          operator: string
+          points_awarded: number
+        }
+        Update: {
+          active?: boolean
+          condition_type?: string
+          condition_value?: string
+          cooldown_seconds?: number | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          label?: string | null
+          operator?: string
+          points_awarded?: number
+        }
+        Relationships: []
       }
       honesty_log: {
         Row: {
@@ -641,6 +686,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rule_cooldowns: {
+        Row: {
+          id: string
+          last_triggered_at: string
+          rule_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_triggered_at: string
+          rule_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_triggered_at?: string
+          rule_id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       top_departments: {
         Row: {

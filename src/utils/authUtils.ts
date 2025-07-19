@@ -1,42 +1,26 @@
 
 import { WHITELABEL_CONFIG } from '@/config';
 
-// Backdoor authentication for development/testing
-export const BACKDOOR_USERNAME = import.meta.env.VITE_BACKDOOR_USERNAME || '';
-export const BACKDOOR_PASSWORD = import.meta.env.VITE_BACKDOOR_PASSWORD || '';
-export const isBackdoorEnabled =
-  import.meta.env.VITE_BACKDOOR_ENABLED === 'true' &&
-  BACKDOOR_USERNAME !== '' &&
-  BACKDOOR_PASSWORD !== '';
-
-export function getBackdoorUser() {
-  return {
-    id: 'backdoor',
-    name: 'Backdoor User',
-    email: 'backdoor@honesty.shop',
-    role: 'admin',
-    department: 'all',
-    points: 9999,
-    is_active: true,
-    created_at: new Date().toISOString(),
-  };
+// Auth validation helpers
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
-export function getBackdoorMessages() {
+
+export function getAuthMessages() {
   return WHITELABEL_CONFIG.messages.auth;
 }
 
-export function getBackdoorWelcomeMessage() {
+export function getWelcomeMessage() {
   const messages = WHITELABEL_CONFIG.messages.auth;
   return messages?.welcome_back || 'Welcome back!';
 }
 
-export function getBackdoorErrorMessage() {
+export function getErrorMessage() {
   const messages = WHITELABEL_CONFIG.messages.errors;
   return messages?.login_failed || 'Login failed';
 }
-
-// Auth validation helpers
 export const validateStudentId = (studentId: string): { isValid: boolean; error?: string } => {
   const messages = WHITELABEL_CONFIG.messages.auth;
   

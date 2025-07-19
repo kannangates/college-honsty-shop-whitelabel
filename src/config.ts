@@ -7,5 +7,7 @@
 // @ts-nocheck – JSON modules are provided by Vite and typed as `any`.
 
 import config from '../whitelabel.json';
+import { CONFIG } from './config/secrets';
 
 export const WHITELABEL_CONFIG = config;
+export { CONFIG };

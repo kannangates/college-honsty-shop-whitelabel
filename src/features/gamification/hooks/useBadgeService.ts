@@ -24,7 +24,20 @@ export const useBadgeService = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // ... (rest of the hook implementation as in the original file)
+  const fetchAllBadges = useCallback(async () => {
+    // Fetch badges implementation
+    console.log('Fetching all badges...');
+  }, []);
+
+  const fetchUserProgress = useCallback(async () => {
+    // Fetch user progress implementation
+    console.log('Fetching user progress...');
+  }, []);
+
+  const awardBadgesForUser = useCallback(async (orderId: string) => {
+    // Award badges implementation
+    console.log('Awarding badges for order:', orderId);
+  }, []);
 
   return {
     badges,
@@ -32,6 +45,8 @@ export const useBadgeService = () => {
     badgeProgress,
     overallProgress,
     loading,
-    // ... (other returned functions)
+    fetchAllBadges,
+    fetchUserProgress,
+    awardBadgesForUser,
   };
 }; 

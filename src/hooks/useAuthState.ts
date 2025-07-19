@@ -10,27 +10,9 @@ export const useAuthState = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [backdoorMode, setBackdoorMode] = useState(false);
 
-  // Restore backdoor session from localStorage if present
+  // Increased timeout for more reliable auth loading
   useEffect(() => {
-    const isBackdoor = localStorage.getItem('backdoorMode') === 'true';
-    if (isBackdoor) {
-      setBackdoorMode(true);
-      try {
-        setUser(JSON.parse(localStorage.getItem('backdoorUser')!));
-        setProfile(JSON.parse(localStorage.getItem('backdoorProfile')!));
-        setSession(JSON.parse(localStorage.getItem('backdoorSession')!));
-      } catch (e) {
-        setUser(null);
-        setProfile(null);
-        setSession(null);
-      }
-      setLoading(false);
-      return;
-    }
-
-    // Increased timeout for more reliable auth loading
     const loadingTimeout = setTimeout(() => {
       console.warn('⚠️ Auth loading timeout reached, forcing loading to false');
       setLoading(false);
@@ -73,11 +55,6 @@ export const useAuthState = () => {
   };
 
   useEffect(() => {
-    if (backdoorMode) {
-      setLoading(false);
-      return;
-    }
-
     let isMounted = true;
     let currentUserId: string | null = null;
 
@@ -179,7 +156,7 @@ export const useAuthState = () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [backdoorMode]);
+  }, []);
 
   return {
     user,
@@ -191,14 +168,5 @@ export const useAuthState = () => {
     setSession,
     setLoading,
     fetchProfile,
-    backdoorMode,
-    setBackdoorMode,
   };
 };
-
-export function clearBackdoorSession() {
-  localStorage.removeItem('backdoorMode');
-  localStorage.removeItem('backdoorUser');
-  localStorage.removeItem('backdoorProfile');
-  localStorage.removeItem('backdoorSession');
-}

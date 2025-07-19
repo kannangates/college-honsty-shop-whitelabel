@@ -6,16 +6,18 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { CalendarIcon, CreditCard, Search, RefreshCw } from 'lucide-react';
+import { CalendarIcon, CreditCard, Search, RefreshCw, Plus } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
+import { PaymentRecordModal } from '@/components/admin/PaymentRecordModal';
 
 const AdminPaymentReports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
+  const [isPaymentRecordOpen, setIsPaymentRecordOpen] = useState(false);
 
   const paymentRecords = useMemo(() => [
     {
@@ -256,6 +258,13 @@ const AdminPaymentReports = () => {
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
+            <Button 
+              onClick={() => setIsPaymentRecordOpen(true)}
+              className="h-11 px-4 bg-green-600 hover:bg-green-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Record Payment
+            </Button>
           </div>
         </div>
       </div>
@@ -271,6 +280,16 @@ const AdminPaymentReports = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Payment Record Modal */}
+      <PaymentRecordModal
+        open={isPaymentRecordOpen}
+        onOpenChange={setIsPaymentRecordOpen}
+        onRecordAdded={() => {
+          // Refresh payment reports data here if needed
+          console.log('Payment record added');
+        }}
+      />
     </div>
   );
 };

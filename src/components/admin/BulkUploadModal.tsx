@@ -99,9 +99,9 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
                       '# Note: Users will be required to change their password on first login\n' +
                       '# Email will be automatically generated as: student_id@shasuncollege.edu.in\n' +
                       'student_id,name,department,shift,role,initial_points,password\n' +
-                      'ST001,John Doe,Computer Science,Morning (1st Shift),student,100,shasun@123\n' +
-                      'ST002,Jane Smith,Information Technology,Evening (2nd Shift),teacher,150,password456\n' +
-                      'ST003,Mike Johnson,All Department,Full Shift,teacher,200,password789';
+                      'ST001,John Doe,Computer Science,Morning (1st Shift),student,100,TempPassword123\n' +
+                      'ST002,Jane Smith,Information Technology,Evening (2nd Shift),teacher,150,TempPassword456\n' +
+                      'ST003,Mike Johnson,All Department,Full Shift,teacher,200,TempPassword789';
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -114,13 +114,25 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
 
   const createUserDirectly = async (userData: Parameters<typeof AuthService.signup>[0], rowIndex: number) => {
     try {
-      const signupResult = await AuthService.signup({
-        ...userData,
-        user_metadata: { must_change_password: true }
+      // Use auth-signup edge function for bulk creation (no captcha required)
+      const payload = {
+        studentId: userData.student_id,
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        department: userData.department,
+        shift: userData.shift,
+        role: userData.role,
+        points: userData.points,
+        userMetadata: { must_change_password: true },
+        skipCaptcha: true // Bulk upload users don't need captcha
+      };
+      
+      const { data, error } = await supabase.functions.invoke('auth-signup', {
+        body: payload
       });
-      if (!signupResult.success) {
-        throw new Error(signupResult.error || 'Failed to create user');
-      }
+
+      if (error) throw error;
       return { success: true };
     } catch (error) {
       return {
@@ -171,7 +183,7 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
           shift: row['shift'] || 'Morning (1st Shift)',
           role: toUserRole(row['role'] || 'student'),
           points: parseInt(row['initial_points'] || '100'),
-          password: row['password'] || 'Temp@123',
+          password: row['password'] || 'TempPassword123',
         };
         setProgress(prev => ({ 
           ...prev, 

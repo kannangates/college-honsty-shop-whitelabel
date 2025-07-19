@@ -477,7 +477,7 @@ const AdminPointsBadges = () => {
                       <tr key={row.id} className="hover:bg-gray-50">
                         {row.getVisibleCells().map(cell => (
                           <td key={cell.id} className="border px-2 py-1">
-                            {flexRender(cell.column.columnDef.cell || cell.column.columnDef.header, cell.getContext())}
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </td>
                         ))}
                       </tr>

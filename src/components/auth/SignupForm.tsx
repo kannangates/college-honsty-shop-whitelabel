@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { WHITELABEL_CONFIG } from '@/config';
+import { WHITELABEL_CONFIG, CONFIG } from '@/config';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
@@ -62,9 +62,10 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
 
   const placeholders = { ...defaultPlaceholders, ...config.forms.placeholders };
   const errorMessages = config.messages.errors;
-  const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
+  const HCAPTCHA_SITE_KEY = CONFIG.HCAPTCHA_SITE_KEY;
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   // Use the correct Supabase edge function URL for public signup
-  const SUPABASE_FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL || 'https://vkuagjkrpbagrchsqmsf.functions.supabase.co';
+  const SUPABASE_FUNCTIONS_URL = CONFIG.SUPABASE_FUNCTIONS_URL;
 
   const handleInputChange = (field: keyof SignupFormData, value: string) => {
     if (field === 'student_id') {
@@ -134,6 +135,16 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
     setLoading(true);
 
     if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
+
+    if (!isLocalhost && !captchaToken) {
+      toast({
+        title: 'Captcha Required',
+        description: 'Please complete the captcha verification.',
+        variant: 'destructive',
+      });
       setLoading(false);
       return;
     }
@@ -354,6 +365,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
             )}
           </div>
 
+          {!isLocalhost && (
           <div className="mt-4 flex w-full justify-center">
             <HCaptcha
               ref={captchaRef}
@@ -361,6 +373,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
               onVerify={token => setCaptchaToken(token)}
             />
           </div>
+          )}
 
           <Button
             type="submit"

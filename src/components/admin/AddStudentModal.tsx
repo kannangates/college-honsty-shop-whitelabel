@@ -59,7 +59,7 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
 
     try {
       const payload = {
-        student_id: formData.student_id,
+        studentId: formData.student_id,
         name: formData.name,
         email: formData.email,
         password: formData.password,
@@ -67,7 +67,8 @@ export const AddStudentModal = ({ open, onOpenChange, onStudentAdded }: AddStude
         shift: formData.shift,
         role: formData.role,
         points: parseInt(formData.points),
-        user_metadata: { must_change_password: true }
+        userMetadata: { must_change_password: true },
+        skipCaptcha: true // Admin-created users don't need captcha
       };
       
       console.log('📤 Sending payload to auth-signup:', payload);

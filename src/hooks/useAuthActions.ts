@@ -15,7 +15,6 @@ interface UseAuthActionsProps {
   setUser: (user: User | null) => void;
   setProfile: (profile: UserProfile | null) => void;
   setSession: (session: Session | null) => void;
-  setBackdoorMode: (mode: boolean) => void;
   setLoading: (loading: boolean) => void;
   fetchProfile: (userId: string) => Promise<void>;
 }
@@ -24,7 +23,6 @@ export const useAuthActions = ({
   setUser,
   setProfile,
   setSession,
-  setBackdoorMode,
   setLoading,
   fetchProfile
 }: UseAuthActionsProps) => {
@@ -133,7 +131,7 @@ export const useAuthActions = ({
     setUser(null);
     setProfile(null);
     setSession(null);
-    setBackdoorMode(false);
+    setSession(null);
     window.location.href = '/auth';
   };
 

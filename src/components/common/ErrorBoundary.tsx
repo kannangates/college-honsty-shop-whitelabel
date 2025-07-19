@@ -11,7 +11,9 @@ interface State {
   error?: Error;
 }
 
-const N8N_GMAIL_WEBHOOK_URL = import.meta.env.VITE_N8N_GMAIL_WEBHOOK_URL || '';
+import { CONFIG } from '@/config';
+
+const N8N_GMAIL_WEBHOOK_URL = CONFIG.N8N_GMAIL_WEBHOOK_URL;
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {

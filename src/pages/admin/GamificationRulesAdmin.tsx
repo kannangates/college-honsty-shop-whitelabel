@@ -8,7 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
+import { CONFIG } from '@/config';
+
+const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 const EVENT_TYPES = [
   'PAYMENT_RECORDED',
@@ -276,7 +278,7 @@ export default function GamificationRulesAdmin() {
                   <tr key={row.id} className="hover:bg-gray-50">
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id} className="border px-2 py-1">
-                        {flexRender(cell.column.columnDef.cell || cell.column.columnDef.header, cell.getContext())}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
                   </tr>

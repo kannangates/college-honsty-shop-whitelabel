@@ -17,15 +17,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { WHITELABEL_CONFIG } from '@/config';
+import { WHITELABEL_CONFIG, CONFIG } from '@/config';
 import { Eye, EyeOff } from 'lucide-react';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getSiteKey(config: any) {
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_HCAPTCHA_SITE_KEY) {
-    return import.meta.env.VITE_HCAPTCHA_SITE_KEY;
-  }
-  return config?.security?.hcaptcha_site_key || 'ad901dde-946e-4c0e-bc78-d0fc4bb08868';
+  return config?.security?.hcaptcha_site_key || CONFIG.HCAPTCHA_SITE_KEY;
 }
 
 export function LoginForm({

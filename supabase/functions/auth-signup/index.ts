@@ -66,7 +66,8 @@ const handler = async (req: Request): Promise<Response> => {
       role = "student",
       shift = "Morning (1st Shift)",
       points = 100,
-      userMetadata = {}
+      userMetadata = {},
+      skipCaptcha = false // Admin-created users can skip captcha
     } = bodyData;
 
     log("📥 Incoming Payload:", {
