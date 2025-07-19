@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { Check, ChevronsUpDown, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import type { Database } from '@/integrations/supabase/types';
 
 interface PaymentRecordModalProps {
   open: boolean;
@@ -26,25 +27,29 @@ interface UnpaidOrder {
   student_id: string;
 }
 
+// Define a type for the joined user object
+interface JoinedUser {
+  name: string;
+  student_id: string;
+}
+
 export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: PaymentRecordModalProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [orderComboOpen, setOrderComboOpen] = useState(false);
   const [unpaidOrders, setUnpaidOrders] = useState<UnpaidOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<string>('');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    payment_mode: Database["public"]["Enums"]["payment_mode"] | "";
+    transaction_id: string;
+    paid_at: string;
+  }>({
     payment_mode: '',
     transaction_id: '',
     paid_at: new Date().toISOString().slice(0, 16)
   });
 
-  useEffect(() => {
-    if (open) {
-      fetchUnpaidOrders();
-    }
-  }, [open]);
-
-  const fetchUnpaidOrders = async () => {
+  const fetchUnpaidOrders = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -60,13 +65,13 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
 
       if (error) throw error;
 
-      const formattedOrders = data.map(order => ({
+      const formattedOrders = data.map((order: { id: string; user_id: string; total_amount: number; created_at: string; users: JoinedUser }) => ({
         id: order.id,
         user_id: order.user_id,
         total_amount: order.total_amount,
         created_at: order.created_at,
-        user_name: (order.users as any).name,
-        student_id: (order.users as any).student_id
+        user_name: order.users.name,
+        student_id: order.users.student_id
       }));
 
       setUnpaidOrders(formattedOrders);
@@ -78,7 +83,13 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
         variant: 'destructive',
       });
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (open) {
+      fetchUnpaidOrders();
+    }
+  }, [open, fetchUnpaidOrders]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +109,7 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
         .from('orders')
         .update({
           payment_status: 'paid',
-          payment_mode: formData.payment_mode as any,
+          payment_mode: formData.payment_mode || null,
           transaction_id: formData.transaction_id,
           paid_at: new Date(formData.paid_at).toISOString()
         })
@@ -215,18 +226,14 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
           
           <div>
             <Label htmlFor="payment_mode">Payment Method</Label>
-            <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value})}>
+            <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value as Database["public"]["Enums"]["payment_mode"]})}>
               <SelectTrigger>
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="upi">UPI</SelectItem>
-                <SelectItem value="credit_card">Credit Card</SelectItem>
-                <SelectItem value="debit_card">Debit Card</SelectItem>
-                <SelectItem value="net_banking">Net Banking</SelectItem>
-                <SelectItem value="cheque">Cheque</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="qr_manual">QR/Manual</SelectItem>
+                <SelectItem value="razorpay">Razorpay</SelectItem>
+                <SelectItem value="pay_later">Pay Later</SelectItem>
               </SelectContent>
             </Select>
           </div>
