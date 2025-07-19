@@ -5,7 +5,7 @@ export const CONFIG = {
   SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrdWFnamtycGJhZ3JjaHNxbXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MjEyMjAsImV4cCI6MjA2NDA5NzIyMH0.c8Zh7OLqeHVFObhiTnmCU7ZkyP2G-5iHY9m3E2KNObs",
   
   // hCaptcha configuration  
-  HCAPTCHA_SITE_KEY: process.env.HCAPTCHA_SITE_KEY || "dummy-site-key",
+  HCAPTCHA_SITE_KEY: process.env.HCAPTCHA_SITE_KEY,
   
   // Integration URLs
   N8N_GMAIL_WEBHOOK_URL: process.env.N8N_GMAIL_WEBHOOK_URL || "",
