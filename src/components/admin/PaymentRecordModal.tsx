@@ -27,11 +27,20 @@ interface UnpaidOrder {
   student_id: string;
 }
 
-// Define a type for the joined user object
-interface JoinedUser {
-  name: string;
-  student_id: string;
+// Type for the users join result
+interface OrderWithUser {
+  id: string;
+  user_id: string;
+  total_amount: number;
+  created_at: string;
+  users: {
+    name: string;
+    student_id: string;
+  };
 }
+
+// Payment mode enum type
+type PaymentMode = Database['public']['Enums']['payment_mode'];
 
 export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: PaymentRecordModalProps) => {
   const { toast } = useToast();
@@ -39,11 +48,7 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
   const [orderComboOpen, setOrderComboOpen] = useState(false);
   const [unpaidOrders, setUnpaidOrders] = useState<UnpaidOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<string>('');
-  const [formData, setFormData] = useState<{
-    payment_mode: Database["public"]["Enums"]["payment_mode"] | "";
-    transaction_id: string;
-    paid_at: string;
-  }>({
+  const [formData, setFormData] = useState({
     payment_mode: '',
     transaction_id: '',
     paid_at: new Date().toISOString().slice(0, 16)
@@ -65,7 +70,7 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
 
       if (error) throw error;
 
-      const formattedOrders = data.map((order: { id: string; user_id: string; total_amount: number; created_at: string; users: JoinedUser }) => ({
+      const formattedOrders = data.map((order: OrderWithUser) => ({
         id: order.id,
         user_id: order.user_id,
         total_amount: order.total_amount,
@@ -109,7 +114,7 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
         .from('orders')
         .update({
           payment_status: 'paid',
-          payment_mode: formData.payment_mode || null,
+          payment_mode: formData.payment_mode as PaymentMode,
           transaction_id: formData.transaction_id,
           paid_at: new Date(formData.paid_at).toISOString()
         })
@@ -226,12 +231,12 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
           
           <div>
             <Label htmlFor="payment_mode">Payment Method</Label>
-            <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value as Database["public"]["Enums"]["payment_mode"]})}>
+            <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value})}>
               <SelectTrigger>
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="qr_manual">QR/Manual</SelectItem>
+                <SelectItem value="qr_manual">QR Manual</SelectItem>
                 <SelectItem value="razorpay">Razorpay</SelectItem>
                 <SelectItem value="pay_later">Pay Later</SelectItem>
               </SelectContent>

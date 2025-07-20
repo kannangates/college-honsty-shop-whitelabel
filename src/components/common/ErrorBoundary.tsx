@@ -13,8 +13,6 @@ interface State {
 
 import { CONFIG } from '@/config';
 
-const N8N_GMAIL_WEBHOOK_URL = CONFIG.N8N_GMAIL_WEBHOOK_URL;
-
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -60,11 +58,8 @@ function ErrorBoundaryFallback({ error }: { error?: Error }) {
         userAgent: navigator.userAgent,
         timestamp: new Date().toISOString(),
       };
-      await fetch(N8N_GMAIL_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      // TODO: Implement error reporting via Supabase edge function
+      console.log('Error report payload:', payload);
       setSent(true);
     } catch (err) {
       setErrorMsg('Failed to send report. Please try again later.');
