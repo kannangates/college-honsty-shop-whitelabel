@@ -71,7 +71,7 @@ const AdminPanel = () => {
     },
     {
       title: "n8n Automation",
-      description: "Manage n8n workflows and credentials",
+      description: "Manage n8n workflows and credentials.Coming Soon",
       icon: Settings,
       color: "from-gray-500 to-gray-600",
       bgColor: "bg-gray-200",
@@ -80,7 +80,7 @@ const AdminPanel = () => {
     },
     {
       title: "Gamification Rules",
-      description: "Manage XP and badge rules for events",
+      description: "Manage XP and badge rules for events. Coming Soon",
       icon: Gamepad2,
       color: "from-pink-500 to-pink-600",
       bgColor: "bg-pink-100",
