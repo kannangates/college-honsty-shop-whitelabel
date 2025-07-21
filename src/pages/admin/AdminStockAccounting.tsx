@@ -41,10 +41,11 @@ interface StockOperationRow {
   estimated_closing_stock: number;
   stolen_stock: number;
   wastage_stock: number;
+  warehouse_stock: number;
   sales: number;
   order_count: number;
   created_at: string;
-  updated_at: string | null;
+  updated_at?: string | null;
 }
 
 // Stock operation as used in UI (with product field)
@@ -95,8 +96,12 @@ const AdminStockAccounting = () => {
 
       if (operationsError) throw operationsError;
 
-      // Type assertion for operationsData
-      const opsData: StockOperationRow[] = (operationsData ?? []) as StockOperationRow[];
+      // Type assertion for operationsData with proper handling
+      const opsData: StockOperationRow[] = (operationsData ?? []).map((op: any) => ({
+        ...op,
+        updated_at: op.updated_at || null,
+        warehouse_stock: op.warehouse_stock || 0
+      }));
 
       // Transform products and merge with operations
       const transformedProducts = (productsData ?? []).map(item => ({
@@ -120,6 +125,7 @@ const AdminStockAccounting = () => {
           estimated_closing_stock: existingOp?.estimated_closing_stock ?? product.shelf_stock,
           stolen_stock: existingOp?.stolen_stock ?? 0,
           wastage_stock: existingOp?.wastage_stock ?? 0,
+          warehouse_stock: existingOp?.warehouse_stock ?? product.warehouse_stock,
           sales: existingOp?.sales ?? 0,
           order_count: existingOp?.order_count ?? 0,
           created_at: existingOp?.created_at ?? today,
@@ -286,9 +292,12 @@ const AdminStockAccounting = () => {
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="electronics">Electronics</SelectItem>
-            <SelectItem value="fashion">Fashion</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
+            {Array.from(new Set(products.map(p => p.category))).map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -300,9 +309,12 @@ const AdminStockAccounting = () => {
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="all">All Status</SelectItem>
+            {Array.from(new Set(products.map(p => p.status?.toString() || 'active'))).map((status) => (
+              <SelectItem key={status} value={status}>
+                {status}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -314,8 +326,8 @@ const AdminStockAccounting = () => {
             <SelectValue placeholder="Stock Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="all">All Stock Status</SelectItem>
+            <SelectItem value="low">Low Stock</SelectItem>
             <SelectItem value="out">Out of Stock</SelectItem>
           </SelectContent>
         </Select>

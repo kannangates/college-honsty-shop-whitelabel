@@ -5,12 +5,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RefreshCw, Eye } from 'lucide-react';
+import { RefreshCw, Eye, Download } from 'lucide-react';
 import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
+import { useDataExport } from '@/hooks/useDataExport';
 
 interface Order {
   id: string;
@@ -37,6 +38,7 @@ interface OrdersTableProps {
 
 export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTableProps) => {
   const [statusPopoverOpen, setStatusPopoverOpen] = useState<string | null>(null);
+  const { exportData, isExporting } = useDataExport();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -47,10 +49,44 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
     }
   };
 
+  const handleExport = () => {
+    const exportHeaders = [
+      'Order ID', 'Student Name', 'Student ID', 'Date', 'Amount', 'Payment Mode', 'Status', 'Items'
+    ];
+    
+    const exportRows = orders.map(order => [
+      order.id,
+      order.users?.name || 'N/A',
+      order.users?.student_id || 'N/A',
+      new Date(order.created_at).toLocaleDateString(),
+      order.total_amount,
+      order.payment_mode || 'N/A',
+      order.payment_status,
+      order.order_items?.map(item => `${item.products?.name} (×${item.quantity})`).join(', ') || 'N/A'
+    ]);
+
+    exportData({
+      headers: exportHeaders,
+      data: exportRows,
+      filename: `orders-${new Date().toISOString().split('T')[0]}`
+    }, 'csv');
+  };
+
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-gray-800">Orders ({orders.length})</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-gray-800">Orders ({orders.length})</CardTitle>
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={isExporting || orders.length === 0}
+            className="text-sm"
+          >
+            <Download className="h-4 w-4 mr-1" />
+            Export CSV
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>

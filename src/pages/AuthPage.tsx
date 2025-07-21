@@ -4,14 +4,13 @@ import { useAuth } from '@/contexts/useAuth';
 import { useISOCompliance } from '@/hooks/useISOCompliance';
 import { WHITELABEL_CONFIG } from '@/config';
 import { LoginForm } from '@/components/auth/LoginForm';
-import { SignupForm } from '@/components/auth/SignupForm';
 import { EnhancedImage } from '@/components/common/EnhancedImage';
 
-export interface AuthPageProps { initialMode?: 'login' | 'signup' | 'recovery'; }
+export interface AuthPageProps { initialMode?: 'login' | 'recovery'; }
 
 const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const { user, loading } = useAuth();
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'recovery'>(initialMode);
+  const [authMode, setAuthMode] = useState<'login' | 'recovery'>(initialMode);
   const [themeLoaded, setThemeLoaded] = useState(false);
   const theme = WHITELABEL_CONFIG.branding;
   
@@ -52,7 +51,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
     recordError(error, 'low');
   };
 
-  const handleToggleForm = async (mode: 'login' | 'signup' | 'recovery') => {
+  const handleToggleForm = async (mode: 'login' | 'recovery') => {
     await trackUserAction('toggle_auth_form', { 
       switching_to: mode 
     });
@@ -60,16 +59,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   };
 
   const renderAuthForm = () => {
-    switch (authMode) {
-      case 'signup':
-        return <SignupForm onToggleLogin={() => handleToggleForm('login')} />;
-      default:
-        return (
-          <LoginForm 
-            onToggleSignup={() => handleToggleForm('signup')}
-          />
-        );
-    }
+    return <LoginForm />;
   };
 
   return (

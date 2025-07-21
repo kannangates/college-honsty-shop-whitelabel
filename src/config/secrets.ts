@@ -7,7 +7,7 @@ export const CONFIG = {
   
   // hCaptcha site key (public value safe for frontend) 
   // TODO: Replace with your actual hCaptcha site key from the Supabase dashboard
-  HCAPTCHA_SITE_KEY: "d3c6a1ba-a136-45fc-b890-b9a8a5449e2a",
+  HCAPTCHA_SITE_KEY: "7a1fcd80-4e12-428b-a905-b45d2942ddad",
   
   // Email domain for student accounts
   EMAIL_DOMAIN: "shasuncollege.edu.in"
@@ -19,7 +19,7 @@ export const validateSecrets = () => {
     'HCAPTCHA_SITE_KEY'
   ] as const;
   
-  const missing = requiredSecrets.filter(key => !CONFIG[key] || CONFIG[key] === "d3c6a1ba-a136-45fc-b890-b9a8a5449e2a");
+  const missing = requiredSecrets.filter(key => !CONFIG[key] || CONFIG[key] === "7a1fcd80-4e12-428b-a905-b45d2942ddad");
   
   if (missing.length > 0) {
     console.warn('Missing required environment variables:', missing);

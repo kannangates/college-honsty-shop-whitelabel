@@ -32,7 +32,7 @@ function App() {
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/auth" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<AuthPage initialMode="login" />} />
-                <Route path="/signup" element={<AuthPage initialMode="signup" />} />
+                <Route path="/signup" element={<Navigate to="/login" replace />} />
                 {UserRoutes()}
                 {AdminRoutes()}
                 <Route path="*" element={<NotFound />} />

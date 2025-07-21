@@ -93,6 +93,7 @@ const AdminStudentManagement = () => {
 
   useEffect(() => {
     fetchStudents();
+    fetchStats();
   }, [fetchStudents]);
 
   const fetchStats = async () => {
@@ -104,11 +105,11 @@ const AdminStudentManagement = () => {
       if (error) throw error;
 
       const now = new Date();
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
       const totalStudents = allUsers?.length || 0;
       const activeThisMonth = allUsers?.filter(user => 
-        user.last_signed_in_at && new Date(user.last_signed_in_at) >= lastMonth
+        user.last_signed_in_at && new Date(user.last_signed_in_at) >= startOfThisMonth
       ).length || 0;
       const highestPoints = Math.max(...(allUsers?.map(user => user.points || 0) || [0]));
       const departments = new Set(allUsers?.map(user => user.department).filter(Boolean)).size;
@@ -308,6 +309,15 @@ const AdminStudentManagement = () => {
           <div className="flex justify-between items-center">
             <CardTitle className="text-gray-800 text-lg">All Students ({filteredStudents.length})</CardTitle>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={fetchStudents}
+                disabled={loading}
+                className="text-sm"
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => handleExport('csv')}

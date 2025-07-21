@@ -10,13 +10,15 @@ interface Product {
   id: string;
   name: string;
   opening_stock: number;
+  warehouse_stock: number;
+  shelf_stock: number;
 }
 
 interface RestockModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product | null;
-  onRestock: (productId: string, quantity: number) => Promise<void>;
+  onRestock: (productId: string, quantity: number, restockType: 'warehouse' | 'shelf') => Promise<void>;
 }
 
 export const RestockModal: React.FC<RestockModalProps> = ({
@@ -28,6 +30,7 @@ export const RestockModal: React.FC<RestockModalProps> = ({
   const [quantity, setQuantity] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [restockType, setRestockType] = useState<'warehouse' | 'shelf'>('warehouse');
 
   const handleSubmit = async () => {
     if (!product) return;
@@ -38,12 +41,19 @@ export const RestockModal: React.FC<RestockModalProps> = ({
       return;
     }
 
+    // Validation for shelf restock
+    if (restockType === 'shelf' && restockQty > product.warehouse_stock) {
+      setError(`Cannot restock ${restockQty} units to shelf. Only ${product.warehouse_stock} units available in warehouse.`);
+      return;
+    }
+
     console.log('🔄 Restock request initiated:', {
       productId: product.id,
       productName: product.name,
-      currentStock: product.opening_stock,
+      restockType,
+      currentWarehouseStock: product.warehouse_stock,
+      currentShelfStock: product.shelf_stock,
       restockQuantity: restockQty,
-      newStock: product.opening_stock + restockQty,
       timestamp: new Date().toISOString()
     });
 
@@ -51,9 +61,10 @@ export const RestockModal: React.FC<RestockModalProps> = ({
     setError('');
 
     try {
-      await onRestock(product.id, restockQty);
+      await onRestock(product.id, restockQty, restockType);
       console.log('✅ Restock operation completed successfully:', {
         productId: product.id,
+        restockType,
         restockQuantity: restockQty,
         timestamp: new Date().toISOString()
       });
@@ -63,6 +74,7 @@ export const RestockModal: React.FC<RestockModalProps> = ({
     } catch (error) {
       console.error('❌ Restock operation failed:', {
         productId: product.id,
+        restockType,
         restockQuantity: restockQty,
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
@@ -76,6 +88,7 @@ export const RestockModal: React.FC<RestockModalProps> = ({
   const handleClose = () => {
     setQuantity('');
     setError('');
+    setRestockType('warehouse');
     onClose();
   };
 
@@ -95,9 +108,50 @@ export const RestockModal: React.FC<RestockModalProps> = ({
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="bg-gray-50 p-3 rounded-lg">
-            <div className="text-sm text-gray-600">Current Stock</div>
-            <div className="text-lg font-semibold">{product.opening_stock} units</div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-sm text-gray-600">Warehouse Stock</div>
+              <div className="text-lg font-semibold">{product.warehouse_stock} units</div>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-sm text-gray-600">Shelf Stock</div>
+              <div className="text-lg font-semibold">{product.shelf_stock} units</div>
+            </div>
+          </div>
+
+          <div>
+            <Label>Restock Type</Label>
+            <div className="flex gap-2 mt-2">
+              <Button
+                type="button"
+                variant={restockType === 'warehouse' ? 'default' : 'outline'}
+                onClick={() => {
+                  setRestockType('warehouse');
+                  setError('');
+                }}
+                className="flex-1"
+                size="sm"
+              >
+                Warehouse
+              </Button>
+              <Button
+                type="button"
+                variant={restockType === 'shelf' ? 'default' : 'outline'}
+                onClick={() => {
+                  setRestockType('shelf');
+                  setError('');
+                }}
+                className="flex-1"
+                size="sm"
+              >
+                Shelf
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {restockType === 'warehouse' 
+                ? 'Add new stock to warehouse inventory' 
+                : 'Move stock from warehouse to shelf (reduces warehouse stock)'}
+            </p>
           </div>
 
           <div>
@@ -106,14 +160,20 @@ export const RestockModal: React.FC<RestockModalProps> = ({
               id="quantity"
               type="number"
               min="1"
+              max={restockType === 'shelf' ? product.warehouse_stock : undefined}
               value={quantity}
               onChange={(e) => {
                 setQuantity(e.target.value);
                 setError('');
               }}
-              placeholder="Enter quantity to add"
+              placeholder={`Enter quantity to ${restockType === 'warehouse' ? 'add' : 'move to shelf'}`}
               className="mt-1"
             />
+            {restockType === 'shelf' && (
+              <p className="text-xs text-gray-500 mt-1">
+                Available in warehouse: {product.warehouse_stock} units
+              </p>
+            )}
             {error && (
               <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
                 <AlertCircle className="h-3 w-3" />
@@ -124,9 +184,26 @@ export const RestockModal: React.FC<RestockModalProps> = ({
 
           {quantity && !isNaN(parseInt(quantity)) && parseInt(quantity) > 0 && (
             <div className="bg-blue-50 p-3 rounded-lg">
-              <div className="text-sm text-blue-600">New Stock After Restock</div>
-              <div className="text-lg font-semibold text-blue-800">
-                {product.opening_stock + parseInt(quantity)} units
+              <div className="text-sm text-blue-600">Stock After Restock</div>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <div>
+                  <div className="text-xs text-blue-600">Warehouse</div>
+                  <div className="text-lg font-semibold text-blue-800">
+                    {restockType === 'warehouse' 
+                      ? product.warehouse_stock + parseInt(quantity)
+                      : Math.max(0, product.warehouse_stock - parseInt(quantity))
+                    } units
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-blue-600">Shelf</div>
+                  <div className="text-lg font-semibold text-blue-800">
+                    {restockType === 'shelf' 
+                      ? product.shelf_stock + parseInt(quantity)
+                      : product.shelf_stock
+                    } units
+                  </div>
+                </div>
               </div>
             </div>
           )}

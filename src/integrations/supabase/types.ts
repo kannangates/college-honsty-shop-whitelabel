@@ -140,6 +140,7 @@ export type Database = {
           product_id: string | null
           sales: number | null
           stolen_stock: number | null
+          warehouse_stock: number | null
           wastage_stock: number
         }
         Insert: {
@@ -153,6 +154,7 @@ export type Database = {
           product_id?: string | null
           sales?: number | null
           stolen_stock?: number | null
+          warehouse_stock?: number | null
           wastage_stock: number
         }
         Update: {
@@ -166,6 +168,7 @@ export type Database = {
           product_id?: string | null
           sales?: number | null
           stolen_stock?: number | null
+          warehouse_stock?: number | null
           wastage_stock?: number
         }
         Relationships: [

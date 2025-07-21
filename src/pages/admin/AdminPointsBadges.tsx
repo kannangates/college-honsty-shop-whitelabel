@@ -16,7 +16,7 @@ import { BadgeCreateCard, BADGE_PRESETS } from './BadgeCreateCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { ColumnDef, useReactTable, getCoreRowModel, flexRender, CellContext } from '@tanstack/react-table';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface Student {
   id: string;
@@ -314,11 +314,12 @@ const AdminPointsBadges = () => {
   });
 
   return (
-    <div className="space-y-4 text-sm">
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-4 rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold mb-1">Points & Badges</h1>
-        <p className="text-purple-100 text-sm">Configure point allocation and badge management</p>
-      </div>
+    <TooltipProvider>
+      <div className="space-y-4 text-sm">
+        <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-4 rounded-xl shadow-lg">
+          <h1 className="text-2xl font-bold mb-1">Points & Badges</h1>
+          <p className="text-purple-100 text-sm">Configure point allocation and badge management</p>
+        </div>
 
       <Tabs defaultValue="points" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
@@ -676,7 +677,8 @@ const AdminPointsBadges = () => {
       </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
 

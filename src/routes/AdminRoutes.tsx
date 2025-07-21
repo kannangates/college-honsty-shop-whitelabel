@@ -13,7 +13,7 @@ import AdminStockAccounting from '@/pages/admin/AdminStockAccounting';
 import AdminPaymentReports from '@/pages/admin/AdminPaymentReports';
 import AdminDeveloper from '@/pages/admin/AdminDeveloper';
 import WhitelabelConfig from '@/pages/admin/WhitelabelConfig';
-import GamificationRulesAdmin from '@/pages/admin/GamificationRulesAdmin';
+
 
 const ProtectedLayoutRoute = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
@@ -36,7 +36,6 @@ export const AdminRoutes = () => {
       <Route path="/admin/payment-reports" element={<ProtectedLayoutRoute><AdminPaymentReports /></ProtectedLayoutRoute>} />
       <Route path="/admin/dev-tools" element={<ProtectedLayoutRoute><AdminDeveloper /></ProtectedLayoutRoute>} />
       <Route path="/admin/whitelabel-config" element={<ProtectedLayoutRoute><WhitelabelConfig /></ProtectedLayoutRoute>} />
-      <Route path="/admin/gamification" element={<ProtectedLayoutRoute><GamificationRulesAdmin /></ProtectedLayoutRoute>} />
     </>
   );
 };

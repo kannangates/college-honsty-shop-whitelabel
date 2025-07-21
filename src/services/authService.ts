@@ -185,7 +185,7 @@ export class AuthService {
     }
   }
 
-  static async login(studentId: string, password: string, captchaToken?: string): Promise<LoginResult> {
+  static async login(studentId: string, password: string): Promise<LoginResult> {
     try {
       // Validate input
       const studentIdValidation = validateStudentId(studentId);
@@ -201,13 +201,10 @@ export class AuthService {
       // Construct email directly from student ID
       const email = `${studentId}@shasuncollege.edu.in`;
 
-      // Attempt authentication with captcha token
+      // Attempt authentication without captcha
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          captchaToken
-        }
+        password
       });
 
       if (signInError || !signInData.session) {

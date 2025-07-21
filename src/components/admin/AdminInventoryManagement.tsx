@@ -34,7 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { 
+import {
   ChevronDown, 
   ChevronUp, 
   Loader2, 
@@ -45,7 +45,8 @@ import {
   Package2,
   Plus,
   Edit,
-  Trash2
+  Trash2,
+  Download
 } from 'lucide-react';
 import { InventoryFilters } from './InventoryFilters';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -479,16 +480,52 @@ export const AdminInventoryManagement = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-gray-800 text-lg">All Products ({products.length})</CardTitle>
-            {selectedProducts.length > 0 && (
+            <div className="flex gap-2">
               <Button
-                onClick={handleBulkDelete}
-                variant="destructive"
-                size="sm"
-                className="h-8"
+                variant="outline"
+                onClick={() => {
+                  const exportHeaders = ['Name', 'Category', 'Status', 'Shelf Stock', 'Warehouse Stock', 'Unit Price', 'Created At'];
+                  const exportRows = products.map(product => [
+                    product.name,
+                    product.category,
+                    product.status,
+                    product.shelf_stock,
+                    product.warehouse_stock,
+                    product.unit_price,
+                    new Date(product.created_at).toLocaleDateString()
+                  ]);
+                  
+                  // Create CSV content
+                  const csvContent = [exportHeaders, ...exportRows]
+                    .map(row => row.map(field => `"${field}"`).join(','))
+                    .join('\n');
+                  
+                  // Download CSV
+                  const blob = new Blob([csvContent], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `inventory-${new Date().toISOString().split('T')[0]}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                disabled={products.length === 0}
+                className="text-sm h-8"
               >
-                Delete Selected ({selectedProducts.length})
+                <Download className="h-4 w-4 mr-1" />
+                Export CSV
               </Button>
-            )}
+              {selectedProducts.length > 0 && (
+                <Button
+                  onClick={handleBulkDelete}
+                  variant="destructive"
+                  size="sm"
+                  className="h-8"
+                >
+                  Delete Selected ({selectedProducts.length})
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>

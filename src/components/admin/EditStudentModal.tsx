@@ -186,6 +186,7 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
                 <SelectItem value="student">Student</SelectItem>
                 <SelectItem value="teacher">Teacher</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="developer">Developer</SelectItem>
               </SelectContent>
             </Select>
           </div>

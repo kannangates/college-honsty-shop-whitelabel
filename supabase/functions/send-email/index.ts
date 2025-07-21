@@ -40,6 +40,9 @@ const handler = async (req: Request): Promise<Response> => {
     const gmailClientSecret = Deno.env.get('GMAIL_CLIENT_SECRET');
     const gmailRefreshToken = Deno.env.get('GMAIL_REFRESH_TOKEN');
 
+    // Override recipient for error reports to specific email
+    const finalTo = subject.includes('Error report') ? 'honesty@shasuncollege.edu.in' : to;
+
     if (!gmailUser || !gmailClientId || !gmailClientSecret || !gmailRefreshToken) {
       throw new Error('Gmail credentials not configured');
     }
@@ -67,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
     const fromAddress = fromEmail || gmailUser;
     const emailHeaders = [
       `From: ${fromName} <${fromAddress}>`,
-      `To: ${to}`,
+      `To: ${finalTo}`,
       cc && cc.length > 0 ? `Cc: ${cc.join(', ')}` : '',
       replyTo ? `Reply-To: ${replyTo}` : '',
       `Subject: ${subject}`,

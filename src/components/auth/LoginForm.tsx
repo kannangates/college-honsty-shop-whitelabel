@@ -1,5 +1,4 @@
-import React, { useState, useRef } from 'react';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
@@ -20,10 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG, CONFIG } from '@/config';
 import { Eye, EyeOff } from 'lucide-react';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getSiteKey(config: any) {
-  return config?.security?.hcaptcha_site_key || CONFIG.HCAPTCHA_SITE_KEY;
-}
 
 export function LoginForm({
   className,
@@ -38,15 +33,6 @@ export function LoginForm({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-
-  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const config = WHITELABEL_CONFIG;
-  // Determine hCaptcha site key with sensible fallbacks for development
-  // Use env var first, then config, finally public test key
-  // https://docs.hcaptcha.com/#localdev
-  const siteKey: string = getSiteKey(config);
-  const captchaRef = useRef<HCaptcha>(null);
   const { toast } = useToast();
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -71,7 +57,7 @@ export function LoginForm({
     setLoading(true);
 
     try {
-      await signIn(studentId, password, isLocalhost ? undefined : captchaToken || undefined);
+      await signIn(studentId, password);
       // Don't navigate immediately - let auth context handle it
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : messages['login_failed'] || 'Login failed';
@@ -167,16 +153,6 @@ export function LoginForm({
               </div>
             </div>
 
-            {/* Captcha - centered */}
-            {!isLocalhost && (
-            <div className="flex justify-center">
-              <HCaptcha
-                sitekey={siteKey}
-                onVerify={(token) => setCaptchaToken(token)}
-                ref={captchaRef}
-              />
-            </div>
-            )}
  
              <Button 
               type="submit" 
@@ -195,20 +171,6 @@ export function LoginForm({
               )}
             </Button>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600 mb-3">
-                Don't have an account yet? 🤔
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  navigate('/signup');
-                }}
-                className="text-sm font-medium text-purple-600 hover:text-purple-800 underline underline-offset-4 transition-colors"
-              >
-                Create your account ✨
-              </button>
-            </div>
           </form>
         </CardContent>
       </Card>

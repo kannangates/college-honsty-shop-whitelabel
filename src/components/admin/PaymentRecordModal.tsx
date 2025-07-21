@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
+import MultipleSelector, { Option } from '@/components/ui/multiple-selector';
 
 interface PaymentRecordModalProps {
   open: boolean;
@@ -47,7 +48,7 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
   const [loading, setLoading] = useState(false);
   const [orderComboOpen, setOrderComboOpen] = useState(false);
   const [unpaidOrders, setUnpaidOrders] = useState<UnpaidOrder[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<string>('');
+  const [selectedOrders, setSelectedOrders] = useState<Option[]>([]);
   const [formData, setFormData] = useState({
     payment_mode: '',
     transaction_id: '',
@@ -98,7 +99,7 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedOrder || !formData.payment_mode || !formData.transaction_id) {
+    if (!selectedOrders.length || !formData.payment_mode || !formData.transaction_id) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
@@ -110,6 +111,8 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
     setLoading(true);
 
     try {
+      // Update multiple orders
+      const orderIds = selectedOrders.map(order => order.value);
       const { error } = await supabase
         .from('orders')
         .update({
@@ -118,16 +121,16 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
           transaction_id: formData.transaction_id,
           paid_at: new Date(formData.paid_at).toISOString()
         })
-        .eq('id', selectedOrder);
+        .in('id', orderIds);
 
       if (error) throw error;
 
       toast({
         title: 'Success',
-        description: 'Payment record updated successfully',
+        description: `Payment records updated successfully for ${selectedOrders.length} orders`,
       });
 
-      setSelectedOrder('');
+      setSelectedOrders([]);
       setFormData({
         payment_mode: '',
         transaction_id: '',
@@ -138,10 +141,10 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
       onOpenChange(false);
       fetchUnpaidOrders(); // Refresh the list
     } catch (error) {
-      console.error('Error updating payment record:', error);
+      console.error('Error updating payment records:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update payment record',
+        description: 'Failed to update payment records',
         variant: 'destructive',
       });
     } finally {
@@ -149,7 +152,10 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
     }
   };
 
-  const selectedOrderData = unpaidOrders.find(order => order.id === selectedOrder);
+  const orderOptions: Option[] = unpaidOrders.map(order => ({
+    label: `${order.user_name} (${order.student_id}) - ₹${order.total_amount}`,
+    value: order.id
+  }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -166,65 +172,37 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Select Order</Label>
-            <Popover open={orderComboOpen} onOpenChange={setOrderComboOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={orderComboOpen}
-                  className="w-full justify-between"
-                >
-                  {selectedOrder
-                    ? unpaidOrders.find(order => order.id === selectedOrder)?.user_name + 
-                      ` (${unpaidOrders.find(order => order.id === selectedOrder)?.student_id}) - ₹${unpaidOrders.find(order => order.id === selectedOrder)?.total_amount}`
-                    : "Select order..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Search orders..." />
-                  <CommandList>
-                    <CommandEmpty>No unpaid orders found.</CommandEmpty>
-                    <CommandGroup>
-                      {unpaidOrders.map((order) => (
-                        <CommandItem
-                          key={order.id}
-                          value={`${order.user_name} ${order.student_id} ${order.total_amount}`}
-                          onSelect={() => {
-                            setSelectedOrder(order.id);
-                            setOrderComboOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedOrder === order.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <div className="flex flex-col">
-                            <span className="font-medium">{order.user_name} ({order.student_id})</span>
-                            <span className="text-sm text-muted-foreground">
-                              ₹{order.total_amount} • {new Date(order.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <Label>Select Orders (Multiple Selection)</Label>
+            <MultipleSelector
+              value={selectedOrders}
+              onValueChange={setSelectedOrders}
+              defaultOptions={orderOptions}
+              placeholder="Select orders to mark as paid..."
+              emptyIndicator={() => (
+                <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
+                  No unpaid orders found.
+                </p>
+              )}
+            />
           </div>
 
-          {selectedOrderData && (
+          {selectedOrders.length > 0 && (
             <div className="p-3 bg-gray-50 rounded-md">
-              <h4 className="font-medium text-sm mb-2">Order Details</h4>
+              <h4 className="font-medium text-sm mb-2">Selected Orders ({selectedOrders.length})</h4>
               <div className="space-y-1 text-sm">
-                <div>Student: {selectedOrderData.user_name} ({selectedOrderData.student_id})</div>
-                <div>Amount: ₹{selectedOrderData.total_amount}</div>
-                <div>Order Date: {new Date(selectedOrderData.created_at).toLocaleString()}</div>
+                {selectedOrders.slice(0, 3).map((order) => {
+                  const orderData = unpaidOrders.find(o => o.id === order.value);
+                  return orderData ? (
+                    <div key={order.value}>
+                      {orderData.user_name} ({orderData.student_id}) - ₹{orderData.total_amount}
+                    </div>
+                  ) : null;
+                })}
+                {selectedOrders.length > 3 && (
+                  <div className="text-muted-foreground">
+                    +{selectedOrders.length - 3} more orders selected
+                  </div>
+                )}
               </div>
             </div>
           )}
