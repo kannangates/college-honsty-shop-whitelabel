@@ -88,7 +88,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur opacity-30"></div>
             <EnhancedImage
-              src="/college-logo.jpg"
+              src="/college-logo.png"
               alt="College Logo"
               className="relative w-16 h-16 md:w-20 md:h-20 object-cover rounded-2xl shadow-xl border-2 border-white/30 backdrop-blur-sm"
               fallbackSrc={theme.logo.fallback}
