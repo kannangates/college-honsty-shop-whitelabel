@@ -11,7 +11,7 @@ const DEFAULT_CONFIG = {
   },
   branding: {
     college_name: "Your College Name",
-    portal_name: "Your College Honesty Shop Portal",
+    portal_name: "Shasun College Honesty Shop Portal",
     colors: {
       primary: "#3b82f6",
       secondary: "#64748b",
