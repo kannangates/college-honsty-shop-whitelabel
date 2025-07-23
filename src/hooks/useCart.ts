@@ -80,7 +80,7 @@ export const useCart = () => {
 
       if (orderError) throw orderError;
 
-      // Create order items
+      // Create order items and update shelf stock
       const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: item.id,
@@ -94,6 +94,34 @@ export const useCart = () => {
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
+
+      // Update shelf stock for each product
+      for (const item of items) {
+        const { data: product, error: fetchError } = await supabase
+          .from('products')
+          .select('shelf_stock')
+          .eq('id', item.id)
+          .single();
+
+        if (fetchError) {
+          console.error('Error fetching product:', fetchError);
+          continue;
+        }
+
+        const newShelfStock = Math.max(0, (product.shelf_stock || 0) - item.quantity);
+        
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ 
+            shelf_stock: newShelfStock,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', item.id);
+
+        if (updateError) {
+          console.error('Error updating product stock:', updateError);
+        }
+      }
 
       // Award badges for the new order
       try {

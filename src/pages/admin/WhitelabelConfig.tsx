@@ -9,4 +9,4 @@ const WhitelabelConfig = () => {
   );
 };
 
-export default WhitelabelConfig; 
+export default WhitelabelConfig;

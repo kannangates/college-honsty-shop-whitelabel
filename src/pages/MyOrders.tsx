@@ -9,15 +9,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { ShoppingCart, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { InvoiceGenerator } from '@/components/invoice/InvoiceGenerator';
 
 interface Order {
   id: string;
   created_at: string;
   payment_status: 'paid' | 'unpaid';
+  payment_mode?: string;
+  transaction_id?: string;
+  paid_at?: string;
   total_amount: number;
+  users?: {
+    name: string;
+    email: string;
+  };
   order_items?: {
     id: string;
     quantity: number;
+    unit_price: number;
+    total_price: number;
     products?: {
       name: string;
       unit_price: number;
@@ -41,6 +51,7 @@ const MyOrders = () => {
         .from('orders')
         .select(`
           *,
+          users (name, email),
           order_items (
             *,
             products (*)
@@ -130,6 +141,7 @@ const MyOrders = () => {
                       <TableHead>Date</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Invoice</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -137,9 +149,17 @@ const MyOrders = () => {
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
                         <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>${order.total_amount}</TableCell>
+                        <TableCell>₹{order.total_amount}</TableCell>
                         <TableCell>
                           <Badge variant="destructive">{order.payment_status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <InvoiceGenerator 
+                            order={{
+                              ...order,
+                              user: order.users || { name: 'Unknown', email: 'unknown@email.com' }
+                            }} 
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -179,6 +199,7 @@ const MyOrders = () => {
                       <TableHead>Date</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Invoice</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -186,11 +207,19 @@ const MyOrders = () => {
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
                         <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>${order.total_amount}</TableCell>
+                        <TableCell>₹{order.total_amount}</TableCell>
                         <TableCell>
                           <Badge variant={order.payment_status === 'paid' ? 'default' : 'destructive'}>
                             {order.payment_status}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <InvoiceGenerator 
+                            order={{
+                              ...order,
+                              user: order.users || { name: 'Unknown', email: 'unknown@email.com' }
+                            }} 
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

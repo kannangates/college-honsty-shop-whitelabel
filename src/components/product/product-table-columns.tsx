@@ -37,7 +37,8 @@ export const createProductColumns = ({
       },
       cell: ({ row }) => {
         const product = row.original
-        const isOutOfStock = product.shelf_stock <= 0
+        const shelfStock = product.shelf_stock || 0
+        const isOutOfStock = shelfStock <= 0
         
         return (
           <div className="flex flex-col">
@@ -104,11 +105,17 @@ export const createProductColumns = ({
         )
       },
       cell: ({ row }) => {
-        const stock = row.getValue("shelf_stock") as number
+        const product = row.original
+        const totalStock = (product.shelf_stock || 0) + (product.opening_stock || 0)
         return (
-          <Badge variant={stock > 10 ? "default" : "secondary"}>
-            {stock}
-          </Badge>
+          <div className="flex flex-col items-center">
+            <Badge variant={totalStock > 10 ? "default" : "secondary"}>
+              {totalStock}
+            </Badge>
+            <span className="text-xs text-muted-foreground mt-1">
+              Shelf: {product.shelf_stock || 0} + Opening: {product.opening_stock || 0}
+            </span>
+          </div>
         )
       },
     },
@@ -118,7 +125,8 @@ export const createProductColumns = ({
       cell: ({ row }) => {
         const product = row.original
         const quantity = getItemQuantity(product.id)
-        const isOutOfStock = product.shelf_stock <= 0
+        const shelfStock = product.shelf_stock || 0
+        const isOutOfStock = shelfStock <= 0
         
         return (
           <div className="flex items-center gap-2">
@@ -136,7 +144,7 @@ export const createProductColumns = ({
               variant="outline"
               size="sm"
               onClick={() => handleAddToCart(product)}
-              disabled={isOutOfStock || quantity >= product.shelf_stock}
+              disabled={isOutOfStock || quantity >= shelfStock}
               className="h-8 w-8 p-0"
             >
               <Plus className="h-4 w-4" />
@@ -166,7 +174,8 @@ export const createProductColumns = ({
       header: "Actions",
       cell: ({ row }) => {
         const product = row.original
-        const isOutOfStock = product.shelf_stock <= 0
+        const shelfStock = product.shelf_stock || 0
+        const isOutOfStock = shelfStock <= 0
         
         return (
           <Button

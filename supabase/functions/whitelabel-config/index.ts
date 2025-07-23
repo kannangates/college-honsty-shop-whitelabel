@@ -10,8 +10,8 @@ const DEFAULT_CONFIG = {
     description: "A modern, secure, and ISO-compliant honesty shop management system built with enterprise-grade security and performance optimization."
   },
   branding: {
-    college_name: "Shasun College Name",
-    portal_name: "Shasun College Honesty Shop Portal",
+    college_name: "Your College Name",
+    portal_name: "Your College Honesty Shop Portal",
     colors: {
       primary: "#3b82f6",
       secondary: "#64748b",

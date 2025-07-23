@@ -512,6 +512,7 @@ export type Database = {
       orders: {
         Row: {
           created_at: string | null
+          friendly_id: string | null
           id: string
           paid_at: string | null
           payment_mode: Database["public"]["Enums"]["payment_mode"] | null
@@ -524,6 +525,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          friendly_id?: string | null
           id?: string
           paid_at?: string | null
           payment_mode?: Database["public"]["Enums"]["payment_mode"] | null
@@ -536,6 +538,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          friendly_id?: string | null
           id?: string
           paid_at?: string | null
           payment_mode?: Database["public"]["Enums"]["payment_mode"] | null
@@ -888,6 +891,10 @@ export type Database = {
           email: string
           user_data: Json
         }[]
+      }
+      generate_friendly_order_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_current_user_role: {
         Args: Record<PropertyKey, never>

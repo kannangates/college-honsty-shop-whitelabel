@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShoppingCart, Trash2 } from 'lucide-react';
+import { PaymentModal } from '@/components/cart/PaymentModal';
+import { ThankYouModal } from '@/components/cart/ThankYouModal';
 
 interface CartItem {
   id: string;
@@ -16,10 +18,39 @@ interface CartSummaryProps {
   items: CartItem[];
   updateQuantity: (productId: string, quantity: number) => void;
   totalPrice: number;
-  checkout: (mode: 'immediate' | 'later') => void;
+  checkout: (mode: 'immediate' | 'later') => Promise<any>;
 }
 
 export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: CartSummaryProps) => {
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [thankYouModalOpen, setThankYouModalOpen] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState<string>('');
+
+  const handlePayNow = async () => {
+    try {
+      const order = await checkout('immediate');
+      if (order) {
+        setCurrentOrderId(order.id);
+        setPaymentModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+    }
+  };
+
+  const handlePayLater = async () => {
+    try {
+      await checkout('later');
+      setThankYouModalOpen(true);
+    } catch (error) {
+      console.error('Error creating order:', error);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    // Payment completed successfully
+  };
+
   if (items.length === 0) return null;
 
   return (
@@ -68,19 +99,32 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
           </div>
           <div className="flex gap-2">
             <Button 
-              onClick={() => checkout('immediate')} 
+              onClick={handlePayNow}
               className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
             >
               Pay Now
             </Button>
             <Button 
-              onClick={() => checkout('later')} 
+              onClick={handlePayLater}
               className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
             >
               Pay Later
             </Button>
           </div>
         </div>
+
+        <PaymentModal
+          isOpen={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+          orderId={currentOrderId}
+          amount={totalPrice}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+
+        <ThankYouModal
+          isOpen={thankYouModalOpen}
+          onClose={() => setThankYouModalOpen(false)}
+        />
       </CardContent>
     </Card>
   );

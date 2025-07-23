@@ -27,6 +27,7 @@ export interface AuthContextType {
     mustChangePassword?: boolean // add optional argument
   ) => Promise<void>;
   signOut: () => Promise<void>;
+  logout: () => Promise<void>; // Add logout alias
   isAdmin: boolean;
   updateProfile: (newProfile: Partial<UserProfile>) => void;
   refreshProfile: () => Promise<void>;
@@ -67,6 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signIn: authActions.signIn,
     signUp: authActions.signUp, // already supports extra args
     signOut: authActions.signOut,
+    logout: authActions.signOut, // Add logout alias
     isAdmin,
     updateProfile,
     refreshProfile,
