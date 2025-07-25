@@ -211,13 +211,7 @@ export class AuthService {
         return { success: false, error: signInError?.message || 'Login failed' };
       }
 
-      // Update last signed in timestamp
-      await supabase
-        .from('users')
-        .update({ last_signed_in_at: new Date().toISOString() })
-        .eq('id', signInData.session.user.id);
-
-      // Fetch complete user profile
+      // Fetch complete user profile with password_changed_at
       const { data: profileData, error: profileError } = await supabase
         .from('users')
         .select('*')
@@ -227,6 +221,31 @@ export class AuthService {
       if (profileError) {
         return { success: false, error: 'Failed to fetch user profile' };
       }
+
+      // Check if password needs to be changed (older than 120 days)
+      const PASSWORD_EXPIRY_DAYS = 120;
+      const passwordChangedAt = profileData.password_changed_at ? new Date(profileData.password_changed_at) : new Date();
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() - PASSWORD_EXPIRY_DAYS);
+
+      // If password is expired, return a special response
+      if (passwordChangedAt < expiryDate) {
+        // Sign out the user since their password is expired
+        await supabase.auth.signOut();
+        
+        return { 
+          success: false, 
+          error: 'Your password has expired. Please reset your password.',
+          requiresPasswordReset: true,
+          userId: signInData.session.user.id
+        };
+      }
+
+      // Update last signed in timestamp
+      await supabase
+        .from('users')
+        .update({ last_signed_in_at: new Date().toISOString() })
+        .eq('id', signInData.session.user.id);
 
       // Store complete session in sessionStorage
       sessionStorage.setItem('supabase_session', JSON.stringify(signInData.session));

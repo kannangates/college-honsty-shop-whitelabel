@@ -28,7 +28,7 @@ export const UserRoutes = () => {
       <Route path="/my-orders" element={<ProtectedLayoutRoute><MyOrders /></ProtectedLayoutRoute>} />
       <Route path="/add-product" element={<ProtectedLayoutRoute><AddProduct /></ProtectedLayoutRoute>} />
       <Route path="/order/:id" element={<ProtectedLayoutRoute><OrderDetails /></ProtectedLayoutRoute>} />
-      <Route path="/payment/:orderId" element={<ProtectedLayoutRoute><Payment /></ProtectedLayoutRoute>} />
+      <Route path="/payment" element={<ProtectedLayoutRoute><Payment /></ProtectedLayoutRoute>} />
       <Route path="/settings" element={<ProtectedLayoutRoute><Settings /></ProtectedLayoutRoute>} />
       <Route path="/notifications" element={<ProtectedLayoutRoute><Notifications /></ProtectedLayoutRoute>} />
       <Route path="/my-badges" element={<ProtectedLayoutRoute><BadgeGallery /></ProtectedLayoutRoute>} />

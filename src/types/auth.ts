@@ -19,4 +19,6 @@ export interface SignupResult extends AuthResult {
 export interface LoginResult extends AuthResult {
   session?: AuthSession;
   profile?: UserProfile;
+  requiresPasswordReset?: boolean;
+  userId?: string;
 }

@@ -71,25 +71,48 @@ export const MFASetup = () => {
     }
 
     try {
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      if (!factors?.totp?.[0]) throw new Error('No MFA factor found');
+      // First, get the list of factors
+      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+      if (factorsError) throw factorsError;
+      
+      const totpFactor = factors?.totp?.[0];
+      if (!totpFactor) throw new Error('No MFA factor found. Please try setting up MFA again.');
 
-      const { error } = await supabase.auth.mfa.verify({
-        factorId: factors.totp[0].id,
-        challengeId: factors.totp[0].id,
+      // First, verify the code with the factor
+      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId: totpFactor.id
+      });
+
+      if (challengeError) throw challengeError;
+
+      // Then verify the challenge with the code
+      const { error: verifyError } = await supabase.auth.mfa.verify({
+        factorId: totpFactor.id,
+        challengeId: challengeData.id,
         code: verificationCode
       });
 
-      if (error) throw error;
+      if (verifyError) throw verifyError;
+
+      // Verify that MFA is now enabled
+      const { data: updatedFactors, error: updatedFactorsError } = await supabase.auth.mfa.listFactors();
+      if (updatedFactorsError) throw updatedFactorsError;
+
+      const isMFAEnabled = updatedFactors?.totp?.some(factor => factor.status === 'verified');
+      if (!isMFAEnabled) {
+        throw new Error('MFA verification was not successful. Please try again.');
+      }
 
       setIsEnabled(true);
       setIsVerifying(false);
+      setVerificationCode('');
       
       toast({
         title: 'MFA Enabled',
         description: 'Two-factor authentication has been successfully enabled',
       });
     } catch (error: unknown) {
+      console.error('MFA Verification Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Invalid verification code';
       toast({
         title: 'Verification Failed',

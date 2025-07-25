@@ -7,7 +7,6 @@ interface OrderStatsProps {
     todayOrders: number;
     revenue: number;
     unpaidRevenue: number;
-    pendingOrders: number;
     avgOrder: number;
   };
 }

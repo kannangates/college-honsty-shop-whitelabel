@@ -156,7 +156,7 @@ const MyOrders = () => {
                         <TableCell>
   <Button
     variant="destructive"
-    onClick={() => navigate(`/payment/${order.id}`)}
+    onClick={() => navigate(`/payment?mode=pay_now&orderId=${order.id}&amount=${order.total_amount}`)}
     aria-label="Pay Now"
   >
     Pay Now
