@@ -131,7 +131,7 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ order }) => 
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Invoice_${invoiceData.invoiceNumber.replace(/[\/\\]/g, '_')}.html`;
+    link.download = `Invoice_${invoiceData.invoiceNumber.replace(/[\s/]/g, '_')}.html`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,11 +37,7 @@ export default function WhitelabelConfigForm() {
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadConfig();
-  }, []);
-
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     setLoading(true);
     try {
       const data = await whitelabelService.getConfig();
@@ -56,7 +52,11 @@ export default function WhitelabelConfigForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -78,14 +78,14 @@ export default function WhitelabelConfigForm() {
     }
   };
 
-  const updateConfig = (path: string, value: any) => {
+  const updateConfig = (path: string, value: string | number) => {
     setConfig(prev => {
       const newConfig = { ...prev };
       const keys = path.split('.');
-      let current: any = newConfig;
+      let current: Record<string, unknown> = newConfig;
       
       for (let i = 0; i < keys.length - 1; i++) {
-        current = current[keys[i]];
+        current = current[keys[i]] as Record<string, unknown>;
       }
       
       current[keys[keys.length - 1]] = value;

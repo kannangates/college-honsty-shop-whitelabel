@@ -97,7 +97,10 @@ const AdminStockAccounting = () => {
       if (operationsError) throw operationsError;
 
       // Type assertion for operationsData with proper handling
-      const opsData: StockOperationRow[] = (operationsData ?? []).map((op: any) => ({
+      const opsData: StockOperationRow[] = (operationsData ?? []).map((op: Omit<StockOperationRow, 'updated_at' | 'warehouse_stock'> & { 
+        updated_at?: string | null; 
+        warehouse_stock?: number;
+      }) => ({
         ...op,
         updated_at: op.updated_at || null,
         warehouse_stock: op.warehouse_stock || 0
