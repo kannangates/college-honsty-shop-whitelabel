@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RefreshCw, Eye, Download } from 'lucide-react';
+import { RefreshCw, Eye, Download, Pencil } from 'lucide-react';
 import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check } from 'lucide-react';
@@ -100,6 +100,7 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
               <TableHead>Payment</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
+              
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -147,79 +148,27 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Order Details</DialogTitle>
-                          <DialogDescription>Order ID: {order.id}</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label>Customer</Label>
-                            <p>{order.users?.name} ({order.users?.student_id})</p>
-                          </div>
-                          <div>
-                            <Label>Items</Label>
-                            <div className="space-y-1">
-                              {order.order_items?.map((item, index) => (
-                                <div key={index} className="flex justify-between">
-                                  <span>{item.products?.name} (×{item.quantity})</span>
-                                  <span>₹{(item.unit_price * item.quantity).toFixed(2)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <Label>Update Status</Label>
-                            <Popover open={statusPopoverOpen === order.id} onOpenChange={(open) => setStatusPopoverOpen(open ? order.id : null)}>
-                              <PopoverTrigger asChild>
-                                <button
-                                  type="button"
-                                  className={cn(
-                                    "w-full h-10 border border-input bg-background rounded-md px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                                    !order.payment_status && "text-muted-foreground"
-                                  )}
-                                >
-                                  {order.payment_status || "Select status"}
-                                </button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                                <Command>
-                                  <CommandInput placeholder="Search status..." />
-                                  <CommandList>
-                                    <CommandEmpty>No status found.</CommandEmpty>
-                                    {['unpaid', 'paid', 'cancelled'].map((status) => (
-                                      <CommandItem
-                                        key={status}
-                                        value={status}
-                                        onSelect={() => {
-                                          onUpdateOrderStatus(order.id, status);
-                                          setStatusPopoverOpen(null);
-                                        }}
-                                      >
-                                        <Check
-                                          className={cn(
-                                            "mr-2 h-4 w-4",
-                                            order.payment_status === status ? "opacity-100" : "opacity-0"
-                                          )}
-                                        />
-                                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandList>
-                                </Command>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    {order.payment_status !== 'cancelled' ? (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => onUpdateOrderStatus(order.id, 'cancelled')}
+                        aria-label="Cancel Order"
+                      >
+                        Cancel
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onUpdateOrderStatus(order.id, 'unpaid')}
+                        aria-label="Unmark Cancelled"
+                      >
+                        Unmark Cancelled
+                      </Button>
+                    )}
                   </TableCell>
+                  
                 </TableRow>
               ))
             )}

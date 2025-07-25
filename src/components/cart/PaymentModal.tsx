@@ -26,7 +26,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [transactionId, setTransactionId] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handlePayment = async () => {
     if (!transactionId.trim()) {
@@ -40,17 +40,30 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
     setLoading(true);
     try {
+      // Insert payment record and update order
+      const paidAt = new Date().toISOString();
+      // Insert into payment table
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          order_id: orderId,
+          user_id: user?.id,
+          amount,
+          transaction_id: transactionId,
+          paid_at: paidAt
+        });
+      if (paymentError) throw paymentError;
+
       // Update order payment status
       const { error: orderError } = await supabase
         .from('orders')
         .update({
           payment_status: 'paid',
           transaction_id: transactionId,
-          paid_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          paid_at: paidAt,
+          updated_at: paidAt
         })
         .eq('id', orderId);
-
       if (orderError) throw orderError;
 
       toast({
@@ -60,7 +73,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
       onPaymentSuccess();
       onClose();
-      
       // Auto logout after 2 seconds
       setTimeout(() => {
         logout();
@@ -94,15 +106,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* QR Code placeholder */}
+          {/* QR Code image */}
           <div className="flex justify-center">
-            <div className="w-48 h-48 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <CreditCard className="h-12 w-12 mx-auto mb-2" />
-                <p className="text-sm">QR Code for Payment</p>
-                <p className="text-xs">Scan to pay</p>
-              </div>
-            </div>
+            <img
+              src={process.env.PUBLIC_URL ? process.env.PUBLIC_URL + '/static-qr-code.png' : '/static-qr-code.png'}
+              alt="QR Code"
+              className="w-48 h-48 object-contain border-2 border-gray-300 rounded-lg bg-white"
+            />
           </div>
 
           {/* Amount */}

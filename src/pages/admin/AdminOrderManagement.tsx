@@ -35,7 +35,7 @@ const AdminOrderManagement = React.memo(() => {
   const [stats, setStats] = useState({
     todayOrders: 0,
     revenue: 0,
-    pendingOrders: 0,
+    unpaidRevenue: 0,
     avgOrder: 0
   });
   const { toast } = useToast();
@@ -45,12 +45,19 @@ const AdminOrderManagement = React.memo(() => {
     setLoading(true);
     try {
       console.log('📦 Fetching orders with optimized query');
-      const { data, error } = await supabase.functions.invoke('order-management', {
-        body: { operation: 'fetch_orders' }
-      });
-
-      if (error) throw error;
-      setOrders(data?.orders || []);
+      const { data: allOrders, error: allOrdersError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          users (name, student_id, email),
+          order_items (
+            *,
+            products (*)
+          )
+        `)
+        .order('created_at', { ascending: false });
+      if (allOrdersError) throw allOrdersError;
+      setOrders(allOrders || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
@@ -65,17 +72,29 @@ const AdminOrderManagement = React.memo(() => {
 
   const fetchStats = useCallback(async () => {
     try {
-      console.log('📊 Fetching order stats');
-      const { data, error } = await supabase.functions.invoke('order-management', {
-        body: { operation: 'get_stats' }
+      // Calculate stats locally from orders if not provided by backend
+      let todayOrders = 0, revenue = 0, unpaidRevenue = 0, avgOrder = 0;
+      const today = new Date().toDateString();
+      let paidOrders = 0;
+      orders.forEach(order => {
+        const isToday = new Date(order.created_at).toDateString() === today;
+        if (isToday) todayOrders++;
+        // Revenue: completed orders
+        if (order.payment_status === 'completed') {
+          revenue += order.total_amount;
+          paidOrders++;
+        }
+        // Unpaid Revenue: pending, processing, failed
+        if (["pending", "processing", "failed"].includes(order.payment_status)) {
+          unpaidRevenue += order.total_amount;
+        }
       });
-
-      if (error) throw error;
-      setStats(data || { todayOrders: 0, revenue: 0, pendingOrders: 0, avgOrder: 0 });
+      avgOrder = paidOrders > 0 ? Math.round(revenue / paidOrders) : 0;
+      setStats({ todayOrders, revenue, unpaidRevenue, avgOrder });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error('Error calculating stats:', error);
     }
-  }, []);
+  }, [orders]);
 
   // Memoized filter function for better performance
   const filterOrders = useCallback(() => {
@@ -142,10 +161,15 @@ const AdminOrderManagement = React.memo(() => {
   }, []);
 
   // Effects
+  // Fetch orders on mount or refresh
   useEffect(() => {
     fetchOrders();
+  }, [fetchOrders]);
+
+  // Calculate stats whenever orders change
+  useEffect(() => {
     fetchStats();
-  }, [fetchOrders, fetchStats]);
+  }, [orders, fetchStats]);
 
   useEffect(() => {
     filterOrders();

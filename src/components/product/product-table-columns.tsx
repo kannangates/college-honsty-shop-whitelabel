@@ -105,18 +105,14 @@ export const createProductColumns = ({
         )
       },
       cell: ({ row }) => {
-        const product = row.original
-        const totalStock = (product.shelf_stock || 0) + (product.opening_stock || 0)
+        const product = row.original;
         return (
-          <div className="flex flex-col items-center">
-            <Badge variant={totalStock > 10 ? "default" : "secondary"}>
-              {totalStock}
+          <div className="flex justify-center">
+            <Badge variant={product.shelf_stock > 10 ? "default" : "secondary"}>
+              {product.shelf_stock || 0}
             </Badge>
-            <span className="text-xs text-muted-foreground mt-1">
-              Shelf: {product.shelf_stock || 0} + Opening: {product.opening_stock || 0}
-            </span>
           </div>
-        )
+        );
       },
     },
     {

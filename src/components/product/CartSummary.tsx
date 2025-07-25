@@ -18,7 +18,7 @@ interface CartSummaryProps {
   items: CartItem[];
   updateQuantity: (productId: string, quantity: number) => void;
   totalPrice: number;
-  checkout: (mode: 'immediate' | 'later') => Promise<any>;
+  checkout: (mode: 'immediate' | 'later') => Promise<{ id: string } | null>;
 }
 
 export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: CartSummaryProps) => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { handleRestockOperation } from '@/utils/restockUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -279,103 +280,92 @@ export const AdminInventoryManagement = () => {
     }
   };
 
-  const handleAddProduct = async (productInput: ProductInput) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase
-        .from('products')
-        .insert([{
-          name: productInput.name,
-          unit_price: productInput.unit_price,
-          category: productInput.category,
-          shelf_stock: productInput.shelf_stock,
-          warehouse_stock: productInput.warehouse_stock,
-          status: productInput.status,
-          image_url: productInput.image_url || null,
-          created_by: null
-        }]);
-      if (error) throw error;
-      toast({
-        title: 'Success',
-        description: 'Product added successfully',
-      });
-      fetchProducts();
-      setAddModalOpen(false);
-    } catch (error) {
-      console.error('Error adding product:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add product',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  
 
-  const deleteProduct = async (id: string) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
+const handleAddProduct = async (productInput: ProductInput) => {
+  try {
+    setLoading(true);
+    const { error } = await supabase
+      .from('products')
+      .insert([{
+        name: productInput.name,
+        unit_price: productInput.unit_price,
+        category: productInput.category,
+        shelf_stock: productInput.shelf_stock,
+        warehouse_stock: productInput.warehouse_stock,
+        status: productInput.status,
+        image_url: productInput.image_url || null,
+        created_by: null
+      }]);
+    if (error) throw error;
+    toast({
+      title: 'Success',
+      description: 'Product added successfully',
+    });
+    fetchProducts();
+    setAddModalOpen(false);
+  } catch (error) {
+    console.error('Error adding product:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to add product',
+      variant: 'destructive',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
-      if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Product deleted successfully",
-      });
-      fetchProducts();
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete product",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleRestock = async (productId: string, quantity: number, restockType: 'warehouse' | 'shelf') => {
+  try {
+    setLoading(true);
+    await handleRestockOperation(productId, quantity, restockType);
+    toast({
+      title: "Success",
+      description: restockType === 'warehouse'
+        ? `Added ${quantity} units to warehouse stock`
+        : `Moved ${quantity} units from warehouse to shelf`,
+    });
+    fetchProducts();
+  } catch (error) {
+    console.error('Error restocking product:', error);
+    toast({
+      title: "Error",
+      description: error instanceof Error ? error.message : 'Failed to restock product',
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleRestock = async (productId: string, quantity: number) => {
-    try {
-      setLoading(true);
-      const product = products.find(p => p.id === productId);
-      if (!product) return;
+const deleteProduct = async (id: string) => {
+  try {
+    setLoading(true);
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
 
-      const { error } = await supabase
-        .from('products')
-        .update({
-          warehouse_stock: product.warehouse_stock + quantity,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', productId);
+    if (error) throw error;
+    toast({
+      title: "Success",
+      description: "Product deleted successfully",
+    });
+    fetchProducts();
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    toast({
+      title: "Error",
+      description: "Failed to delete product",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
-      if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: `Added ${quantity} units to warehouse stock`,
-      });
-      fetchProducts();
-    } catch (error) {
-      console.error('Error restocking product:', error);
-      toast({
-        title: "Error",
-        description: "Failed to restock product",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteClick = (productId: string) => {
-    setProductToDelete(productId);
-    setDeleteConfirmOpen(true);
-  };
 
   const handleDeleteConfirm = async () => {
     if (!productToDelete) return;

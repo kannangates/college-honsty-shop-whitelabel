@@ -6,6 +6,7 @@ interface OrderStatsProps {
   stats: {
     todayOrders: number;
     revenue: number;
+    unpaidRevenue: number;
     pendingOrders: number;
     avgOrder: number;
   };
@@ -28,11 +29,11 @@ export const OrderStats = ({ stats }: OrderStatsProps) => {
       iconColor: "text-green-600"
     },
     {
-      title: "Pending Orders",
-      value: stats.pendingOrders,
-      icon: Clock,
-      bgColor: "bg-orange-100",
-      iconColor: "text-orange-600"
+      title: "Unpaid Revenue",
+      value: `₹${stats.unpaidRevenue}`,
+      icon: DollarSign,
+      bgColor: "bg-yellow-100",
+      iconColor: "text-yellow-600"
     },
     {
       title: "Avg Order",

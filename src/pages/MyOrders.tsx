@@ -141,7 +141,7 @@ const MyOrders = () => {
                       <TableHead>Date</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Invoice</TableHead>
+                      <TableHead>Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -154,13 +154,14 @@ const MyOrders = () => {
                           <Badge variant="destructive">{order.payment_status}</Badge>
                         </TableCell>
                         <TableCell>
-                          <InvoiceGenerator 
-                            order={{
-                              ...order,
-                              user: order.users || { name: 'Unknown', email: 'unknown@email.com' }
-                            }} 
-                          />
-                        </TableCell>
+  <Button
+    variant="destructive"
+    onClick={() => navigate(`/payment/${order.id}`)}
+    aria-label="Pay Now"
+  >
+    Pay Now
+  </Button>
+</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
