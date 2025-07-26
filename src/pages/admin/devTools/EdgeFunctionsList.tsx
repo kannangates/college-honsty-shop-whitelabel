@@ -5,6 +5,7 @@ import { Server } from "lucide-react";
 import { Badge } from '@/features/gamification/components/badge';
 
 export const EdgeFunctionsList = ({ edgeFunctions }: { edgeFunctions: string[] }) => (
+    
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">

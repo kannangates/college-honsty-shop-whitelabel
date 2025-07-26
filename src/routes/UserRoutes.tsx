@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Layout } from '@/components/layout/Layout';
 import Dashboard from '@/pages/Dashboard';
@@ -23,7 +23,7 @@ const ProtectedLayoutRoute = ({ children }: { children: React.ReactNode }) => (
 
 export const UserRoutes = () => {
   return (
-    <>
+    <Routes>
       <Route path="/dashboard" element={<ProtectedLayoutRoute><Dashboard /></ProtectedLayoutRoute>} />
       <Route path="/my-orders" element={<ProtectedLayoutRoute><MyOrders /></ProtectedLayoutRoute>} />
       <Route path="/add-product" element={<ProtectedLayoutRoute><AddProduct /></ProtectedLayoutRoute>} />
@@ -33,6 +33,6 @@ export const UserRoutes = () => {
       <Route path="/notifications" element={<ProtectedLayoutRoute><Notifications /></ProtectedLayoutRoute>} />
       <Route path="/my-badges" element={<ProtectedLayoutRoute><BadgeGallery /></ProtectedLayoutRoute>} />
       <Route path="/about" element={<ProtectedLayoutRoute><AboutSystem /></ProtectedLayoutRoute>} />
-    </>
+    </Routes>
   );
 };

@@ -1,49 +1,140 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { Suspense, lazy, useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "./src/components/ui/toaster";
-import { PasswordChangePrompt } from "./src/components/common/PasswordChangePrompt";
-import { ErrorBoundary } from "./src/components/common/ErrorBoundary";
+import { Loader2 } from "lucide-react";
+import { registerServiceWorker } from "./src/utils/registerServiceWorker";
+import GlobalErrorBoundary from "./src/components/common/GlobalErrorBoundary";
+import "./App.css";
+
+// Add debug logs for environment variables
+console.log('Environment:', {
+  NODE_ENV: import.meta.env.MODE,
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Not Set',
+  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Not Set',
+});
+
+// Lazy load components with proper type handling
+const PasswordChangePrompt = lazy(
+  () => import("./src/components/common/PasswordChangePrompt")
+    .then(module => ({ default: module.PasswordChangePrompt }))
+);
+
+const ErrorBoundary = lazy(
+  () => import("./src/components/common/ErrorBoundary")
+    .then(module => ({ default: module.ErrorBoundary }))
+);
+
+const AuthPage = lazy(
+  () => import("./src/pages/AuthPage")
+    .then(module => ({ default: module.default }))
+);
+
+const NotFound = lazy(
+  () => import("./src/pages/NotFound")
+    .then(module => ({ default: module.default }))
+);
+
+const UserRoutes = lazy(
+  () => import("./src/routes/UserRoutes")
+    .then(module => ({ default: module.UserRoutes }))
+);
+
+const AdminRoutes = lazy(
+  () => import("./src/routes/AdminRoutes")
+    .then(module => ({ default: module.AdminRoutes }))
+);
+
+// Import providers directly since they're needed immediately
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { ProductProvider } from "./src/contexts/ProductContext";
-import AuthPage from "./src/pages/AuthPage";
-import { UserRoutes } from "./src/routes/UserRoutes";
-import { AdminRoutes } from "./src/routes/AdminRoutes";
-import NotFound from "./src/pages/NotFound";
-import { Navigate } from "react-router-dom";
-import { useEffect } from "react";
-import "./App.css";
+
+// Loading component
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <Loader2 className="w-8 h-8 animate-spin" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
 function App() {
+  const [isInitialized, setIsInitialized] = useState(false);
+
   useEffect(() => {
-    // Initialize branding configuration on app start
-    // If needed, use WHITELABEL_CONFIG for branding access
+    console.log('App mounted');
+    
+    try {
+      // Initialize branding configuration on app start
+      console.log('Initializing app...');
+      
+      // Register service worker in production
+      if (import.meta.env.PROD) {
+        console.log('Registering service worker...');
+        registerServiceWorker();
+      }
+      
+      setIsInitialized(true);
+      console.log('App initialized successfully');
+    } catch (error) {
+      console.error('Error during app initialization:', error);
+    }
   }, []);
+  
+  if (!isInitialized) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <ErrorBoundary>
+    <GlobalErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <AuthProvider>
-            <ProductProvider>
-              <Routes>
-                <Route path="/" element={<Navigate to="/login" replace />} />
-                <Route path="/auth" element={<Navigate to="/login" replace />} />
-                <Route path="/login" element={<AuthPage initialMode="login" />} />
-                <Route path="/signup" element={<Navigate to="/login" replace />} />
-                {UserRoutes()}
-                {AdminRoutes()}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <PasswordChangePrompt />
-            </ProductProvider>
-          </AuthProvider>
+          <Suspense
+            fallback={
+              <div className="flex h-screen w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            }
+          >
+            <ErrorBoundary>
+              <AuthProvider>
+                <ProductProvider>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="/auth" element={<Navigate to="/login" replace />} />
+                    <Route 
+                      path="/login" 
+                      element={
+                        <Suspense fallback={<LoadingFallback />}>
+                          <AuthPage initialMode="login" />
+                        </Suspense>
+                      } 
+                    />
+                    <Route path="/signup" element={<Navigate to="/login" replace />} />
+                    <Route path="/*" element={<UserRoutes />} />
+                    <Route path="/admin/*" element={<AdminRoutes />} />
+                    <Route 
+                      path="*" 
+                      element={
+                        <Suspense fallback={<LoadingFallback />}>
+                          <NotFound />
+                        </Suspense>
+                      } 
+                    />
+                  </Routes>
+                  <PasswordChangePrompt />
+                </ProductProvider>
+              </AuthProvider>
+            </ErrorBoundary>
+          </Suspense>
         </Router>
         <Toaster />
       </QueryClientProvider>
-    </ErrorBoundary>
+    </GlobalErrorBoundary>
   );
 }
 

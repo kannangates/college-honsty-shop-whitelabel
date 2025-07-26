@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDataExport } from '@/hooks/useDataExport';
 import { useToast } from '@/hooks/use-toast';
 import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
+import { Shield } from 'lucide-react';
 
 interface Student {
   id: string;
@@ -228,14 +229,11 @@ const AdminStudentManagement = () => {
   return (
     <div className="space-y-4 text-sm">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-4 rounded-xl shadow-lg">
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
-              <Users className="h-6 w-6" />
-              Students Management
-            </h1>
-            <p className="text-purple-100 text-sm">Manage student accounts and view their progress</p>
+          <h1 className="text-3xl font-bold">Students Management</h1>
+          <p className="text-purple-100">Manage student accounts and view their progress</p>
           </div>
           <div className="flex gap-2">
             <Button 
@@ -257,8 +255,37 @@ const AdminStudentManagement = () => {
         </div>
       </div>
 
-      {/* Custom Filter/Search Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+      {/* Stats Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+          <CardContent className="p-4 text-center">
+            <div className="text-xl font-bold text-blue-800">{stats.totalStudents}</div>
+            <div className="text-xs text-blue-600">Total Students</div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
+          <CardContent className="p-4 text-center">
+            <div className="text-xl font-bold text-green-800">{stats.activeThisMonth}</div>
+            <div className="text-xs text-green-600">Active This Month</div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100">
+          <CardContent className="p-4 text-center">
+            <div className="text-xl font-bold text-yellow-800">{stats.highestPoints}</div>
+            <div className="text-xs text-yellow-600">Highest Points</div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+          <CardContent className="p-4 text-center">
+            <div className="text-xl font-bold text-purple-800">{stats.departments}</div>
+            <div className="text-xs text-purple-600">Departments</div>
+          </CardContent>
+        </Card>
+      </div>
+
+            {/* Custom Filter/Search Section */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
           <Input
             type="text"
@@ -430,11 +457,18 @@ const AdminStudentManagement = () => {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600">Email</label>
-                  <Input 
-                    value={editForm.email || ''} 
-                    onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                    className="text-sm h-8" 
-                  />
+                  <div className="relative">
+                    <Input
+                      type="email"
+                      value={editForm.email || ''}
+                      readOnly
+                      className="text-sm h-8 bg-gray-50 border-gray-200 cursor-not-allowed"
+                      placeholder="Email"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-end pr-3 pointer-events-none">
+                      <span className="text-xs text-gray-500">Read-only</span>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600">Department</label>
@@ -465,6 +499,23 @@ const AdminStudentManagement = () => {
                       <SelectItem value="Morning (1st Shift)">Morning (1st Shift)</SelectItem>
                       <SelectItem value="Evening (2nd Shift)">Evening (2nd Shift)</SelectItem>
                       <SelectItem value="Full Shift">Full Shift</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Role</label>
+                  <Select 
+                    value={editForm.role || 'student'} 
+                    onValueChange={(value: 'admin' | 'student' | 'teacher' | 'developer') => 
+                      setEditForm({...editForm, role: value})
+                    }
+                  >
+                    <SelectTrigger className="text-sm h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="student">Student</SelectItem>
+                      <SelectItem value="teacher">Teacher</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -518,33 +569,6 @@ const AdminStudentManagement = () => {
         onUploadComplete={fetchStudents}
       />
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
-          <CardContent className="p-4 text-center">
-            <div className="text-xl font-bold text-blue-800">{stats.totalStudents}</div>
-            <div className="text-xs text-blue-600">Total Students</div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
-          <CardContent className="p-4 text-center">
-            <div className="text-xl font-bold text-green-800">{stats.activeThisMonth}</div>
-            <div className="text-xs text-green-600">Active This Month</div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100">
-          <CardContent className="p-4 text-center">
-            <div className="text-xl font-bold text-yellow-800">{stats.highestPoints}</div>
-            <div className="text-xs text-yellow-600">Highest Points</div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
-          <CardContent className="p-4 text-center">
-            <div className="text-xl font-bold text-purple-800">{stats.departments}</div>
-            <div className="text-xs text-purple-600">Departments</div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };

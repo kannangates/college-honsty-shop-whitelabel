@@ -270,12 +270,18 @@ const Settings = () => {
                   </div>
                   <div>
                     <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department</Label>
-                    <DepartmentCombobox
-                      value={formData.department}
-                      onChange={(value) => setFormData({ ...formData, department: value })}
-                      className="border-0 rounded-xl bg-white/70 backdrop-blur-sm"
-                      placeholder="Select your department"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="department"
+                        value={formData.department || 'Not specified'}
+                        readOnly
+                        className="border-0 rounded-xl bg-gray-50 cursor-not-allowed text-gray-700"
+                        placeholder="Department"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-end pr-3 pointer-events-none">
+                        <span className="text-xs text-gray-500">Read-only</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <Button
@@ -312,55 +318,22 @@ const Settings = () => {
                   </Button>
                 </CardContent>
               </Card>
+              {/* Security Settings */}
               <Card className="border-0 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Key className="h-5 w-5" />
-                    Account Status
-                  </CardTitle>
-                  <CardDescription>Your current account information</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Account Status:</span>
-                    <Badge 
-                      variant={profile?.status === 'active' ? 'default' : 'secondary'}
-                      className={profile?.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}
-                    >
-                      {profile?.status || 'Unknown'}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Role:</span>
-                    <Badge variant="outline">{profile?.role || 'Student'}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Points Balance:</span>
-                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                      {profile?.points || 0} pts
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-          {/* Security Settings */}
-          <div className="space-y-6 mt-6">
-            {/* Two-Factor Authentication */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
                   Security Settings
                 </CardTitle>
-                <CardDescription>
+                  <CardDescription>
                   Enhance your account security with two-factor authentication
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </CardHeader>
+                <CardContent>
                 <MFASetup />
               </CardContent>
-            </Card>
+              </Card>
+            </div>
           </div>
         </div>
       </div>

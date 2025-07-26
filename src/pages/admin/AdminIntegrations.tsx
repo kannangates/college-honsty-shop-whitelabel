@@ -1,98 +1,100 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Settings, Mail, CreditCard, Webhook, Send } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Settings, Mail, CreditCard, Webhook, Trophy, Award, Bell, BarChart } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-
-const WEBHOOK_TYPES = [
-  { type: 'points', label: 'Points Automation', icon: <Trophy className="h-5 w-5 text-yellow-600" /> },
-  { type: 'badge', label: 'Badge Automation', icon: <Award className="h-5 w-5 text-purple-600" /> },
-  { type: 'notification', label: 'Notification Automation', icon: <Bell className="h-5 w-5 text-green-600" /> },
-  { type: 'analytics', label: 'Analytics Automation', icon: <BarChart className="h-5 w-5 text-blue-600" /> },
-];
+import { EmailService } from '@/services/emailService';
 
 export default function AdminIntegrations() {
-  const [webhooks, setWebhooks] = useState({});
-  const [status, setStatus] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState({});
-  const [testing, setTesting] = useState({});
-  const [testResult, setTestResult] = useState({});
 
-  useEffect(() => {
-    // Fetch webhook URLs and status from DB
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from('n8n_webhooks').select('*');
-      if (data) {
-        const map = {};
-        const stat = {};
-        data.forEach(row => {
-          map[row.type] = row.url;
-          stat[row.type] = {
-            last_status: row.last_status,
-            last_called_at: row.last_called_at,
-            last_error: row.last_error
-          };
-        });
-        setWebhooks(map);
-        setStatus(stat);
+  // Email Test Form Component
+  function EmailTestForm() {
+    const [email, setEmail] = useState('');
+    const [subject, setSubject] = useState('Test Email from College Honesty Shop');
+    const [message, setMessage] = useState('This is a test email to verify that your email service is working correctly.');
+    const [isSending, setIsSending] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!email) return;
+      
+      setIsSending(true);
+      try {
+        await EmailService.sendTestEmail(email, subject, message);
+      } finally {
+        setIsSending(false);
       }
-      setLoading(false);
-    })();
-  }, []);
+    };
 
-  const handleSave = async (type) => {
-    setSaving(s => ({ ...s, [type]: true }));
-    const url = webhooks[type];
-    // Upsert webhook URL
-    await supabase.from('n8n_webhooks').upsert({ type, url, updated_at: new Date().toISOString() }, { onConflict: 'type' });
-    setSaving(s => ({ ...s, [type]: false }));
-  };
-
-  const handleTest = async (type) => {
-    setTesting(t => ({ ...t, [type]: true }));
-    setTestResult(r => ({ ...r, [type]: undefined }));
-    const url = webhooks[type];
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ test: true, type, timestamp: new Date().toISOString() })
-      });
-      const text = await res.text();
-      setTestResult(r => ({ ...r, [type]: res.ok ? 'Success' : `Error: ${text}` }));
-      // Update status in DB
-      await supabase.from('n8n_webhooks').update({
-        last_status: res.ok ? 'success' : 'error',
-        last_called_at: new Date().toISOString(),
-        last_error: res.ok ? null : text,
-        updated_at: new Date().toISOString()
-      }).eq('type', type);
-      setStatus(s => ({ ...s, [type]: {
-        last_status: res.ok ? 'success' : 'error',
-        last_called_at: new Date().toISOString(),
-        last_error: res.ok ? null : text
-      }}));
-    } catch (e) {
-      setTestResult(r => ({ ...r, [type]: `Error: ${e.message}` }));
-      await supabase.from('n8n_webhooks').update({
-        last_status: 'error',
-        last_called_at: new Date().toISOString(),
-        last_error: e.message,
-        updated_at: new Date().toISOString()
-      }).eq('type', type);
-      setStatus(s => ({ ...s, [type]: {
-        last_status: 'error',
-        last_called_at: new Date().toISOString(),
-        last_error: e.message
-      }}));
-    }
-    setTesting(t => ({ ...t, [type]: false }));
-  };
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="test-email">Recipient Email</Label>
+          <Input
+            id="test-email"
+            type="email"
+            placeholder="recipient@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={isSending}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="email-subject">Subject</Label>
+          <Input
+            id="email-subject"
+            type="text"
+            placeholder="Email subject"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            disabled={isSending}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="email-message">Message</Label>
+          <Textarea
+            id="email-message"
+            placeholder="Your test message"
+            rows={4}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            disabled={isSending}
+          />
+        </div>
+        
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isSending || !email}>
+            {isSending ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sending...
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Send Test Email
+              </>
+            )}
+          </Button>
+        </div>
+        
+        <div className="text-xs text-gray-500 mt-2">
+          <p>Note: This will send a real email to the specified address. Use with caution.</p>
+        </div>
+      </form>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -132,81 +134,59 @@ export default function AdminIntegrations() {
         </Card>
       </div>
 
-      {/* n8n Automation Webhook Management */}
+      {/* n8n Automation Card */}
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>n8n Automation Webhooks</CardTitle>
-          <CardDescription>Configure and test n8n workflow webhooks for automation</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {WEBHOOK_TYPES.map(({ type, label, icon }) => (
-            <div key={type} className="space-y-2 border-b pb-4 last:border-b-0 last:pb-0">
-              <div className="flex items-center gap-2 mb-1">{icon}<span className="font-semibold">{label}</span></div>
-              <div className="flex gap-2 items-center">
-                <Input
-                  value={webhooks[type] || ''}
-                  onChange={e => setWebhooks(w => ({ ...w, [type]: e.target.value }))}
-                  placeholder={`https://n8n.yourdomain.com/webhook/${type}`}
-                  className="font-mono text-sm flex-1"
-                  disabled={loading}
-                />
-                <Button onClick={() => handleSave(type)} disabled={saving[type] || loading} size="sm">
-                  {saving[type] ? 'Saving...' : 'Save'}
-                </Button>
-                <Button onClick={() => handleTest(type)} disabled={testing[type] || !webhooks[type]} size="sm" variant="outline">
-                  {testing[type] ? 'Testing...' : 'Test Webhook'}
-                </Button>
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {status[type]?.last_status && (
-                  <span className={status[type].last_status === 'success' ? 'text-green-600' : 'text-red-600'}>
-                    Last status: {status[type].last_status}
-                  </span>
-                )}
-                {status[type]?.last_called_at && (
-                  <> | Last called: {new Date(status[type].last_called_at).toLocaleString()}</>
-                )}
-                {status[type]?.last_error && (
-                  <><br/>Error: <span className="text-red-600">{status[type].last_error}</span></>
-                )}
-                {testResult[type] && (
-                  <><br/>Test result: <span className={testResult[type].startsWith('Success') ? 'text-green-600' : 'text-red-600'}>{testResult[type]}</span></>
-                )}
-              </div>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>n8n Automation</CardTitle>
+              <CardDescription>Configure and manage n8n workflow automation</CardDescription>
             </div>
-          ))}
+            <Button asChild variant="outline">
+              <Link to="/admin/n8n">
+                <Webhook className="mr-2 h-4 w-4" />
+                Manage n8n Settings
+              </Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600">
+            Configure webhooks for points automation, badge awards, notifications, and analytics.
+            Click the button above to manage all n8n automation settings.
+          </p>
         </CardContent>
       </Card>
 
-      {/* Setup Instructions */}
+      {/* Email Test Section */}
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>n8n Setup Instructions</CardTitle>
-          <CardDescription>Follow these steps to configure n8n workflows</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li>Set up an n8n instance or use your existing one</li>
-            <li>Create new workflows for each automation type:
-              <ul className="list-disc list-inside ml-4 mt-1 text-sm text-gray-500">
-                <li>Points allocation based on payment timing</li>
-                <li>Badge awards based on point thresholds</li>
-                <li>Notification triggers for achievements</li>
-                <li>Analytics and reporting automation</li>
-              </ul>
-            </li>
-            <li>Configure webhook nodes in n8n and copy the webhook URLs</li>
-            <li>Paste the webhook URLs in the corresponding fields above</li>
-            <li>Use the Test buttons to verify the webhooks are working</li>
-          </ol>
-
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-            <h4 className="font-semibold text-yellow-800 mb-2">Important Note</h4>
-            <p className="text-sm text-yellow-700">
-              Make sure your n8n instance is properly secured and accessible only through HTTPS. 
-              All webhook URLs should be authenticated to prevent unauthorized access.
-            </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Email Test</CardTitle>
+              <CardDescription>Test your email service configuration</CardDescription>
+            </div>
           </div>
+        </CardHeader>
+        <CardContent>
+          <EmailTestForm />
+        </CardContent>
+      </Card>
+
+      {/* Payment Gateway Automation Card */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Payment Gateway Automation</CardTitle>
+              <CardDescription>Configure and manage payment gateway settings</CardDescription>
+            </div> 
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600">
+            Coming Soon...
+          </p>
         </CardContent>
       </Card>
     </div>

@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { ShoppingCart, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { InvoiceGenerator } from '@/components/invoice/InvoiceGenerator';
 
 interface Order {
@@ -80,9 +81,8 @@ const MyOrders = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <span className="ml-2">Loading orders...</span>
+      <div className="w-full py-12">
+        <LoadingSpinner text="Loading your orders..." />
       </div>
     );
   }
@@ -123,9 +123,8 @@ const MyOrders = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                <span className="ml-2">Loading...</span>
+              <div className="flex items-center justify-center p-8">
+                <LoadingSpinner size="sm" text="Loading order details..." className="py-8" />
               </div>
             ) : unpaidOrders.length === 0 ? (
               <div className="text-center py-8">

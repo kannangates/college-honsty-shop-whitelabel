@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+  import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
-import { Shield, Users, Package, Settings, Mail, CreditCard, Award, University, Megaphone, ReceiptIndianRupee, ReceiptText, Gamepad2 } from 'lucide-react';
+import { Shield, Users, Package, Settings, Mail, CreditCard, Award, University, Megaphone, ReceiptIndianRupee, ReceiptText, Gamepad2, Code2, Server } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/useAuth';
@@ -76,15 +76,6 @@ const AdminPanel = () => {
       color: "from-gray-500 to-gray-600",
       bgColor: "bg-gray-200",
       path: "/admin/n8n",
-      roles: ['admin', 'developer'],
-    },
-    {
-      title: "Gamification Rules",
-      description: "Manage XP and badge rules for events. Coming Soon",
-      icon: Gamepad2,
-      color: "from-pink-500 to-pink-600",
-      bgColor: "bg-pink-100",
-      path: "/admin/gamification",
       roles: ['admin', 'developer'],
     },
     {
@@ -229,14 +220,16 @@ const AdminPanel = () => {
   return (
     <div className="space-y-4 text-sm text-left">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-4 rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
-          <Shield className="h-6 w-6" />
-          Admin Panel
-        </h1>
-        <p className="text-purple-100 text-sm">Manage all aspects of the Honesty Store system</p>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
+      <div className="flex items-center gap-3">
+          <Shield className="h-8 w-8" />
+          <div>
+            <h1 className="text-3xl font-bold">Admin Panel</h1>
+            <p className="text-purple-100">Manage all aspects of the Honesty Store system</p>
+          </div>
+        </div>
       </div>
-
+      
       {/* Admin Sections Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {adminSections
@@ -269,8 +262,7 @@ const AdminPanel = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Whitelabel Config */}
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-3">
@@ -430,6 +422,25 @@ const AdminPanel = () => {
           )}
         </Card>
 
+        {/* Edge Functions */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Server className="h-5 w-5" />
+              Edge Functions
+            </CardTitle>
+            <CardDescription className="text-sm">Manage serverless functions and APIs</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => navigate('/admin/edge-functions')}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm hover:from-purple-700 hover:to-pink-700"
+            >
+              <Code2 className="h-4 w-4 mr-1" />
+              Manage Functions
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

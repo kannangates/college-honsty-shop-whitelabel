@@ -3,6 +3,7 @@ import { useBadgeService } from '@/features/gamification/hooks/useBadgeService';
 import { useAuth } from '@/contexts/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy } from 'lucide-react';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 const BadgeGallery = () => {
   const { user } = useAuth();
@@ -30,9 +31,8 @@ const BadgeGallery = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <span className="ml-2">Loading badges...</span>
+      <div className="w-full py-12">
+        <LoadingSpinner text="Loading your badges..." />
       </div>
     );
   }

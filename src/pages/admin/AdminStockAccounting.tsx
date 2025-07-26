@@ -280,9 +280,13 @@ const AdminStockAccounting = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-white p-6 rounded-lg">
-        <h1 className="text-2xl font-semibold">Admin Stock Accounting</h1>
-        <p className="text-sm">Manage the stock operations for today</p>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
+      <div className="flex items-center justify-between">
+      <div>
+          <h1 className="text-3xl font-bold">Daily Stock Accounting</h1>
+          <p className="text-purple-100">Manage the stock operations for today</p>
+          </div>
+          </div>
       </div>
 
       {/* Filters Section */}

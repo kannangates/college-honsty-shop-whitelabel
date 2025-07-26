@@ -17,7 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 /**
  * Shows a one-time password-change prompt for users flagged with user_metadata.must_change_password === true.
  */
-export const PasswordChangePrompt = () => {
+export function PasswordChangePrompt() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

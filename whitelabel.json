@@ -61,6 +61,7 @@
       "account_created": "Account created! 🎉",
       "sign_in_success": "You're successfully logged in!",
       "fill_all_fields": "Please fill in all required fields",
+      "passwordResetSent": "If an account with that email exists, you will receive a password reset link.",
       "errors": {
         "missing_student_id": "Student ID is required",
         "student_id_alphanumeric": "Only letters and numbers allowed",

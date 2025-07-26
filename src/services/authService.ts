@@ -4,6 +4,9 @@ import type { Database } from '@/integrations/supabase/types';
 import { validateStudentId, validatePassword, validatePasswordMatch } from '@/utils/authUtils';
 import { WHITELABEL_CONFIG } from '@/config';
 import type { SignupResult, LoginResult, AuthSession, UserProfile } from '@/types/auth';
+import { NotificationService } from './notificationService';
+
+type UserRole = Database['public']['Tables']['users']['Row']['role'];
 
 interface SignupData {
   email: string;
@@ -11,7 +14,7 @@ interface SignupData {
   student_id: string;
   name: string;
   department: string;
-  role: Database["public"]["Enums"]["user_role"] | null;
+  role: UserRole;
   shift: string;
   points: number;
   captchaToken?: string;
@@ -94,7 +97,7 @@ export class AuthService {
             student_id: data.student_id,
             department: data.department,
             
-            role: data.role  as Database["public"]["Enums"]["user_role"],
+            role: data.role,
             shift: data.shift,
             points: data.points,
             ...(data.user_metadata || {})
@@ -126,7 +129,7 @@ export class AuthService {
           email: data.email,
           department: data.department,
           
-          role: data.role  as Database["public"]["Enums"]["user_role"],
+          role: data.role,
           shift: data.shift,
           points: data.points,
           status: 'active'
@@ -308,5 +311,45 @@ export class AuthService {
     
     // Sign out from Supabase
     await supabase.auth.signOut();
+  }
+
+  /**
+   * Sends a password reset email to the specified email address
+   * @param email The email address to send the reset link to
+   * @returns Object indicating success or failure
+   */
+  static async sendPasswordResetEmail(email: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        NotificationService.showError('Please enter a valid email address');
+        return { success: false, error: 'Invalid email format' };
+      }
+
+      console.log('Sending password reset email to:', email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        console.error('Supabase password reset error:', error);
+        throw error;
+      }
+
+      // Log success but don't reveal if the email exists in the system
+      console.log('Password reset email sent successfully');
+      NotificationService.showSuccess(
+        WHITELABEL_CONFIG.messages?.auth?.passwordResetSent || 
+        'If an account with that email exists, you will receive a password reset link.'
+      );
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error in sendPasswordResetEmail:', error);
+      NotificationService.handleEmailError(error, 'password_reset');
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to send password reset email' 
+      };
+    }
   }
 }
