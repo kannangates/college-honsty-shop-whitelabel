@@ -6,8 +6,17 @@ import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
 
+// For environment variables in client-side code
+declare global {
+  interface Window {
+    __ENV: Record<string, string>;
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // In production, we'll use window.__ENV for environment variables
+  // In development, we'll use process.env directly
   build: {
     chunkSizeWarningLimit: 800,
     rollupOptions: {
@@ -62,6 +71,9 @@ export default defineConfig(({ mode }) => ({
     sourcemap: true,
     cssCodeSplit: true,
     reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
   server: {
     host: "::",
@@ -143,6 +155,28 @@ export default defineConfig(({ mode }) => ({
       filename: 'bundle-analyzer-report.html',
     }),
   ].filter(Boolean),
+  define: {
+    // Make process.env available in the browser
+    'process.env': {
+      NODE_ENV: JSON.stringify(mode),
+      ...(mode === 'production' ? {} : {
+        // In development, pass through all environment variables that start with NEXT_PUBLIC_
+        ...Object.keys(process.env).reduce((acc, key) => {
+          if (key.startsWith('NEXT_PUBLIC_')) {
+            acc[key] = JSON.stringify(process.env[key]);
+          }
+          return acc;
+        }, {} as Record<string, string>)
+      })
+    },
+    // Global variable for browser
+    'global': 'window',
+    // For compatibility with some libraries
+    'process.browser': true,
+    'window.process': {
+      env: { NODE_ENV: JSON.stringify(mode) }
+    }
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -150,9 +184,17 @@ export default defineConfig(({ mode }) => ({
       'lodash': 'lodash-es',
     },
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis',
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: [],
+    setupFiles: './src/test/setup.ts',
   },
 }));

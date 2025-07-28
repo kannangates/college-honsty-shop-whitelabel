@@ -20,11 +20,6 @@ const PasswordChangePrompt = lazy(
     .then(module => ({ default: module.PasswordChangePrompt }))
 );
 
-const ErrorBoundary = lazy(
-  () => import("./src/components/common/ErrorBoundary")
-    .then(module => ({ default: module.ErrorBoundary }))
-);
-
 const AuthPage = lazy(
   () => import("./src/pages/AuthPage")
     .then(module => ({ default: module.default }))
@@ -46,7 +41,7 @@ const AdminRoutes = lazy(
 );
 
 // Import providers directly since they're needed immediately
-import { AuthProvider } from "./src/contexts/AuthContext";
+import { AuthProvider } from "./src/contexts/AuthProvider";
 import { ProductProvider } from "./src/contexts/ProductContext";
 
 // Loading component
@@ -100,36 +95,34 @@ function App() {
               </div>
             }
           >
-            <ErrorBoundary>
-              <AuthProvider>
-                <ProductProvider>
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/login" replace />} />
-                    <Route path="/auth" element={<Navigate to="/login" replace />} />
-                    <Route 
-                      path="/login" 
-                      element={
-                        <Suspense fallback={<LoadingFallback />}>
-                          <AuthPage initialMode="login" />
-                        </Suspense>
-                      } 
-                    />
-                    <Route path="/signup" element={<Navigate to="/login" replace />} />
-                    <Route path="/*" element={<UserRoutes />} />
-                    <Route path="/admin/*" element={<AdminRoutes />} />
-                    <Route 
-                      path="*" 
-                      element={
-                        <Suspense fallback={<LoadingFallback />}>
-                          <NotFound />
-                        </Suspense>
-                      } 
-                    />
-                  </Routes>
-                  <PasswordChangePrompt />
-                </ProductProvider>
-              </AuthProvider>
-            </ErrorBoundary>
+            <AuthProvider>
+              <ProductProvider>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/login" replace />} />
+                  <Route path="/auth" element={<Navigate to="/login" replace />} />
+                  <Route 
+                    path="/login" 
+                    element={
+                      <Suspense fallback={<LoadingFallback />}>
+                        <AuthPage initialMode="login" />
+                      </Suspense>
+                    } 
+                  />
+                  <Route path="/signup" element={<Navigate to="/login" replace />} />
+                  <Route path="/*" element={<UserRoutes />} />
+                  <Route path="/admin/*" element={<AdminRoutes />} />
+                  <Route 
+                    path="*" 
+                    element={
+                      <Suspense fallback={<LoadingFallback />}>
+                        <NotFound />
+                      </Suspense>
+                    } 
+                  />
+                </Routes>
+                <PasswordChangePrompt />
+              </ProductProvider>
+            </AuthProvider>
           </Suspense>
         </Router>
         <Toaster />

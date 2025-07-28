@@ -1,16 +1,17 @@
-// Frontend configuration with hardcoded public values
+import { env } from '@/utils/env';
+
+// Frontend configuration with environment variables
 export const CONFIG = {
-  // Supabase configuration (public values safe for frontend)
-  SUPABASE_URL: "https://vkuagjkrpbagrchsqmsf.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrdWFnamtycGJhZ3JjaHNxbXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MjEyMjAsImV4cCI6MjA2NDA5NzIyMH0.c8Zh7OLqeHVFObhiTnmCU7ZkyP2G-5iHY9m3E2KNObs",
-  SUPABASE_FUNCTIONS_URL: "https://vkuagjkrpbagrchsqmsf.functions.supabase.co",
+  // Supabase configuration
+  SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL,
+  SUPABASE_ANON_KEY: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  SUPABASE_FUNCTIONS_URL: env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL || '',
   
-  // hCaptcha site key (public value safe for frontend) 
-  // TODO: Replace with your actual hCaptcha site key from the Supabase dashboard
-  HCAPTCHA_SITE_KEY: "7a1fcd80-4e12-428b-a905-b45d2942ddad",
+  // hCaptcha site key
+  HCAPTCHA_SITE_KEY: env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '',
   
   // Email domain for student accounts
-  EMAIL_DOMAIN: "shasuncollege.edu.in"
+  EMAIL_DOMAIN: env.NEXT_PUBLIC_EMAIL_DOMAIN || 'example.edu.in'
 } as const;
 
 // Helper function to check if all required secrets are configured

@@ -26,6 +26,9 @@
     "addl",
     "Cooldown",
     "Uncategorized",
+    "qrCode",
+    "otpauth",
+    "totp",
   ],
   "ignoreWords": [],
   "patterns": []
