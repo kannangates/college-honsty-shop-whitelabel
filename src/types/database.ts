@@ -1,7 +1,11 @@
 // Database types for the application
-export type UserRole = 'student' | 'admin' | 'developer';
-export type PaymentMode = 'online' | 'cash' | 'upi';
+export type UserRole = 'student' | 'admin' | 'developer' | 'teacher';
+export type PaymentMode = 'qr_manual' | 'razorpay' | 'pay_later';
 export type NotificationType = 'order_placed' | 'payment_received' | 'general_announcement' | 'student_promotion' | 'new_product_alert';
+export type PaymentStatus = 'paid' | 'unpaid' | 'cancelled';
+
+// Fix for database compatibility 
+export type DatabasePaymentStatus = string;
 
 // Product type matching the database structure
 export interface DatabaseProduct {
@@ -46,8 +50,8 @@ export interface User {
   updated_by: string | null;
 }
 
-// Order type
-export interface Order {
+// Order type for database
+export interface DatabaseOrder {
   id: string;
   user_id: string | null;
   total_amount: number;
@@ -59,4 +63,9 @@ export interface Order {
   updated_at: string | null;
   updated_by: string | null;
   paid_at: string | null;
+}
+
+// Order type for application use  
+export interface Order extends Omit<DatabaseOrder, 'payment_status'> {
+  payment_status: PaymentStatus | null;
 }

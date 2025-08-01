@@ -143,16 +143,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Profile Management
   const updateProfile = useCallback((newProfile: Partial<UserProfile>) => {
-    authState.setProfile(prev => ({
-      ...prev,
-      profile: prev.profile ? { ...prev.profile, ...newProfile } as UserProfile : null,
-    }));
+    authState.setProfile(prev => 
+      prev ? { ...prev, ...newProfile } as UserProfile : null
+    );
   }, [authState]);
 
   const refreshProfile = useCallback(async () => {
     if (authState.user?.id) {
       try {
-        await authState.refreshProfile();
+        await authState.fetchProfile(authState.user.id);
       } catch (error) {
         console.error('Error refreshing profile:', error);
       }

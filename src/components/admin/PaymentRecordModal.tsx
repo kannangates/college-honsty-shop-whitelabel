@@ -40,8 +40,8 @@ interface OrderWithUser {
   };
 }
 
-// Payment mode enum type
-type PaymentMode = Database['public']['Enums']['payment_mode'];
+// Payment mode enum type  
+type PaymentMode = 'qr_manual' | 'razorpay' | 'pay_later';
 
 export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: PaymentRecordModalProps) => {
   const { toast } = useToast();
@@ -71,13 +71,13 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
 
       if (error) throw error;
 
-      const formattedOrders = data.map((order: OrderWithUser) => ({
+      const formattedOrders = data.map((order: any) => ({
         id: order.id,
         user_id: order.user_id,
         total_amount: order.total_amount,
         created_at: order.created_at,
-        user_name: order.users.name,
-        student_id: order.users.student_id
+        user_name: order.users?.name || 'Unknown',
+        student_id: order.users?.student_id || 'Unknown'
       }));
 
       setUnpaidOrders(formattedOrders);

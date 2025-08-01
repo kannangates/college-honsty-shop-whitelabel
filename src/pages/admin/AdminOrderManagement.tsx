@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useStockManagement } from '@/hooks/useStockManagement';
 import { OrderStats } from '@/components/admin/orders/OrderStats';
 import { OrderFilters } from '@/components/admin/orders/OrderFilters';
 import { OrdersTable } from '@/components/admin/orders/OrdersTable';
@@ -39,6 +40,7 @@ const AdminOrderManagement = React.memo(() => {
     avgOrder: 0
   });
   const { toast } = useToast();
+  const { restoreStock, reduceStock } = useStockManagement();
 
   // Memoized fetch functions
   const fetchOrders = useCallback(async () => {
@@ -126,6 +128,11 @@ const AdminOrderManagement = React.memo(() => {
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {
     try {
       console.log(`🔄 Updating order ${orderId} status to ${newStatus}`);
+      
+      // Get current order status before updating
+      const currentOrder = orders.find(order => order.id === orderId);
+      const previousStatus = currentOrder?.payment_status;
+      
       await supabase.functions.invoke('order-management', {
         body: { 
           operation: 'update_order',
@@ -135,6 +142,15 @@ const AdminOrderManagement = React.memo(() => {
         }
       });
 
+      // Handle stock management based on status changes
+      if (newStatus === 'cancelled' && previousStatus !== 'cancelled') {
+        // Restore stock when cancelling an order
+        await restoreStock(orderId);
+      } else if (previousStatus === 'cancelled' && newStatus !== 'cancelled') {
+        // Reduce stock when uncancelling an order
+        await reduceStock(orderId);
+      }
+
       setOrders(prev => prev.map(order =>
         order.id === orderId 
           ? { ...order, payment_status: newStatus }
@@ -143,7 +159,7 @@ const AdminOrderManagement = React.memo(() => {
 
       toast({
         title: 'Success',
-        description: 'Order status updated successfully',
+        description: `Order status updated successfully${newStatus === 'cancelled' ? ' and stock restored' : newStatus === 'unpaid' && previousStatus === 'cancelled' ? ' and stock reduced' : ''}`,
       });
     } catch (error) {
       console.error('Error updating order:', error);
@@ -153,7 +169,7 @@ const AdminOrderManagement = React.memo(() => {
         variant: 'destructive',
       });
     }
-  }, [toast]);
+  }, [toast, orders, restoreStock, reduceStock]);
 
   const clearDateFilter = useCallback(() => {
     setDateFrom(undefined);

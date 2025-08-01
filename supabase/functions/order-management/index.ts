@@ -92,6 +92,15 @@ serve(async (req: Request) => {
       case 'update_order': {
         const { id, ...updateData } = params
         
+        // Get current order data before update to check status change
+        const { data: currentOrder, error: currentOrderError } = await supabase
+          .from('orders')
+          .select('payment_status')
+          .eq('id', id)
+          .single()
+
+        if (currentOrderError) throw currentOrderError
+
         const { data, error } = await supabase
           .from('orders')
           .update({
@@ -116,7 +125,10 @@ serve(async (req: Request) => {
         }
 
         return new Response(
-          JSON.stringify({ order: data[0] }),
+          JSON.stringify({ 
+            order: data[0], 
+            previousStatus: currentOrder.payment_status 
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }

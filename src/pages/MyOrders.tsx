@@ -15,7 +15,7 @@ import { InvoiceGenerator } from '@/components/invoice/InvoiceGenerator';
 interface Order {
   id: string;
   created_at: string;
-  payment_status: 'paid' | 'unpaid';
+  payment_status: string;
   payment_mode?: string;
   transaction_id?: string;
   paid_at?: string;
