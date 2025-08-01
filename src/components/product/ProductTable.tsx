@@ -8,7 +8,7 @@ import { CartSummary } from '@/components/product/CartSummary';
 import { WHITELABEL_CONFIG } from '@/config';
 import { DataTable } from '@/components/ui/data-table';
 import { createProductColumns } from './product-table-columns';
-import { Product } from '@/contexts/ProductContext';
+import type { Product } from '@/types/database';
 
 const ProductTable = () => {
   const { products, loading } = useProductContext();

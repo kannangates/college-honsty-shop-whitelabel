@@ -36,4 +36,5 @@ export interface AuthContextType {
   setupMFA: () => Promise<{ qrCode: string; secret: string }>;
   enableMFA: (token: string) => Promise<boolean>;
   disableMFA: () => Promise<boolean>;
+  verifyMFASession: () => Promise<boolean>;
 }

@@ -1,6 +1,5 @@
-// Client-side environment variables utility
-// In production, these will be injected by the hosting platform
-// In development, they'll be loaded from .env.local
+// Environment variables utility for Lovable deployment
+// Works with both development and production environments
 
 interface EnvVars {
   NEXT_PUBLIC_SUPABASE_URL: string;
@@ -8,42 +7,24 @@ interface EnvVars {
   [key: string]: string | undefined;
 }
 
-// Extend the Window interface to include __ENV
-declare global {
-  interface Window {
-    __ENV?: Record<string, string>;
-  }
-}
+// Fallback values for production deployment
+const PRODUCTION_SUPABASE_URL = 'https://vkuagjkrpbagrchsqmsf.supabase.co';
+const PRODUCTION_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrdWFnamtycGJhZ3JjaHNxbXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MjEyMjAsImV4cCI6MjA2NDA5NzIyMH0.c8Zh7OLqeHVFObhiTnmCU7ZkyP2G-5iHY9m3E2KNObs';
 
-// This will be populated at runtime
-let envVars: EnvVars = {
-  NEXT_PUBLIC_SUPABASE_URL: '',
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
+// Get environment variables with proper fallbacks for Lovable deployment
+const getEnvVars = (): EnvVars => {
+  // Try to get from import.meta.env first (Vite)
+  const viteSupabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
+  const viteSupabaseKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
+
+  return {
+    NEXT_PUBLIC_SUPABASE_URL: viteSupabaseUrl || PRODUCTION_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: viteSupabaseKey || PRODUCTION_SUPABASE_ANON_KEY,
+  };
 };
 
-// In the browser, we'll use window.__ENV if available (injected by the hosting platform)
-// Otherwise, we'll use process.env (for development)
-if (typeof window !== 'undefined') {
-  // In the browser
-  const windowEnv = (window as unknown as { __ENV?: Record<string, string> }).__ENV;
-  
-  if (windowEnv) {
-    // In production, use the injected environment variables
-    envVars = { ...envVars, ...windowEnv };
-  } else if (process.env.NODE_ENV === 'development') {
-    // In development, use process.env
-    envVars = {
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-    };
-  }
-} else {
-  // On the server, always use process.env
-  envVars = {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-  };
-}
+// Initialize environment variables
+const envVars: EnvVars = getEnvVars();
 
 // Export the environment variables
 export const env = envVars;
@@ -52,5 +33,6 @@ export const env = envVars;
 export function getEnvVar(key: string, defaultValue: string = ''): string {
   return envVars[key] || defaultValue;
 }
+
 // For backward compatibility
 export default env;

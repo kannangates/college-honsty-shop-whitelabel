@@ -1,18 +1,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { User, Session } from '@supabase/supabase-js';
-import { Tables } from '@/integrations/supabase/types';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import type { User as DatabaseUser, UserRole } from '@/types/database';
 import { useAuthCleanup } from './auth/useAuthCleanup';
 import { useAuthRedirect } from './auth/useAuthRedirect';
-
-
 import { AuthService } from '@/services/authService';
-import type { Database } from '@/integrations/supabase/types';
 
-type UserProfile = Tables<'users'>;
+type UserProfile = DatabaseUser;
 
 interface UseAuthActionsProps {
-  setUser: (user: User | null) => void;
+  setUser: (user: SupabaseUser | null) => void;
   setProfile: (profile: UserProfile | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
@@ -87,7 +84,7 @@ export const useAuthActions = ({
         student_id: studentId, // FIX: use student_id
         name,
         department,
-        role: role as Database["public"]["Enums"]["user_role"],
+        role: role as UserRole,
         shift,
         points,
         captchaToken,

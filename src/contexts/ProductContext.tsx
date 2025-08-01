@@ -1,16 +1,12 @@
 // eslint-disable react-refresh/only-export-components
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
 import { useProductContext } from './useProductContext';
 import { ProductContext } from './ProductContextObject';
+import type { Product, DatabaseProduct } from '@/types/database';
 
-type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
-
-export type Product = Tables<'products'> & {
-  description?: string;
-  price: number;
-};
+// Export Product type for use in other components
+export type { Product } from '@/types/database';
 
 interface ProductContextType {
   products: Product[];
@@ -38,7 +34,7 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       if (error) {
         setError(error.message);
       } else {
-        const transformedProducts = (data || []).map(item => ({
+        const transformedProducts: Product[] = (data || []).map((item: DatabaseProduct) => ({
           ...item,
           description: '',
           price: item.unit_price
@@ -62,9 +58,9 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (error) {
         setError(error.message);
-      } else if (data) {
-        const transformedProduct = {
-          ...data[0],
+      } else if (data && data[0]) {
+        const transformedProduct: Product = {
+          ...(data[0] as DatabaseProduct),
           description: '',
           price: data[0].unit_price
         };
@@ -88,9 +84,9 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (error) {
         setError(error.message);
-      } else if (data) {
-        const transformedProduct = {
-          ...data[0],
+      } else if (data && data[0]) {
+        const transformedProduct: Product = {
+          ...(data[0] as DatabaseProduct),
           description: '',
           price: data[0].unit_price
         };

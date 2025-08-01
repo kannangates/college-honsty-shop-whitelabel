@@ -1,11 +1,9 @@
-import type { Session, User } from '@supabase/supabase-js';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import type { User as DatabaseUser } from '@/types/database';
 
-import type { Tables } from '@/integrations/supabase/types';
-
-export type UserProfile = Tables<'users'>;
-
+export type UserProfile = DatabaseUser;
 export type AuthSession = Session;
-export type AuthUser = User;
+export type AuthUser = SupabaseUser;
 
 export interface AuthResult {
   success: boolean;

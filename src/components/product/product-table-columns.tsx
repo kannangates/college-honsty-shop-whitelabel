@@ -5,7 +5,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, Plus, Minus, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from '@/features/gamification/components/badge';
-import { Product } from "@/contexts/ProductContext"
+import type { Product } from "@/types/database"
 import { WHITELABEL_CONFIG } from '@/config';
 
 interface ProductTableColumnsProps {
