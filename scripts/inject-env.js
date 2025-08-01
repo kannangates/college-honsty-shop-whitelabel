@@ -1,9 +1,10 @@
 // This script injects environment variables into the HTML at build time
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Load environment variables from .env.local if it exists
-require('dotenv').config({ path: path.resolve(process.cwd(), '.env.local') });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Get all environment variables that start with NEXT_PUBLIC_
 const envVars = Object.entries(process.env)
