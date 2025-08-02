@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/useAuth';
-import { Shield, QrCode, Smartphone, Key, CheckCircle, Loader2 } from 'lucide-react';
+import { Shield, QrCode, Smartphone, Key, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 
 export const MFASetup = () => {
@@ -157,7 +157,11 @@ export const MFASetup = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex gap-2">
+          <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+          <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          <div className="w-3 h-3 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+        </div>
       </div>
     );
   }
@@ -204,7 +208,11 @@ export const MFASetup = () => {
                   </div>
                 ) : (
                   <div className="flex h-48 w-48 items-center justify-center rounded-lg border">
-                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                      <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-3 h-3 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
                   </div>
                 )}
               </div>

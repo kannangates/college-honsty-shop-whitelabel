@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,20 +6,99 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { CalendarIcon, CreditCard, Search, RefreshCw, Plus } from 'lucide-react';
+import { CalendarIcon, CreditCard, Search, RefreshCw, Plus, Edit, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { PaymentRecordModal } from '@/components/admin/PaymentRecordModal';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 const AdminPaymentReports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [isPaymentRecordOpen, setIsPaymentRecordOpen] = useState(false);
+  const [paymentRecords, setPaymentRecords] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const paymentRecords = useMemo(() => [
+  const fetchPayments = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select(`
+          *,
+          orders (
+            id,
+            friendly_id,
+            users (name, student_id, email)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const formattedData = data.map(payment => ({
+        id: payment.id,
+        studentId: payment.orders?.users?.student_id || 'Unknown',
+        studentName: payment.orders?.users?.name || 'Unknown',
+        amount: payment.amount,
+        date: format(new Date(payment.paid_at), 'yyyy-MM-dd'),
+        method: payment.payment_method || 'Manual',
+        status: 'Paid' as const,
+        transactionId: payment.transaction_id || 'N/A',
+        orderId: payment.orders?.friendly_id || payment.order_id
+      }));
+      
+      setPaymentRecords(formattedData);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load payment records',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPayments();
+  }, []);
+
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!confirm('Are you sure you want to delete this payment record?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('payments')
+        .delete()
+        .eq('id', paymentId);
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Success',
+        description: 'Payment record deleted successfully'
+      });
+      
+      fetchPayments();
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete payment record',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const staticRecords = [
     {
       id: '1',
       studentId: 'STU001',
@@ -120,7 +199,9 @@ const AdminPaymentReports = () => {
       status: 'Pending' as const,
       items: ['Whiteboard Markers']
     }
-  ], []);
+  ];
+
+  const allRecords = [...paymentRecords, ...staticRecords];
 
   const statusOptions = useMemo(() => [
     { value: 'all', label: 'All' },
@@ -134,7 +215,7 @@ const AdminPaymentReports = () => {
   };
 
   const filteredRecords = useMemo(() => {
-    return paymentRecords.filter(record => {
+    return allRecords.filter(record => {
       const matchesSearch = record.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           record.studentId.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || record.status.toLowerCase() === statusFilter;
@@ -145,17 +226,39 @@ const AdminPaymentReports = () => {
         (!dateRange.from && dateRange.to && recordDate <= dateRange.to);
       return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [paymentRecords, searchTerm, statusFilter, dateRange]);
+  }, [allRecords, searchTerm, statusFilter, dateRange]);
 
   // Define columns for shadcn DataTable
-  const columns: ColumnDef<typeof paymentRecords[0]>[] = [
+  const columns: ColumnDef<any>[] = [
     { accessorKey: 'studentId', header: 'Student ID' },
     { accessorKey: 'studentName', header: 'Student Name' },
-    { accessorKey: 'amount', header: 'Amount', cell: ({ row }) => `$${row.original.amount.toFixed(2)}` },
+    { accessorKey: 'amount', header: 'Amount', cell: ({ row }) => `₹${row.original.amount.toFixed(2)}` },
     { accessorKey: 'date', header: 'Date' },
     { accessorKey: 'method', header: 'Method' },
+    { accessorKey: 'transactionId', header: 'Transaction ID' },
+    { accessorKey: 'orderId', header: 'Order ID' },
     { accessorKey: 'status', header: 'Status' },
-    { accessorKey: 'items', header: 'Items', cell: ({ row }) => row.original.items.join(', ') },
+    { 
+      id: 'actions', 
+      header: 'Actions', 
+      cell: ({ row }) => {
+        const payment = row.original;
+        if (payment.items) return null; // Skip action buttons for static records
+        
+        return (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDeletePayment(payment.id)}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      }
+    },
   ];
 
   const clearFilters = () => {
@@ -253,6 +356,7 @@ const AdminPaymentReports = () => {
             </Button>
             <Button 
               variant="outline" 
+              onClick={fetchPayments}
               className="h-11 px-4 border-gray-200 hover:border-gray-300"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -275,9 +379,13 @@ const AdminPaymentReports = () => {
           <CardTitle className="text-2xl font-semibold">Transaction History</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="overflow-x-auto">
-            <DataTable columns={columns} data={filteredRecords} />
-          </div>
+          {loading ? (
+            <LoadingSpinner text="Loading payment records..." />
+          ) : (
+            <div className="overflow-x-auto">
+              <DataTable columns={columns} data={filteredRecords} />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -286,8 +394,7 @@ const AdminPaymentReports = () => {
         open={isPaymentRecordOpen}
         onOpenChange={setIsPaymentRecordOpen}
         onRecordAdded={() => {
-          // Refresh payment reports data here if needed
-          console.log('Payment record added');
+          fetchPayments();
         }}
       />
     </div>

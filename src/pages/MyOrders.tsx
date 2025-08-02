@@ -14,6 +14,7 @@ import { InvoiceGenerator } from '@/components/invoice/InvoiceGenerator';
 
 interface Order {
   id: string;
+  friendly_id?: string;
   created_at: string;
   payment_status: string;
   payment_mode?: string;
@@ -146,7 +147,7 @@ const MyOrders = () => {
                   <TableBody>
                     {unpaidOrders.map((order) => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
+                        <TableCell className="font-medium">{order.friendly_id || order.id.substring(0, 8) + '...'}</TableCell>
                         <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>₹{order.total_amount}</TableCell>
                         <TableCell>
@@ -205,7 +206,7 @@ const MyOrders = () => {
                   <TableBody>
                     {allOrders.map((order) => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.id.substring(0, 8)}...</TableCell>
+                        <TableCell className="font-medium">{order.friendly_id || order.id.substring(0, 8) + '...'}</TableCell>
                         <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>₹{order.total_amount}</TableCell>
                         <TableCell>

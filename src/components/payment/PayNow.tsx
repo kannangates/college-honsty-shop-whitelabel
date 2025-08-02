@@ -20,28 +20,49 @@ export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCa
   const { toast } = useToast();
   const { logout } = useAuth();
 
-  const handlePayment = async () => {
+  const handlePaymentAndLogout = async () => {
     if (!transactionId.trim()) {
       toast({ title: 'Error', description: 'Please enter a transaction ID', variant: 'destructive' });
       return;
     }
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const paidAt = new Date().toISOString();
+      
+      // Insert payment record
       const { error: paymentError } = await supabase.from('payments').insert({
         order_id: orderId,
         amount,
         transaction_id: transactionId,
-        paid_at: paidAt
+        paid_at: paidAt,
+        user_id: user.id,
+        payment_method: 'qr_manual'
       });
       if (paymentError) throw paymentError;
-      const { error: orderError } = await supabase.from('orders').update({ payment_status: 'paid', paid_at: paidAt }).eq('id', orderId);
+
+      // Update order status
+      const { error: orderError } = await supabase.from('orders').update({ 
+        payment_status: 'paid', 
+        paid_at: paidAt,
+        transaction_id: transactionId
+      }).eq('id', orderId);
       if (orderError) throw orderError;
-      toast({ title: 'Payment Successful', description: 'Your payment has been recorded.' });
-      onSuccess?.();
+
+      toast({ 
+        title: 'Payment Successful', 
+        description: 'Your payment has been recorded. You will be logged out now.' 
+      });
+      
+      // Auto logout after 2 seconds
+      setTimeout(() => {
+        logout();
+      }, 2000);
+      
     } catch (err) {
       toast({ title: 'Payment Failed', description: (err as Error).message, variant: 'destructive' });
-    } finally {
       setLoading(false);
     }
   };
@@ -95,27 +116,23 @@ export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCa
 
                     <div className="space-y-4">
                       <Button 
-                        onClick={handlePayment} 
+                        onClick={handlePaymentAndLogout} 
                         disabled={loading} 
                         size="lg"
-                        className="w-full bg-green-600 hover:bg-green-700 h-12 text-base font-medium"
+                        className="w-full bg-green-600 hover:bg-green-700 h-12 text-base font-medium flex items-center justify-center gap-2"
                       >
-                        {loading ? 'Processing...' : 'Submit Payment'}
+                        {loading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="h-4 w-4" />
+                            Submit Payment & Logout
+                          </>
+                        )}
                       </Button>
-                      
-                      <div className="pt-4">
-                        <p className="text-sm text-gray-500 mb-3 text-center">
-                          After submitting your payment, please
-                        </p>
-                        <Button 
-                          variant="destructive"
-                          size="lg"
-                          onClick={() => logout()} 
-                          className="w-full flex items-center justify-center gap-2 h-12"
-                        >
-                          <LogOut className="h-4 w-4" /> Logout
-                        </Button>
-                      </div>
 
                       {onCancel && (
                         <div className="pt-2">

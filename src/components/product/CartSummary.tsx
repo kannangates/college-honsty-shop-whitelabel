@@ -23,7 +23,6 @@ interface CartSummaryProps {
 }
 
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
-import { Loader2 } from 'lucide-react';
 
 export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: CartSummaryProps) => {
   const [thankYouModalOpen, setThankYouModalOpen] = useState(false);
@@ -94,7 +93,14 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
           <DialogFooter>
             <Button onClick={handleConfirm} disabled={loadingPayNow || loadingPayLater}>
               {loadingPayNow || loadingPayLater ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  </div>
+                  Processing...
+                </div>
               ) : 'Confirm'}
             </Button>
             <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={loadingPayNow || loadingPayLater}>
@@ -153,14 +159,32 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
                 className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
                 disabled={loadingPayNow || loadingPayLater}
               >
-                {loadingPayNow ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : 'Pay Now'}
+                {loadingPayNow ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                    Processing...
+                  </div>
+                ) : 'Pay Now'}
               </Button>
               <Button 
                 onClick={() => openConfirm('pay_later')}
                 className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
                 disabled={loadingPayNow || loadingPayLater}
               >
-                {loadingPayLater ? (<Loader2 className="mr-2 h-4 w-4 animate-spin" />) : 'Pay Later'}
+                {loadingPayLater ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                    Processing...
+                  </div>
+                ) : 'Pay Later'}
               </Button>
             </div>
           </div>

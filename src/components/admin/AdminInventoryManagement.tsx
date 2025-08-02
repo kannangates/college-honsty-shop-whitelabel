@@ -38,7 +38,6 @@ import {
 import {
   ChevronDown, 
   ChevronUp, 
-  Loader2, 
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
@@ -567,8 +566,14 @@ const deleteProduct = async (id: string) => {
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    Loading products...
+                    <div className="flex flex-col items-center">
+                      <div className="flex gap-2 mb-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                        <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
+                      Loading products...
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : products.length === 0 ? (
