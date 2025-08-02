@@ -936,24 +936,6 @@ export type Database = {
         }
         Relationships: []
       }
-      whitelabel_config: {
-        Row: {
-          config: Json
-          id: number
-          updated_at: string | null
-        }
-        Insert: {
-          config: Json
-          id?: number
-          updated_at?: string | null
-        }
-        Update: {
-          config?: Json
-          id?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
