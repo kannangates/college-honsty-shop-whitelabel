@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
+import { Loader2, AlertTriangle, Eye, EyeOff, Check, X, Info, UserPlus, Plus, Minus, Upload, FileText, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/useAuth';
@@ -7,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG, CONFIG } from '@/config';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff } from 'lucide-react';
+
 import { DepartmentCombobox } from '@/components/ui/DepartmentCombobox';
 import { useNavigate } from 'react-router-dom';
 
@@ -382,7 +383,7 @@ export const SignupForm = ({ onToggleLogin }: { onToggleLogin?: () => void }) =>
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Creating Account...
               </span>
             ) : (

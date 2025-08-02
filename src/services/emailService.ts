@@ -25,8 +25,8 @@ export class EmailService {
         body: {
           to: email,
           subject,
-          text: message,
-          html: `
+          plainTextBody: message,
+          htmlBody: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #4f46e5;">${subject}</h2>
               <p>${message}</p>

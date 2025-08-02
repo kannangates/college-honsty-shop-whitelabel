@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -17,7 +18,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG, CONFIG } from '@/config';
-import { Eye, EyeOff } from 'lucide-react';
 
 
 export function LoginForm({
@@ -161,7 +161,7 @@ export function LoginForm({
             >
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   {loadingMessages.signing_in}
                 </span>
               ) : (

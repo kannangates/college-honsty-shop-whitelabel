@@ -98,17 +98,17 @@ function App() {
             <AuthProvider>
               <ProductProvider>
                 <Routes>
-                  <Route path="/" element={<Navigate to="/login" replace />} />
-                  <Route path="/auth" element={<Navigate to="/login" replace />} />
+                  <Route path="/" element={<Navigate to="/auth" replace />} />
                   <Route 
-                    path="/login" 
+                    path="/auth" 
                     element={
                       <Suspense fallback={<LoadingFallback />}>
-                        <AuthPage initialMode="login" />
+                        <AuthPage />
                       </Suspense>
                     } 
                   />
-                  <Route path="/signup" element={<Navigate to="/login" replace />} />
+                  <Route path="/login" element={<Navigate to="/auth" replace />} />
+                  <Route path="/signup" element={<Navigate to="/auth" replace />} />
                   <Route path="/*" element={<UserRoutes />} />
                   <Route path="/admin/*" element={<AdminRoutes />} />
                   <Route 

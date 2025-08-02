@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/useAuth';
 import { useISOCompliance } from '@/hooks/useISOCompliance';
 import { WHITELABEL_CONFIG } from '@/config';
@@ -37,7 +38,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
           <p>Loading your experience... ✨</p>
         </div>
       </div>

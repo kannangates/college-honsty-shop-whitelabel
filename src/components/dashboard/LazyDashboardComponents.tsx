@@ -1,5 +1,6 @@
 
 import { lazy } from 'react';
+import { Loader2 } from 'lucide-react';
 
 // Lazy load dashboard components for better performance
 export const LazyDashboardStats = lazy(() => import('./DashboardStats'));
@@ -19,7 +20,7 @@ export const LoadingFallback = ({ error }: { error?: Error }) => {
   
   return (
     <div className="flex items-center justify-center p-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
     </div>
   );
 };

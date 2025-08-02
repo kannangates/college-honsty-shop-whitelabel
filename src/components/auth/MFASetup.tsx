@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/useAuth';
 import { Shield, QrCode, Smartphone, Key, CheckCircle } from 'lucide-react';
-import Image from 'next/image';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export const MFASetup = () => {
   const [qrCode, setQrCode] = useState('');
@@ -21,9 +21,8 @@ export const MFASetup = () => {
     if (!user) return;
     
     try {
-      const response = await fetch('/api/mfa/status');
-      const data = await response.json();
-      setIsEnabled(data.enabled);
+      // For now, assume MFA is disabled since we don't have the backend implementation
+      setIsEnabled(false);
     } catch (error) {
       console.error('Error checking MFA status:', error);
       toast({
@@ -45,21 +44,12 @@ export const MFASetup = () => {
     
     setIsLoading(true);
     try {
-      const response = await fetch('/api/mfa/setup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      // MFA setup is not implemented yet
+      toast({
+        title: 'Coming Soon',
+        description: 'MFA setup will be available in a future update',
+        variant: 'default',
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to set up MFA');
-      }
-
-      const { qrCode } = await response.json();
-      setQrCode(qrCode);
-      setIsVerifying(true);
     } catch (error) {
       console.error('Error setting up MFA:', error);
       toast({
@@ -84,26 +74,11 @@ export const MFASetup = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/mfa/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token: verificationCode }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to verify MFA');
-      }
-
-      await checkMFAStatus();
-      setIsVerifying(false);
-      setVerificationCode('');
-
+      // MFA verification is not implemented yet
       toast({
-        title: 'Success',
-        description: 'MFA has been enabled successfully',
+        title: 'Coming Soon',
+        description: 'MFA verification will be available in a future update',
+        variant: 'default',
       });
     } catch (error) {
       console.error('Error verifying MFA:', error);
@@ -122,25 +97,11 @@ export const MFASetup = () => {
     
     setIsLoading(true);
     try {
-      const response = await fetch('/api/mfa/disable', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to disable MFA');
-      }
-
-      await checkMFAStatus();
-      setQrCode('');
-      setIsVerifying(false);
-
+      // MFA disable is not implemented yet
       toast({
-        title: 'Success',
-        description: 'MFA has been disabled',
+        title: 'Coming Soon',
+        description: 'MFA disable will be available in a future update',
+        variant: 'default',
       });
     } catch (error) {
       console.error('Error disabling MFA:', error);
@@ -157,11 +118,7 @@ export const MFASetup = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="flex gap-2">
-          <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-          <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-          <div className="w-3 h-3 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-        </div>
+        <LoadingSpinner size="md" text="Processing..." />
       </div>
     );
   }
@@ -194,32 +151,28 @@ export const MFASetup = () => {
           </div>
         ) : isVerifying ? (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-center">
-                {qrCode ? (
-                  <div className="rounded-lg border p-4">
-                    <Image
-                      src={qrCode}
-                      alt="MFA QR Code"
-                      width={200}
-                      height={200}
-                      className="rounded"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex h-48 w-48 items-center justify-center rounded-lg border">
-                    <div className="flex gap-2">
-                      <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                      <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      <div className="w-3 h-3 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              <div className="space-y-2">
+                <div className="flex justify-center">
+                  {qrCode ? (
+                    <div className="rounded-lg border p-4">
+                      <img
+                        src={qrCode}
+                        alt="MFA QR Code"
+                        width={200}
+                        height={200}
+                        className="rounded"
+                      />
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex h-48 w-48 items-center justify-center rounded-lg border">
+                      <LoadingSpinner size="sm" text="" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Scan this QR code with your authenticator app
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Scan this QR code with your authenticator app
-              </p>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="verification-code">Verification Code</Label>
