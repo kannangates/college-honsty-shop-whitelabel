@@ -44,10 +44,12 @@ export const OrderFilters = ({
     setRange({ from: dateFrom, to: dateTo });
   }, [dateFrom, dateTo]);
 
-  const handleRangeChange = (nextRange: DateRange) => {
-    setRange(nextRange);
-    setDateFrom(nextRange.from);
-    setDateTo(nextRange.to);
+  const handleRangeChange = (nextRange: DateRange | undefined) => {
+    if (nextRange) {
+      setRange(nextRange);
+      setDateFrom(nextRange.from);
+      setDateTo(nextRange.to);
+    }
   };
 
   return (

@@ -10,6 +10,7 @@ import { OrdersTable } from '@/components/admin/orders/OrdersTable';
 
 interface Order {
   id: string;
+  friendly_id?: string;
   created_at: string;
   total_amount: number;
   payment_status: string;
@@ -107,7 +108,8 @@ const AdminOrderManagement = React.memo(() => {
       filtered = filtered.filter(order =>
         order.users?.name?.toLowerCase().includes(lowercaseSearch) ||
         order.users?.student_id?.toLowerCase().includes(lowercaseSearch) ||
-        order.id.toLowerCase().includes(lowercaseSearch)
+        order.id.toLowerCase().includes(lowercaseSearch) ||
+        order.friendly_id?.toLowerCase().includes(lowercaseSearch)
       );
     }
 

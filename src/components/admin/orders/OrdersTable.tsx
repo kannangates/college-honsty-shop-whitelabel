@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Eye, Download, Pencil } from 'lucide-react';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check } from 'lucide-react';
@@ -15,6 +17,7 @@ import { useDataExport } from '@/hooks/useDataExport';
 
 interface Order {
   id: string;
+  friendly_id?: string;
   created_at: string;
   total_amount: number;
   payment_status: string;
@@ -33,11 +36,14 @@ interface Order {
 interface OrdersTableProps {
   orders: Order[];
   loading: boolean;
-  onUpdateOrderStatus: (orderId: string, status: string) => void;
+  onUpdateOrderStatus: (orderId: string, status: string) => Promise<void>;
 }
 
 export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTableProps) => {
   const [statusPopoverOpen, setStatusPopoverOpen] = useState<string | null>(null);
+  const [cancellingOrders, setCancellingOrders] = useState<Set<string>>(new Set());
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ orderId: string; action: 'cancel' | 'unmark' } | null>(null);
   const { exportData, isExporting } = useDataExport();
 
   const getStatusColor = (status: string) => {
@@ -49,13 +55,41 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
     }
   };
 
+  const handleActionConfirm = async () => {
+    if (!pendingAction) return;
+    
+    setCancellingOrders(prev => new Set(prev).add(pendingAction.orderId));
+    try {
+      const status = pendingAction.action === 'cancel' ? 'cancelled' : 'unpaid';
+      await onUpdateOrderStatus(pendingAction.orderId, status);
+    } finally {
+      setCancellingOrders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(pendingAction.orderId);
+        return newSet;
+      });
+      setConfirmDialogOpen(false);
+      setPendingAction(null);
+    }
+  };
+
+  const openCancelDialog = (orderId: string) => {
+    setPendingAction({ orderId, action: 'cancel' });
+    setConfirmDialogOpen(true);
+  };
+
+  const openUnmarkDialog = (orderId: string) => {
+    setPendingAction({ orderId, action: 'unmark' });
+    setConfirmDialogOpen(true);
+  };
+
   const handleExport = () => {
     const exportHeaders = [
       'Order ID', 'Student Name', 'Student ID', 'Date', 'Amount', 'Payment Mode', 'Status', 'Items'
     ];
     
     const exportRows = orders.map(order => [
-      order.id,
+      order.friendly_id || order.id,
       order.users?.name || 'N/A',
       order.users?.student_id || 'N/A',
       new Date(order.created_at).toLocaleDateString(),
@@ -107,8 +141,7 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
             {loading ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8">
-                  <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                  Loading orders...
+                  <LoadingSpinner size="md" text="Loading orders..." />
                 </TableCell>
               </TableRow>
             ) : orders.length === 0 ? (
@@ -120,7 +153,9 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
             ) : (
               orders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id.slice(0, 8)}...</TableCell>
+                  <TableCell className="font-medium">
+                    {order.friendly_id || `${order.id.slice(0, 8)}...`}
+                  </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-medium">{order.users?.name}</p>
@@ -152,19 +187,21 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => onUpdateOrderStatus(order.id, 'cancelled')}
+                        disabled={cancellingOrders.has(order.id)}
+                        onClick={() => openCancelDialog(order.id)}
                         aria-label="Cancel Order"
                       >
-                        Cancel
+                        {cancellingOrders.has(order.id) ? 'Cancelling...' : 'Cancel'}
                       </Button>
                     ) : (
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onUpdateOrderStatus(order.id, 'unpaid')}
+                        disabled={cancellingOrders.has(order.id)}
+                        onClick={() => openUnmarkDialog(order.id)}
                         aria-label="Unmark Cancelled"
                       >
-                        Unmark Cancelled
+                        {cancellingOrders.has(order.id) ? 'Processing...' : 'Unmark Cancelled'}
                       </Button>
                     )}
                   </TableCell>
@@ -175,6 +212,19 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
           </TableBody>
         </Table>
       </CardContent>
+      
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        title={pendingAction?.action === 'cancel' ? 'Cancel Order' : 'Unmark Cancelled'}
+        description={
+          pendingAction?.action === 'cancel'
+            ? `Are you sure you want to cancel order ${orders.find(o => o.id === pendingAction?.orderId)?.friendly_id || pendingAction?.orderId?.slice(0, 8)}? This action cannot be undone.`
+            : `Are you sure you want to unmark order ${orders.find(o => o.id === pendingAction?.orderId)?.friendly_id || pendingAction?.orderId?.slice(0, 8)} as cancelled?`
+        }
+        onConfirm={handleActionConfirm}
+        destructive={pendingAction?.action === 'cancel'}
+      />
     </Card>
   );
 };
