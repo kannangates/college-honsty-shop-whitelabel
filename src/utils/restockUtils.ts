@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { addWarehouseStock } from './warehouseStock';
 import { moveToShelfStock } from './shelfStock';
@@ -32,3 +33,4 @@ export const handleRestockOperation = async (
     throw error;
   }
 };
+

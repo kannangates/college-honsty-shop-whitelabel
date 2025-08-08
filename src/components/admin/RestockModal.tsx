@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,15 @@ export const RestockModal: React.FC<RestockModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [restockType, setRestockType] = useState<'warehouse' | 'shelf'>('warehouse');
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity('');
+      setError('');
+      setRestockType('warehouse');
+    }
+  }, [isOpen]);
 
   const handleSubmit = async () => {
     if (!product) return;
