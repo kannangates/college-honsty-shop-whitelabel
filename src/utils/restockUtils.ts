@@ -20,6 +20,16 @@ export const handleRestockOperation = async (
   console.log('🔄 Starting restock operation:', { productId, quantity, restockType });
 
   try {
+    // Validate inputs
+    if (!productId || quantity <= 0) {
+      throw new Error('Invalid product ID or quantity');
+    }
+
+    if (!['warehouse', 'shelf'].includes(restockType)) {
+      throw new Error('Invalid restock type. Must be "warehouse" or "shelf"');
+    }
+
+    // Execute the appropriate restock operation
     if (restockType === 'warehouse') {
       await addWarehouseStock(productId, quantity);
     } else if (restockType === 'shelf') {
@@ -30,7 +40,13 @@ export const handleRestockOperation = async (
 
   } catch (error) {
     console.error('❌ Restock operation failed:', error);
-    throw error;
+    
+    // Re-throw with consistent error handling
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error('An unexpected error occurred during restock operation');
+    }
   }
 };
 

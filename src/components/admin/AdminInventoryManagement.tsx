@@ -165,7 +165,7 @@ const [selectedForEdit, setSelectedForEdit] = useState<Product | null>(null);
       ]);
 
       toast({
-        title: 'Success',
+        title: 'Stock Updated',
         description: `Successfully ${restockType === 'warehouse' ? 'added' : 'moved'} ${quantity} units`,
       });
 
@@ -174,9 +174,20 @@ const [selectedForEdit, setSelectedForEdit] = useState<Product | null>(null);
 
     } catch (error: any) {
       console.error('Error restocking product:', error);
+      
+      // Enhanced error handling for authorization issues
+      let errorMessage = 'Failed to restock product';
+      if (error.message?.includes('Not authorized')) {
+        errorMessage = 'You do not have permission to update product stock';
+      } else if (error.message?.includes('Cannot move')) {
+        errorMessage = error.message; // Use the specific validation message
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to restock product',
+        title: 'Restock Failed',
+        description: errorMessage,
         variant: 'destructive',
       });
     }
