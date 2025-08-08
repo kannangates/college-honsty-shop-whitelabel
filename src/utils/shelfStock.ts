@@ -48,17 +48,22 @@ export const moveToShelfStock = async (
     });
 
     // Update product stock levels
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from('products')
       .update({
         warehouse_stock: newWarehouseStock,
         shelf_stock: newShelfStock,
         updated_at: new Date().toISOString()
       })
-      .eq('id', productId);
+      .eq('id', productId)
+      .select('id, warehouse_stock, shelf_stock')
+      .maybeSingle();
 
     if (updateError) throw updateError;
-
+    if (!updated) {
+      console.warn('⚠️ Shelf move update returned no row. Possible RLS block or missing product.', { productId });
+      throw new Error('Not authorized to update product or product not found');
+    }
     console.log('✅ Stock moved to shelf successfully');
 
   } catch (error) {

@@ -38,17 +38,22 @@ export const addWarehouseStock = async (
     });
 
     // Update product stock levels
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from('products')
       .update({
         warehouse_stock: newWarehouseStock,
         opening_stock: newOpeningStock,
         updated_at: new Date().toISOString()
       })
-      .eq('id', productId);
+      .eq('id', productId)
+      .select('id, warehouse_stock, opening_stock')
+      .maybeSingle();
 
     if (updateError) throw updateError;
-
+    if (!updated) {
+      console.warn('⚠️ Warehouse stock update returned no row. Possible RLS block or missing product.', { productId });
+      throw new Error('Not authorized to update product or product not found');
+    }
     console.log('✅ Warehouse stock added successfully');
 
   } catch (error) {
