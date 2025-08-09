@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { stockService } from './stockService';
 
 export interface ShelfStockEntry {
   product_id: string;
@@ -15,59 +15,21 @@ export const moveToShelfStock = async (
   productId: string,
   quantity: number
 ): Promise<void> => {
-  console.log('📦 Moving stock from warehouse to shelf:', { productId, quantity });
+  console.log('📦 Moving stock from warehouse to shelf (via RPC):', { productId, quantity });
 
   try {
-    // Get current product stock levels
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('warehouse_stock, shelf_stock')
-      .eq('id', productId)
-      .single();
-
-    if (productError) throw productError;
-    if (!product) throw new Error('Product not found');
-
-    console.log('📦 Current stock levels:', {
-      warehouse: product.warehouse_stock,
-      shelf: product.shelf_stock
-    });
-
-    // Validate sufficient warehouse stock
-    if (quantity > product.warehouse_stock) {
-      throw new Error(`Cannot move ${quantity} units to shelf. Only ${product.warehouse_stock} units available in warehouse.`);
-    }
-
-    // Calculate new stock levels
-    const newWarehouseStock = product.warehouse_stock - quantity;
-    const newShelfStock = product.shelf_stock + quantity;
-
-    console.log('📊 New stock levels after move:', {
-      warehouse: newWarehouseStock,
-      shelf: newShelfStock
-    });
-
-    // Update product stock levels
-    const { data: updated, error: updateError } = await supabase
-      .from('products')
-      .update({
-        warehouse_stock: newWarehouseStock,
-        shelf_stock: newShelfStock,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', productId)
-      .select('id, warehouse_stock, shelf_stock')
-      .maybeSingle();
-
-    if (updateError) throw updateError;
-    if (!updated) {
-      console.warn('⚠️ Shelf move update returned no row. Possible RLS block or missing product.', { productId });
+    const res = await stockService.moveWarehouseToShelf(productId, quantity);
+    if (!res) {
+      console.warn('⚠️ Shelf move returned no data (possible RLS or missing product).', { productId });
       throw new Error('Not authorized to update product or product not found');
     }
-    console.log('✅ Stock moved to shelf successfully');
-
-  } catch (error) {
-    console.error('❌ Shelf stock operation failed:', error);
+    console.log('✅ Stock moved to shelf successfully (RPC):', res);
+  } catch (error: any) {
+    console.error('❌ Shelf stock operation failed (RPC):', error);
+    // Preserve friendly error messaging for insufficient stock if surfaced
+    if (error?.message?.toLowerCase().includes('insufficient warehouse stock')) {
+      throw new Error(`Cannot move ${quantity} units to shelf. Insufficient warehouse stock.`);
+    }
     throw error;
   }
 };

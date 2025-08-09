@@ -1,55 +1,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { stockService } from '@/utils/stockService';
 
 export const useStockManagement = () => {
   const { toast } = useToast();
 
   const restoreStock = async (orderId: string) => {
     try {
-      console.log('📦 Restoring stock for cancelled order:', orderId);
+      console.log('📦 Restoring stock for cancelled order via RPC:', orderId);
       
-      // Get order items to restore stock
-      const { data: orderItems, error: orderItemsError } = await supabase
-        .from('order_items')
-        .select('product_id, quantity')
-        .eq('order_id', orderId);
-
-      if (orderItemsError) throw orderItemsError;
-
-      if (!orderItems || orderItems.length === 0) {
-        console.log('No order items found for order:', orderId);
-        return;
-      }
-
-      // Restore stock for each product
-      for (const item of orderItems) {
-        const { data: product, error: productError } = await supabase
-          .from('products')
-          .select('shelf_stock')
-          .eq('id', item.product_id)
-          .single();
-
-        if (productError) {
-          console.error('Error fetching product for stock restoration:', productError);
-          continue;
-        }
-
-        const newShelfStock = (product.shelf_stock || 0) + item.quantity;
-        
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ 
-            shelf_stock: newShelfStock,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', item.product_id);
-
-        if (updateError) {
-          console.error('Error restoring stock for product:', item.product_id, updateError);
-        } else {
-          console.log(`✅ Restored ${item.quantity} units to product ${item.product_id}`);
-        }
-      }
+      await stockService.applyOrderStockChange(orderId, 'restore');
 
       toast({
         title: 'Stock Restored',
@@ -57,7 +17,7 @@ export const useStockManagement = () => {
       });
 
     } catch (error) {
-      console.error('Error restoring stock:', error);
+      console.error('Error restoring stock (RPC):', error);
       toast({
         title: 'Error',
         description: 'Failed to restore stock quantities',
@@ -68,53 +28,13 @@ export const useStockManagement = () => {
 
   const reduceStock = async (orderId: string) => {
     try {
-      console.log('📦 Reducing stock for order:', orderId);
+      console.log('📦 Reducing stock for order via RPC:', orderId);
       
-      // Get order items to reduce stock
-      const { data: orderItems, error: orderItemsError } = await supabase
-        .from('order_items')
-        .select('product_id, quantity')
-        .eq('order_id', orderId);
+      await stockService.applyOrderStockChange(orderId, 'reduce');
 
-      if (orderItemsError) throw orderItemsError;
-
-      if (!orderItems || orderItems.length === 0) {
-        console.log('No order items found for order:', orderId);
-        return;
-      }
-
-      // Reduce stock for each product
-      for (const item of orderItems) {
-        const { data: product, error: productError } = await supabase
-          .from('products')
-          .select('shelf_stock')
-          .eq('id', item.product_id)
-          .single();
-
-        if (productError) {
-          console.error('Error fetching product for stock reduction:', productError);
-          continue;
-        }
-
-        const newShelfStock = Math.max(0, (product.shelf_stock || 0) - item.quantity);
-        
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ 
-            shelf_stock: newShelfStock,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', item.product_id);
-
-        if (updateError) {
-          console.error('Error reducing stock for product:', item.product_id, updateError);
-        } else {
-          console.log(`✅ Reduced ${item.quantity} units from product ${item.product_id}`);
-        }
-      }
-
+      // No toast here originally; keep behavior minimal
     } catch (error) {
-      console.error('Error reducing stock:', error);
+      console.error('Error reducing stock (RPC):', error);
     }
   };
 
