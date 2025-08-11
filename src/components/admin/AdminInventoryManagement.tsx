@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Package, Pencil } from 'lucide-react';
+import { Package, Pencil, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { InventoryFilters } from './InventoryFilters';
 
 import { EditProductModal } from './EditProductModal';
+import { RestockModal } from './RestockModal';
 
 interface Product {
   id: string;
@@ -54,6 +55,8 @@ const [selectedCategory, setSelectedCategory] = useState('all');
 const [showLowStock, setShowLowStock] = useState(false);
 const [editModalOpen, setEditModalOpen] = useState(false);
 const [selectedForEdit, setSelectedForEdit] = useState<Product | null>(null);
+const [restockModalOpen, setRestockModalOpen] = useState(false);
+const [selectedForRestock, setSelectedForRestock] = useState<Product | null>(null);
 
   const { toast } = useToast();
 
@@ -161,6 +164,16 @@ const openEditModal = (product: Product) => {
 const closeEditModal = () => {
   setEditModalOpen(false);
   setSelectedForEdit(null);
+};
+
+const openRestockModal = (product: Product) => {
+  setSelectedForRestock(product);
+  setRestockModalOpen(true);
+};
+
+const closeRestockModal = () => {
+  setRestockModalOpen(false);
+  setSelectedForRestock(null);
 };
 
 const handleProductUpdate = async (id: string, updates: Partial<Product>) => {
@@ -278,6 +291,15 @@ const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
   <Button
     variant="outline"
     size="sm"
+    onClick={() => openRestockModal(product)}
+    className="flex items-center gap-2"
+  >
+    <Plus className="h-4 w-4" />
+    Restock
+  </Button>
+  <Button
+    variant="outline"
+    size="sm"
     onClick={() => openEditModal(product)}
     className="flex items-center gap-2"
   >
@@ -306,6 +328,14 @@ const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
   onClose={closeEditModal}
   product={selectedForEdit}
   onUpdate={handleProductUpdate}
+/>
+
+{/* Restock Modal */}
+<RestockModal
+  isOpen={restockModalOpen}
+  onClose={closeRestockModal}
+  product={selectedForRestock}
+  onStockUpdated={fetchProducts}
 />
     </div>
   );

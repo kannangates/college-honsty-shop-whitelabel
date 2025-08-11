@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useStockManagement } from './useStockManagement';
 import { useBadgeService } from '@/features/gamification/hooks/useBadgeService';
 
 interface Product {
@@ -24,6 +25,7 @@ export const useCart = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { awardBadgesForUser } = useBadgeService();
+  const { adjustShelfStock } = useStockManagement();
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -95,31 +97,11 @@ export const useCart = () => {
 
       if (itemsError) throw itemsError;
 
-      // Update shelf stock for each product
+      // Update shelf stock for each product using the stock management system
       for (const item of items) {
-        const { data: product, error: fetchError } = await supabase
-          .from('products')
-          .select('shelf_stock')
-          .eq('id', item.id)
-          .single();
-
-        if (fetchError) {
-          console.error('Error fetching product:', fetchError);
-          continue;
-        }
-
-        const newShelfStock = Math.max(0, (product.shelf_stock || 0) - item.quantity);
-        
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ 
-            shelf_stock: newShelfStock,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', item.id);
-
-        if (updateError) {
-          console.error('Error updating product stock:', updateError);
+        const stockResult = await adjustShelfStock(item.id, -item.quantity, 'Checkout');
+        if (!stockResult.success) {
+          throw new Error(`Failed to update stock for ${item.name}: ${stockResult.error}`);
         }
       }
 
