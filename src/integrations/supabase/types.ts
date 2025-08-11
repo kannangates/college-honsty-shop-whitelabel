@@ -982,33 +982,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      adjust_product_stock: {
-        Args: {
-          p_product_id: string
-          p_delta_shelf: number
-          p_delta_warehouse: number
-          p_reason?: string
-          p_order_id?: string
-          p_actor_user_id?: string
-          p_adjust_opening?: boolean
-        }
-        Returns: {
-          id: string
-          shelf_stock: number
-          warehouse_stock: number
-          opening_stock: number
-          updated_at: string
-        }[]
-      }
-      apply_order_stock_change: {
-        Args: { p_order_id: string; p_action: string; p_actor_user_id: string }
-        Returns: {
-          product_id: string
-          quantity: number
-          new_shelf_stock: number
-          updated_at: string
-        }[]
-      }
       authenticate_by_student_id: {
         Args: { _student_id: string; _password: string }
         Returns: {

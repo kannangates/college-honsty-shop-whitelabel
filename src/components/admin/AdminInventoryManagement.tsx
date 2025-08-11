@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Package, Warehouse, Pencil } from 'lucide-react';
+import { Package, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
@@ -8,9 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
-import { RestockModal } from './RestockModal';
+
 import { InventoryFilters } from './InventoryFilters';
-import { handleRestockOperation } from '@/utils/restockUtils';
+
 import { EditProductModal } from './EditProductModal';
 
 interface Product {
@@ -43,8 +43,6 @@ export const AdminInventoryManagement = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [restockModalOpen, setRestockModalOpen] = useState(false);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState<InventoryFiltersState>({
     search: '',
@@ -152,56 +150,8 @@ const [selectedForEdit, setSelectedForEdit] = useState<Product | null>(null);
     setFilteredProducts(filtered);
   }, [products, selectedCategory, showLowStock]);
 
-  const handleRestock = async (productId: string, quantity: number, restockType: 'warehouse' | 'shelf') => {
-    try {
-      console.log('🔄 Handling restock operation:', { productId, quantity, restockType });
-      
-      await handleRestockOperation(productId, quantity, restockType);
-      
-      // Refresh all data after successful restock
-      await Promise.all([
-        fetchProducts(),
-        fetchLowStockProducts()
-      ]);
 
-      toast({
-        title: 'Stock Updated',
-        description: `Successfully ${restockType === 'warehouse' ? 'added' : 'moved'} ${quantity} units`,
-      });
 
-      setRestockModalOpen(false);
-      setSelectedProduct(null);
-
-    } catch (error: any) {
-      console.error('Error restocking product:', error);
-      
-      // Enhanced error handling for authorization issues
-      let errorMessage = 'Failed to restock product';
-      if (error.message?.includes('Not authorized')) {
-        errorMessage = 'You do not have permission to update product stock';
-      } else if (error.message?.includes('Cannot move')) {
-        errorMessage = error.message; // Use the specific validation message
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast({
-        title: 'Restock Failed',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const openRestockModal = (product: Product) => {
-    setSelectedProduct(product);
-    setRestockModalOpen(true);
-  };
-
-const closeRestockModal = () => {
-  setRestockModalOpen(false);
-  setSelectedProduct(null);
-};
 
 const openEditModal = (product: Product) => {
   setSelectedForEdit(product);
@@ -334,15 +284,6 @@ const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
     <Pencil className="h-4 w-4" />
     Edit
   </Button>
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={() => openRestockModal(product)}
-    className="flex items-center gap-2"
-  >
-    <Warehouse className="h-4 w-4" />
-    Restock
-  </Button>
 </div>
                     </TableCell>
                   </TableRow>
@@ -358,14 +299,6 @@ const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
           )}
         </CardContent>
       </Card>
-
-{/* Restock Modal */}
-<RestockModal
-  isOpen={restockModalOpen}
-  onClose={closeRestockModal}
-  product={selectedProduct}
-  onRestock={handleRestock}
-/>
 
 {/* Edit Product Modal */}
 <EditProductModal
