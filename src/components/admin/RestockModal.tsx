@@ -69,6 +69,11 @@ export const RestockModal: React.FC<RestockModalProps> = ({
     }
 
     if (result.success) {
+      // Update current stock values with the new data
+      if (result.data) {
+        setCurrentWarehouseStock(result.data.warehouse_stock || 0);
+        setCurrentShelfStock(result.data.shelf_stock || 0);
+      }
       setQuantity('');
       onStockUpdated();
       onClose();

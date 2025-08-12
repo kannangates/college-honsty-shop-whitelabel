@@ -2,7 +2,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Plus, Minus, ShoppingCart } from "lucide-react"
+import { ArrowUpDown, Plus, Minus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from '@/features/gamification/components/badge';
 import type { Product } from "@/types/database"
@@ -163,28 +163,6 @@ export const createProductColumns = ({
         }).format(total)
         
         return <div className="font-medium">{formatted}</div>
-      },
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => {
-        const product = row.original
-        const shelfStock = product.shelf_stock || 0
-        const isOutOfStock = shelfStock <= 0
-        
-        return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleAddToCart(product)}
-            disabled={isOutOfStock}
-            className="flex items-center gap-2"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            {productMessages.add_to_cart || 'Add to Cart'}
-          </Button>
-        )
       },
     },
   ];

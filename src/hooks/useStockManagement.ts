@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,7 +23,7 @@ export const useStockManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const executeStockOperation = async (payload: StockOperationPayload): Promise<StockResponse> => {
+  const executeStockOperation = useCallback(async (payload: StockOperationPayload): Promise<StockResponse> => {
     setIsLoading(true);
     
     try {
@@ -65,10 +65,10 @@ export const useStockManagement = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   // Warehouse restocking - can add any amount
-  const restockWarehouse = async (productId: string, quantity: number, source: StockSource = 'Product Inventory') => {
+  const restockWarehouse = useCallback(async (productId: string, quantity: number, source: StockSource = 'Product Inventory') => {
     if (quantity <= 0) {
       toast({
         title: "Invalid Quantity",
@@ -84,10 +84,10 @@ export const useStockManagement = () => {
       quantity,
       source
     });
-  };
+  }, [executeStockOperation, toast]);
 
   // Shelf restocking - moves stock from warehouse to shelf
-  const restockShelf = async (productId: string, quantity: number, source: StockSource = 'Product Inventory') => {
+  const restockShelf = useCallback(async (productId: string, quantity: number, source: StockSource = 'Product Inventory') => {
     if (quantity <= 0) {
       toast({
         title: "Invalid Quantity",
@@ -103,27 +103,27 @@ export const useStockManagement = () => {
       quantity,
       source
     });
-  };
+  }, [executeStockOperation, toast]);
 
   // Shelf stock adjustment - for order operations (can be negative)
-  const adjustShelfStock = async (productId: string, quantity: number, source: StockSource) => {
+  const adjustShelfStock = useCallback(async (productId: string, quantity: number, source: StockSource) => {
     return executeStockOperation({
       operation: 'adjust_shelf_stock',
       productId,
       quantity,
       source
     });
-  };
+  }, [executeStockOperation]);
 
   // Get current stock status
-  const getStockStatus = async (productId: string) => {
+  const getStockStatus = useCallback(async (productId: string) => {
     return executeStockOperation({
       operation: 'get_stock_status',
       productId,
       quantity: 0,
       source: 'Product Inventory'
     });
-  };
+  }, [executeStockOperation]);
 
   return {
     isLoading,

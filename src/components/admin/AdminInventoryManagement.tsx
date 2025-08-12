@@ -204,6 +204,11 @@ const handleProductUpdate = async (id: string, updates: Partial<Product>) => {
   }
 };
 
+const handleStockUpdated = async () => {
+  // Refresh products data after stock operations
+  await fetchProducts();
+};
+
 const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
   if (stock === 0) return 'destructive';
   if (stock < 10) return 'secondary';
@@ -335,7 +340,7 @@ const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
   isOpen={restockModalOpen}
   onClose={closeRestockModal}
   product={selectedForRestock}
-  onStockUpdated={fetchProducts}
+  onStockUpdated={handleStockUpdated}
 />
     </div>
   );
