@@ -1,7 +1,7 @@
 
 // Enhanced system initialization hook
 import { useEffect } from 'react';
-import { EnhancedSessionManager } from '@/utils/enhancedSessionManager';
+import { SessionManager } from '@/utils/session';
 import { AlertManager } from '@/utils/alertManager';
 import { CDNManager } from '@/utils/cdnManager';
 import { DatabaseOptimizer } from '@/utils/databaseOptimizer';
@@ -30,7 +30,7 @@ export const useSystemInitialization = () => {
 
       // Initialize enhanced session management (non-blocking)
       try {
-        const sessionManager = EnhancedSessionManager.getInstance();
+        const sessionManager = SessionManager.getInstance();
         sessionManager.initializeSession().catch(error => {
           console.error('❌ Session manager initialization failed:', error);
         });
