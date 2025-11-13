@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -983,75 +983,63 @@ export type Database = {
     }
     Functions: {
       authenticate_by_student_id: {
-        Args: { _student_id: string; _password: string }
+        Args: { _password: string; _student_id: string }
         Returns: {
-          user_id: string
           email: string
           user_data: Json
+          user_id: string
         }[]
       }
-      generate_friendly_order_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_friendly_order_id: { Args: never; Returns: string }
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
       get_function_info: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
+          argument_types: string
           function_name: string
           return_type: string
-          argument_types: string
         }[]
       }
       get_policy_info: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          table_name: string
-          policy_name: string
           policy_command: string
+          policy_name: string
           policy_roles: string[]
+          table_name: string
         }[]
       }
       get_table_info: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          table_name: string
           column_count: number
           columns: Json
+          table_name: string
         }[]
       }
       get_todays_dashboard_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           todays_orders: number
           todays_paid_orders: number
-          total_revenue: number
-          todays_unique_customers: number
           todays_sold_products: Json
+          todays_unique_customers: number
+          total_revenue: number
         }[]
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
         }
         Returns: boolean
       }
-      refresh_rankings: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      update_top_departments_rankings: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      update_top_students_rankings: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      refresh_rankings: { Args: never; Returns: undefined }
+      update_top_departments_rankings: { Args: never; Returns: undefined }
+      update_top_students_rankings: { Args: never; Returns: undefined }
     }
     Enums: {
       notification_type:
