@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/useAuth';
-import { SessionManager } from '@/utils/sessionManager';
+import { SessionManager } from '@/utils/session';
 import { AlertManager } from '@/utils/alertManager';
 
 export const useEnhancedAuth = () => {
