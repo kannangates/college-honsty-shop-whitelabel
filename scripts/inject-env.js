@@ -6,9 +6,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Get all environment variables that start with NEXT_PUBLIC_
+// Get all environment variables that start with VITE_
 const envVars = Object.entries(process.env)
-  .filter(([key]) => key.startsWith('NEXT_PUBLIC_'))
+  .filter(([key]) => key.startsWith('VITE_'))
   .reduce((acc, [key, value]) => ({
     ...acc,
     [key]: value

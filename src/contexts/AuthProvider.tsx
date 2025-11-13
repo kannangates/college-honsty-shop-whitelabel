@@ -5,6 +5,7 @@ import { useSystemInitialization } from '@/hooks/useSystemInitialization';
 import type { AuthContextType, MFAStatus } from './AuthContext.types';
 import type { UserProfile } from '@/types/auth';
 import { AuthContext } from './AuthContext';
+import { apiCall } from '@/lib/api-client';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const authState = useAuthState();
@@ -24,7 +25,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isEnabled: false,
         isVerified: true
       };
-      
+
       setMfaStatus(defaultStatus);
       return defaultStatus;
     } catch (error) {
@@ -51,23 +52,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // MFA Methods
   const verifyMFA = useCallback(async (token: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/mfa/verify', {
+      const response = await apiCall('/api/mfa/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token })
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to verify MFA token');
       }
-      
+
       setMfaStatus(prev => ({
         ...prev,
         isVerified: data.verified
       }));
-      
+
       return data.verified;
     } catch (error) {
       console.error('Error verifying MFA token:', error);
@@ -77,13 +77,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const setupMFA = useCallback(async () => {
     try {
-      const response = await fetch('/api/mfa/setup');
+      const response = await apiCall('/api/mfa/setup', {
+        method: 'POST'
+      });
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to set up MFA');
       }
-      
+
       return data;
     } catch (error) {
       console.error('Error setting up MFA:', error);
@@ -93,23 +95,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const enableMFA = useCallback(async (token: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/mfa/enable', {
+      const response = await apiCall('/api/mfa/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token })
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to enable MFA');
       }
-      
+
       setMfaStatus({
         isEnabled: true,
         isVerified: true
       });
-      
+
       return true;
     } catch (error) {
       console.error('Error enabling MFA:', error);
@@ -119,21 +120,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const disableMFA = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch('/api/mfa/disable', {
+      const response = await apiCall('/api/mfa/disable', {
         method: 'POST'
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to disable MFA');
       }
-      
+
       setMfaStatus({
         isEnabled: false,
         isVerified: false
       });
-      
+
       return true;
     } catch (error) {
       console.error('Error disabling MFA:', error);
@@ -143,7 +144,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Profile Management
   const updateProfile = useCallback((newProfile: Partial<UserProfile>) => {
-    authState.setProfile(prev => 
+    authState.setProfile(prev =>
       prev ? { ...prev, ...newProfile } as UserProfile : null
     );
   }, [authState]);
@@ -161,8 +162,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Initialize system features
   useSystemInitialization();
 
-  const isAdmin = authState.profile?.role?.toLowerCase() === 'admin' || 
-                 authState.profile?.role?.toLowerCase() === 'developer';
+  const isAdmin = authState.profile?.role?.toLowerCase() === 'admin' ||
+    authState.profile?.role?.toLowerCase() === 'developer';
 
   // Context value
   const value: AuthContextType = {

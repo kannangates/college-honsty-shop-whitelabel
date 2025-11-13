@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,14 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/contexts/useAuth';
+import { apiCall } from '@/lib/api-client';
 
 export default function VerifyMFA() {
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { verifyMFASession } = useAuth();
-  const { redirect } = router.query;
+  const redirect = searchParams.get('redirect');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,11 +24,8 @@ export default function VerifyMFA() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/mfa/verify-session', {
+      const response = await apiCall('/api/mfa/verify-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ token: code }),
       });
 
@@ -37,10 +36,10 @@ export default function VerifyMFA() {
 
       // Set a cookie to indicate MFA verification is complete
       document.cookie = 'mfa_verified=true; path=/; max-age=86400; samesite=lax; secure';
-      
+
       // Redirect to the intended URL or home
-      const redirectPath = Array.isArray(redirect) ? redirect[0] : redirect || '/';
-      router.push(redirectPath);
+      const redirectPath = redirect || '/';
+      navigate(redirectPath);
     } catch (error) {
       console.error('MFA verification error:', error);
       toast({
@@ -82,9 +81,9 @@ export default function VerifyMFA() {
                 autoFocus
               />
             </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={code.length !== 6 || isLoading}
             >
               {isLoading ? (

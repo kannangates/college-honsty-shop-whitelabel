@@ -159,15 +159,6 @@ export default defineConfig(({ mode }) => ({
     // Make process.env available in the browser
     'process.env': {
       NODE_ENV: JSON.stringify(mode),
-      ...(mode === 'production' ? {} : {
-        // In development, pass through all environment variables that start with NEXT_PUBLIC_
-        ...Object.keys(process.env).reduce((acc, key) => {
-          if (key.startsWith('NEXT_PUBLIC_')) {
-            acc[key] = JSON.stringify(process.env[key]);
-          }
-          return acc;
-        }, {} as Record<string, string>)
-      })
     },
     // Global variable for browser
     'global': 'window',

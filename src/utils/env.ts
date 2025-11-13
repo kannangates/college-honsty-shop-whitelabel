@@ -1,9 +1,9 @@
-// Environment variables utility for Lovable deployment
+// Environment variables utility for Vite deployment
 // Works with both development and production environments
 
 interface EnvVars {
-  NEXT_PUBLIC_SUPABASE_URL: string;
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  VITE_SUPABASE_URL: string;
+  VITE_SUPABASE_ANON_KEY: string;
   [key: string]: string | undefined;
 }
 
@@ -13,13 +13,13 @@ const PRODUCTION_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc
 
 // Get environment variables with proper fallbacks for Lovable deployment
 const getEnvVars = (): EnvVars => {
-  // Try to get from import.meta.env first (Vite)
+  // Get from import.meta.env (Vite)
   const viteSupabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
   const viteSupabaseKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
 
   return {
-    NEXT_PUBLIC_SUPABASE_URL: viteSupabaseUrl || PRODUCTION_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: viteSupabaseKey || PRODUCTION_SUPABASE_ANON_KEY,
+    VITE_SUPABASE_URL: viteSupabaseUrl || PRODUCTION_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: viteSupabaseKey || PRODUCTION_SUPABASE_ANON_KEY,
   };
 };
 
