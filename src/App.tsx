@@ -59,21 +59,47 @@ function App() {
   useEffect(() => {
     console.log('App mounted');
 
-    try {
-      // Initialize branding configuration on app start
-      console.log('Initializing app...');
+    const initApp = async () => {
+      try {
+        // Initialize branding configuration on app start
+        console.log('Initializing app...');
 
-      // Register service worker in production
-      if (import.meta.env.PROD) {
-        console.log('Registering service worker...');
-        registerServiceWorker();
+        // Clear old cache if version changed (for all environments)
+        const APP_VERSION = '2.0.0';
+        const storedVersion = localStorage.getItem('app_version');
+        
+        if (storedVersion && storedVersion !== APP_VERSION) {
+          console.log('🔄 App version updated, clearing old caches...');
+          
+          // Clear caches
+          if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+            console.log('✅ Caches cleared');
+          }
+          
+          // Update version
+          localStorage.setItem('app_version', APP_VERSION);
+        } else if (!storedVersion) {
+          // First time, set version
+          localStorage.setItem('app_version', APP_VERSION);
+        }
+
+        // Register service worker in production
+        if (import.meta.env.PROD) {
+          console.log('Registering service worker...');
+          registerServiceWorker();
+        }
+
+        setIsInitialized(true);
+        console.log('App initialized successfully');
+      } catch (error) {
+        console.error('Error during app initialization:', error);
+        setIsInitialized(true); // Still allow app to load
       }
+    };
 
-      setIsInitialized(true);
-      console.log('App initialized successfully');
-    } catch (error) {
-      console.error('Error during app initialization:', error);
-    }
+    initApp();
   }, []);
 
   if (!isInitialized) {

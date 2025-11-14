@@ -118,6 +118,10 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Force cache busting with version
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -146,6 +150,8 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
+      // Add version to manifest for cache busting
+      manifestFilename: 'manifest.json?v=' + Date.now(),
     }),
     mode === 'development' && componentTagger(),
     mode === 'analyze' && visualizer({
@@ -173,7 +179,11 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
       // Replace lodash with lodash-es for better tree shaking
       'lodash': 'lodash-es',
+      // Ensure single React instance
+      'react': path.resolve(__dirname, './node_modules/react'),
+      'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
     },
+    dedupe: ['react', 'react-dom'],
   },
   optimizeDeps: {
     esbuildOptions: {
