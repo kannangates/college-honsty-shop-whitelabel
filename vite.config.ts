@@ -23,12 +23,9 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Group React and related libraries
-            if (id.includes('react-dom') || id.includes('react-router-dom')) {
+            // Group all React libraries together to prevent version conflicts
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
               return 'react-vendor';
-            }
-            if (id.includes('react')) {
-              return 'react-core';
             }
             // Group UI libraries
             if (id.includes('@radix-ui') || id.includes('class-variance-authority') || id.includes('clsx') || id.includes('tailwind-merge')) {
@@ -179,13 +176,11 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
       // Replace lodash with lodash-es for better tree shaking
       'lodash': 'lodash-es',
-      // Ensure single React instance
-      'react': path.resolve(__dirname, './node_modules/react'),
-      'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
     },
     dedupe: ['react', 'react-dom'],
   },
   optimizeDeps: {
+    include: ['react', 'react-dom'],
     esbuildOptions: {
       // Node.js global to browser globalThis
       define: {
