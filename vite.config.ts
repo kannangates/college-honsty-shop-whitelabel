@@ -82,6 +82,8 @@ export default defineConfig(({ mode }) => ({
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
+        // Add cache name with version to force refresh
+        cacheId: 'honesty-shop-v' + Date.now(),
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -110,8 +112,9 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
-      // Add version to manifest for cache busting
-      manifestFilename: 'manifest.json?v=' + Date.now(),
+      devOptions: {
+        enabled: false, // Disable PWA in development
+      },
     }),
     mode === 'development' && componentTagger(),
     mode === 'analyze' && visualizer({
@@ -140,16 +143,18 @@ export default defineConfig(({ mode }) => ({
       // Replace lodash with lodash-es for better tree shaking
       'lodash': 'lodash-es',
     },
-    dedupe: ['react', 'react-dom'],
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   optimizeDeps: {
-    include: ['react', 'react-dom'],
+    include: ['react', 'react-dom', 'react/jsx-runtime'],
+    exclude: [],
     esbuildOptions: {
       // Node.js global to browser globalThis
       define: {
         global: 'globalThis',
       },
     },
+    force: false,
   },
   test: {
     environment: 'jsdom',
