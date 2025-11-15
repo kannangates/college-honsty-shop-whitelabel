@@ -178,6 +178,62 @@ const AdminAuditLogs = () => {
     setCurrentPage(1);
   };
 
+  const renderNewValuesWithHighlight = (oldValues: any, newValues: any) => {
+    if (!newValues) return null;
+    
+    const changedKeys = new Set<string>();
+    
+    if (oldValues && newValues) {
+      Object.keys(newValues).forEach(key => {
+        if (JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key])) {
+          changedKeys.add(key);
+        }
+      });
+    }
+
+    const renderValue = (key: string, value: any, indent: number = 0): JSX.Element => {
+      const isChanged = changedKeys.has(key);
+      const indentStr = '  '.repeat(indent);
+      
+      if (value === null) {
+        return (
+          <span key={key} className={isChanged ? 'text-destructive font-semibold' : ''}>
+            {indentStr}"{key}": null
+          </span>
+        );
+      }
+      
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        return (
+          <span key={key}>
+            <span className={isChanged ? 'text-destructive font-semibold' : ''}>
+              {indentStr}"{key}": {'{'}
+            </span>
+            {'\n'}
+            {Object.entries(value).map(([k, v]) => renderValue(k, v, indent + 1))}
+            {indentStr}{'}'}
+          </span>
+        );
+      }
+      
+      const valueStr = typeof value === 'string' ? `"${value}"` : JSON.stringify(value);
+      return (
+        <span key={key} className={isChanged ? 'text-destructive font-semibold' : ''}>
+          {indentStr}"{key}": {valueStr}
+          {'\n'}
+        </span>
+      );
+    };
+
+    return (
+      <pre className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-x-auto whitespace-pre-wrap">
+        {'{\n'}
+        {Object.entries(newValues).map(([key, value]) => renderValue(key, value, 1))}
+        {'}'}
+      </pre>
+    );
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -475,9 +531,7 @@ const AdminAuditLogs = () => {
                 {selectedLog.new_values && (
                   <div>
                     <Label className="text-muted-foreground">New Values</Label>
-                    <pre className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-x-auto">
-                      {JSON.stringify(selectedLog.new_values, null, 2)}
-                    </pre>
+                    {renderNewValuesWithHighlight(selectedLog.old_values, selectedLog.new_values)}
                   </div>
                 )}
 
