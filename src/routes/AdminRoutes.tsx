@@ -15,6 +15,7 @@ import AdminPaymentReports from '@/pages/admin/AdminPaymentReports';
 import AdminDeveloper from '@/pages/admin/AdminDeveloper';
 import WhitelabelConfig from '@/pages/admin/WhitelabelConfig';
 import EdgeFunctionsPage from '@/pages/admin/EdgeFunctions';
+import AdminAuditLogs from '@/pages/admin/AdminAuditLogs';
 
 const ProtectedLayoutRoute = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
@@ -39,6 +40,7 @@ export const AdminRoutes = () => {
       <Route path="/dev-tools" element={<ProtectedLayoutRoute><AdminDeveloper /></ProtectedLayoutRoute>} />
       <Route path="/whitelabel-config" element={<ProtectedLayoutRoute><WhitelabelConfig /></ProtectedLayoutRoute>} />
       <Route path="/edge-functions" element={<ProtectedLayoutRoute><EdgeFunctionsPage /></ProtectedLayoutRoute>} />
+      <Route path="/audit-logs" element={<ProtectedLayoutRoute><AdminAuditLogs /></ProtectedLayoutRoute>} />
     </Routes>
   );
 };

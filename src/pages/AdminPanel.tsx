@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
-import { Shield, Users, Package, Settings, Mail, CreditCard, Award, University, Megaphone, ReceiptIndianRupee, ReceiptText, Gamepad2, Code2, Server } from 'lucide-react';
+import { Shield, Users, Package, Settings, Mail, CreditCard, Award, University, Megaphone, ReceiptIndianRupee, ReceiptText, Gamepad2, Code2, Server, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/useAuth';
@@ -113,6 +113,15 @@ const AdminPanel = () => {
       bgColor: "bg-red-100",
       path: "/admin/dev-tools",
       roles: ['developer'],
+    },
+    {
+      title: "Audit Logs",
+      description: "View comprehensive admin activity logs",
+      icon: FileText,
+      color: "from-gray-500 to-gray-600",
+      bgColor: "bg-gray-100",
+      path: "/admin/audit-logs",
+      roles: ['admin', 'developer'],
     }
   ];
 
