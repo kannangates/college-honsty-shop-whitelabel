@@ -2,7 +2,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
-import { Package, Plus, RefreshCw } from 'lucide-react';
+import { Package, Plus } from 'lucide-react';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 interface Product {
   id: string;
@@ -36,14 +37,7 @@ export const ProductGrid = ({ products, loading, searchTerm, addToCart }: Produc
     return 'bg-green-100 text-green-800 border-green-200';
   };
 
-  if (loading) {
-    return (
-      <div className="col-span-full text-center py-8">
-        <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-        <p>Loading products...</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSpinner text="Loading products..." />;
 
   if (filteredProducts.length === 0) {
     return (

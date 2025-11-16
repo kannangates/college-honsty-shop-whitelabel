@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useProductContext } from '@/contexts/useProductContext';
 import { useCart } from '@/hooks/useCart';
@@ -9,6 +8,7 @@ import { WHITELABEL_CONFIG } from '@/config';
 import { DataTable } from '@/components/ui/data-table';
 import { createProductColumns } from './product-table-columns';
 import type { Product } from '@/types/database';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 const ProductTable = () => {
   const { products, loading } = useProductContext();
@@ -34,14 +34,7 @@ const ProductTable = () => {
     handleRemoveFromCart,
   });
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <span className="ml-2">{productMessages.loading_products || 'Loading products...'}</span>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSpinner text={productMessages.loading_products || 'Loading products...'} />;
 
   return (
     <div className="w-full">
