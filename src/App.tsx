@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "./components/ui/toaster";
 import { Loader2 } from "lucide-react";
+import { LoadingSpinner } from "./components/common/LoadingSpinner";
 import { registerServiceWorker } from "./utils/registerServiceWorker";
 import GlobalErrorBoundary from "./components/common/GlobalErrorBoundary";
 import "./App.css";
@@ -103,24 +104,14 @@ function App() {
   }, []);
 
   if (!isInitialized) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Initializing application..." />;
   }
 
   return (
     <GlobalErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <Suspense
-            fallback={
-              <div className="flex h-screen w-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            }
-          >
+          <Suspense fallback={<LoadingSpinner fullScreen text="Loading page..." />}>
             <AuthProvider>
               <ProductProvider>
                 <Routes>
