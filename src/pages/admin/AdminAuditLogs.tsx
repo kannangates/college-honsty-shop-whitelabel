@@ -58,6 +58,33 @@ const AdminAuditLogs = () => {
     fetchLogs();
   }, []);
 
+  // Real-time subscription for new audit logs
+  useEffect(() => {
+    const channel = supabase
+      .channel('audit-logs-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'admin_audit_log'
+        },
+        (payload) => {
+          const newLog = payload.new as AuditLog;
+          setLogs(prevLogs => [newLog, ...prevLogs]);
+          toast({
+            title: 'New Audit Log',
+            description: `${newLog.action} on ${newLog.table_name}`,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
+
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
