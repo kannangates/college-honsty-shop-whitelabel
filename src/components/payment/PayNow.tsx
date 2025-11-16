@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut } from 'lucide-react';
+import { LogOut, Loader2 } from 'lucide-react';
 
 interface PayNowProps {
   orderId: string;
@@ -123,7 +123,7 @@ export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCa
                       >
                         {loading ? (
                           <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                            <Loader2 className="h-4 w-4 animate-spin" />
                             Processing...
                           </>
                         ) : (
