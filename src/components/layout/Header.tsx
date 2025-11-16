@@ -1,11 +1,11 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, User, Bell, LogOut, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/useAuth';
 import { BadgeDisplay } from '@/features/gamification/components/BadgeDisplay';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,12 +19,15 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const { profile, signOut, isAdmin, loading, refreshProfile } = useAuth();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
     try {
+      setIsSigningOut(true);
       await signOut();
     } catch (error) {
       console.error('Sign out error:', error);
+      setIsSigningOut(false);
     }
   };
 
@@ -39,6 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
   return (
     <>
+      {isSigningOut && <LoadingSpinner fullScreen text="Signing out..." />}
       <header className="bg-white border-b border-gray-200 px-4 py-3 fixed top-0 left-0 right-0 z-50">
         <div className="flex items-center justify-between">
           {/* Left side - Menu and Logo */}

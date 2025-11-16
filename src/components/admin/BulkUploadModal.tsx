@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Download, AlertCircle, CheckCircle, FileIcon, User, Users } from 'lucide-react';
+import { Upload, Download, AlertCircle, CheckCircle, FileIcon, User, Users, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -328,7 +328,7 @@ export const BulkUploadModal = ({ open, onOpenChange, onUploadComplete }: BulkUp
           {status === 'processing' && (
             <div className="space-y-3 p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                 <span className="text-sm font-medium">Processing users...</span>
               </div>
               
