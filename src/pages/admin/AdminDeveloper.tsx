@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { Database, Code, Shield } from 'lucide-react';
 
 const AdminDeveloper = () => {
   interface TableInfo {
@@ -73,68 +75,127 @@ const AdminDeveloper = () => {
 
   useEffect(() => {
     loadDatabaseInfo();
+
+    // Set up real-time subscriptions for database changes
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public'
+        },
+        () => {
+          console.log('Database change detected, reloading...');
+          loadDatabaseInfo();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [loadDatabaseInfo]);
 
   return (
     <div className="max-w-screen-2xl mx-auto space-y-6">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Developer Dashboard</CardTitle>
-          <CardDescription>View database information and manage settings.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          {loading ? (
-            <div className="text-center">Loading...</div>
-          ) : (
-            <>
-              <section>
-                <h2 className="text-xl font-semibold mb-2">Table Information</h2>
-                {tableInfo.length > 0 ? (
-                  <ul className="list-disc list-inside">
-                    {tableInfo.map((table, index) => (
-                      <li key={index}>
-                        <strong>{table.table_name}</strong> - Rows: {table.row_count}, Size: {table.table_size}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No table information available.</p>
-                )}
-              </section>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
+        <h1 className="text-3xl font-bold">Developer Dashboard</h1>
+        <p className="text-purple-100 mt-1">Real-time database monitoring and information</p>
+      </div>
 
-              <section>
-                <h2 className="text-xl font-semibold mb-2">Function Information</h2>
-                {functionInfo.length > 0 ? (
-                  <ul className="list-disc list-inside">
-                    {functionInfo.map((func, index) => (
-                      <li key={index}>
-                        <strong>{func.function_name}</strong> - Language: {func.function_language}, Definition: {func.function_definition}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No function information available.</p>
-                )}
-              </section>
+      {loading ? (
+        <LoadingSpinner text="Loading database information..." />
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Tables Section */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-primary" />
+                Tables ({tableInfo.length})
+              </CardTitle>
+              <CardDescription>Database tables and structure</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {tableInfo.length > 0 ? (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {tableInfo.map((table, index) => (
+                    <div key={index} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <p className="font-semibold text-sm">{table.table_name}</p>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Rows: {table.row_count} • Size: {table.table_size}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No tables found</p>
+              )}
+            </CardContent>
+          </Card>
 
-              <section>
-                <h2 className="text-xl font-semibold mb-2">Policy Information</h2>
-                {policyInfo.length > 0 ? (
-                  <ul className="list-disc list-inside">
-                    {policyInfo.map((policy, index) => (
-                      <li key={index}>
-                        <strong>{policy.policy_name}</strong> - Table: {policy.table_name}, Command: {policy.policy_command}, Expression: {policy.policy_definition}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No policy information available.</p>
-                )}
-              </section>
-            </>
-          )}
-        </CardContent>
-      </Card>
+          {/* Functions Section */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Code className="h-5 w-5 text-primary" />
+                Functions ({functionInfo.length})
+              </CardTitle>
+              <CardDescription>Database functions and procedures</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {functionInfo.length > 0 ? (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {functionInfo.map((func, index) => (
+                    <div key={index} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <p className="font-semibold text-sm">{func.function_name}</p>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Language: {func.function_language}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 font-mono">
+                        {func.function_definition}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No functions found</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Policies Section */}
+          <Card className="shadow-lg md:col-span-2 lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                RLS Policies ({policyInfo.length})
+              </CardTitle>
+              <CardDescription>Row-level security policies</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {policyInfo.length > 0 ? (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {policyInfo.map((policy, index) => (
+                    <div key={index} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <p className="font-semibold text-sm">{policy.policy_name}</p>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Table: <span className="font-mono">{policy.table_name}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Command: <span className="font-mono">{policy.policy_command}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No policies found</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

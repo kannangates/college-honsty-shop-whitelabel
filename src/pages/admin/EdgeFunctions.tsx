@@ -12,18 +12,13 @@ interface EdgeFunction {
   name: string;
   description: string;
   status: FunctionStatus;
-  lastUsed: string;
   error?: string;
 }
 
 // Function to check the status of a single edge function
-async function checkFunctionStatus(functionName: string): Promise<{ status: FunctionStatus; lastUsed: string; error?: string }> {
-  // Since we can't reliably ping functions without implementing a ping endpoint,
-  // we'll just mark them as 'active' if they exist in our list
-  // In a production app, you'd want a proper health check endpoint
+async function checkFunctionStatus(functionName: string): Promise<{ status: FunctionStatus; error?: string }> {
   return {
     status: 'active',
-    lastUsed: 'Unknown',
     error: undefined
   };
 }
@@ -68,7 +63,6 @@ const EdgeFunctionsPage = () => {
             name,
             description: getFunctionDescription(name),
             status: status.status,
-            lastUsed: status.lastUsed,
             error: status.error
           };
         })
@@ -108,17 +102,6 @@ const EdgeFunctionsPage = () => {
     }
   };
 
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (isNaN(diffInSeconds)) return 'Never';
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  };
 
   return (
       <div className="space-y-6">
@@ -142,11 +125,6 @@ const EdgeFunctionsPage = () => {
               <CardTitle>Available Functions</CardTitle>
               <CardDescription>
                 List of all edge functions used in the application
-                {lastUpdated && (
-                  <span className="block text-xs text-muted-foreground mt-1">
-                    Last updated: {formatRelativeTime(lastUpdated.toISOString())}
-                  </span>
-                )}
               </CardDescription>
             </div>
             <Button 
@@ -172,27 +150,23 @@ const EdgeFunctionsPage = () => {
             edgeFunctions.map((func, index) => (
               <div 
                 key={index} 
-                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => console.log(`Viewing details for ${func.name}`)}
+                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Code2 className="h-4 w-4 text-blue-500" />
-                      <h3 className="font-medium">{func.name}</h3>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-3">
+                      <Code2 className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-base">{func.name}</h3>
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20">
                         {getStatusIcon(func.status)}
-                        <span className="capitalize">{func.status}</span>
+                        <span className="text-xs font-medium text-green-700 dark:text-green-400 capitalize">{func.status}</span>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">{func.description}</p>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Last used: {formatRelativeTime(func.lastUsed)}
+                    <p className="text-sm text-muted-foreground ml-8">{func.description}</p>
                   </div>
                 </div>
                 {func.error && (
-                  <div className="mt-2 text-xs text-red-500 bg-red-50 p-2 rounded">
+                  <div className="mt-2 text-xs text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded ml-8">
                     Error: {func.error}
                   </div>
                 )}

@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Save } from 'lucide-react';
+import { Save, RefreshCw } from 'lucide-react';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 // --- Supabase Table Types ---
 type ProductDB = {
@@ -234,12 +235,7 @@ const AdminDailyStockOperations: React.FC = () => {
 
   // UI
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading stock operations...</span>
-      </div>
-    );
+    return <LoadingSpinner text="Loading stock operations..." />;
   }
 
   return (
@@ -254,7 +250,7 @@ const AdminDailyStockOperations: React.FC = () => {
         <Button onClick={handleSaveAll} disabled={saving}>
           {saving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               Saving...
             </>
           ) : (
