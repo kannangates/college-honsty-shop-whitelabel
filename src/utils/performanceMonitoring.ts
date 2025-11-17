@@ -169,11 +169,9 @@ export class PerformanceMonitor {
   }
 
   private checkThresholds(metric: PerformanceMetric): void {
-    if (metric.severity === 'critical') {
-      console.error(`🚨 Critical performance issue: ${metric.name} took ${metric.duration.toFixed(2)}ms`);
-    } else if (metric.severity === 'high' && metric.duration > 10000) {
-      // Only log high severity if duration is truly problematic (>10 seconds)
-      console.warn(`⚠️ Performance threshold exceeded: ${metric.name} took ${metric.duration.toFixed(2)}ms`);
+    // Only log truly critical performance issues (>30 seconds)
+    if (metric.severity === 'critical' && metric.duration > 30000) {
+      console.error(`Performance issue: ${metric.name} took ${metric.duration.toFixed(2)}ms`);
     }
   }
 

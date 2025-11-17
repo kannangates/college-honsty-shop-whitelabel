@@ -34,9 +34,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const handleRefreshProfile = async () => {
     try {
       await refreshProfile();
-      console.log('✅ Profile refreshed');
     } catch (error) {
-      console.error('❌ Profile refresh error:', error);
+      console.error('Profile refresh error:', error);
     }
   };
 

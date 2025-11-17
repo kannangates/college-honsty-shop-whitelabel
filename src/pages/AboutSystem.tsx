@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/features/gamification/components/badge';
 import { SystemHeader } from '@/components/system/SystemHeader';
 import { SystemOverview } from '@/components/system/SystemOverview';
@@ -151,15 +152,24 @@ const AboutSystem = () => {
                   <Badge className="mt-2 bg-green-100 text-green-800">Compliant</Badge>
                 </div>
               </div>
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold mb-2">Compliance Features:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>Automated audit logging for all user actions</li>
-                  <li>Encrypted data storage and transmission</li>
-                  <li>Regular security monitoring and alerts</li>
-                  <li>Performance monitoring and optimization</li>
-                  <li>Quality assurance processes</li>
-                </ul>
+              <div className="mt-6 space-y-4">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-semibold mb-2">Compliance Features:</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>Automated audit logging for all user actions</li>
+                    <li>Encrypted data storage and transmission</li>
+                    <li>Regular security monitoring and alerts</li>
+                    <li>Performance monitoring and optimization</li>
+                    <li>Quality assurance processes</li>
+                  </ul>
+                </div>
+                <Button 
+                  onClick={() => window.location.href = '/admin/iso-compliance'}
+                  variant="outline"
+                  className="w-full"
+                >
+                  View Full ISO Compliance Documentation
+                </Button>
               </div>
             </CardContent>
           </Card>

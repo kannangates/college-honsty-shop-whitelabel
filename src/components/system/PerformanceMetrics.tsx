@@ -25,7 +25,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ systemMe
             <div>
               <p className="text-sm text-gray-600">Response Time</p>
               <p className="text-2xl font-bold">
-                {(systemMetrics?.performance.responseTime || 0).toFixed(2)}ms
+                {Number(systemMetrics?.performance.responseTime || 0).toFixed(2)}ms
               </p>
             </div>
           </div>
@@ -39,7 +39,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ systemMe
             <div>
               <p className="text-sm text-gray-600">Memory Usage</p>
               <p className="text-2xl font-bold">
-                {(systemMetrics?.performance.memoryUsage || 0).toFixed(2)}MB
+                {Number(systemMetrics?.performance.memoryUsage || 0).toFixed(2)}MB
               </p>
             </div>
           </div>
@@ -53,7 +53,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ systemMe
             <div>
               <p className="text-sm text-gray-600">Cache Hit Rate</p>
               <p className="text-2xl font-bold">
-                {(systemMetrics?.performance.cacheHitRate || 0).toFixed(2)}%
+                {Number(systemMetrics?.performance.cacheHitRate || 0).toFixed(2)}%
               </p>
             </div>
           </div>
