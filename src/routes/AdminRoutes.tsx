@@ -16,6 +16,7 @@ import AdminDeveloper from '@/pages/admin/AdminDeveloper';
 import WhitelabelConfig from '@/pages/admin/WhitelabelConfig';
 import EdgeFunctionsPage from '@/pages/admin/EdgeFunctions';
 import AdminAuditLogs from '@/pages/admin/AdminAuditLogs';
+import ISOCompliance from '@/pages/ISOCompliance';
 
 const ProtectedLayoutRoute = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
@@ -41,6 +42,7 @@ export const AdminRoutes = () => {
       <Route path="/whitelabel-config" element={<ProtectedLayoutRoute><WhitelabelConfig /></ProtectedLayoutRoute>} />
       <Route path="/edge-functions" element={<ProtectedLayoutRoute><EdgeFunctionsPage /></ProtectedLayoutRoute>} />
       <Route path="/audit-logs" element={<ProtectedLayoutRoute><AdminAuditLogs /></ProtectedLayoutRoute>} />
+      <Route path="/iso-compliance" element={<ProtectedLayoutRoute><ISOCompliance /></ProtectedLayoutRoute>} />
     </Routes>
   );
 };
