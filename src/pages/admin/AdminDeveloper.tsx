@@ -102,6 +102,9 @@ const AdminDeveloper = () => {
       <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
         <h1 className="text-3xl font-bold">Developer Dashboard</h1>
         <p className="text-purple-100 mt-1">Real-time database monitoring and information</p>
+        <p className="text-purple-200 text-sm mt-2">
+          Table stats (Rows & Size) are updated daily at midnight automatically
+        </p>
       </div>
 
       {loading ? (

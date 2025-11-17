@@ -190,14 +190,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     },
   };
 
-  // Debug logging
+  // Update auth state when changes occur
   useEffect(() => {
     if (!authState.loading && !isCheckingMFA) {
-      console.log('✅ Auth state updated:', {
-        user: authState.user?.email,
-        mfaStatus,
-        isAdmin
-      });
+      // Auth state updated
     }
   }, [authState.loading, authState.user, mfaStatus, isAdmin, isCheckingMFA]);
 

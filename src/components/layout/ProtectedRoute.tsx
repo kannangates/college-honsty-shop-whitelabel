@@ -12,7 +12,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   // Reduced timeout for better user experience
   useEffect(() => {
     const timeout = setTimeout(() => {
-      console.warn('⚠️ ProtectedRoute loading timeout reached');
+      // Loading timeout reached
       setTimeoutReached(true);
     }, 2000); // Increased from 1000ms to 2000ms to give more time for auth
 
@@ -24,7 +24,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   // If timeout reached and still loading, force navigation to auth
   if (timeoutReached && loading) {
-    console.warn('🔄 Forcing redirect to auth due to timeout');
+    // Forcing redirect due to timeout
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
