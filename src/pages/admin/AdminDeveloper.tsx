@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { Database, Code, Shield } from 'lucide-react';
+import { Database, Code, Shield, RefreshCw } from 'lucide-react';
 
 const AdminDeveloper = () => {
   interface TableInfo {
@@ -27,6 +27,7 @@ const AdminDeveloper = () => {
 }
   const [policyInfo, setPolicyInfo] = useState<PolicyInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
   const loadDatabaseInfo = useCallback(async () => {
@@ -97,14 +98,55 @@ const AdminDeveloper = () => {
     };
   }, [loadDatabaseInfo]);
 
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const { error } = await supabase.functions.invoke('update-table-stats');
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Success',
+        description: 'Table statistics updated successfully',
+      });
+      
+      // Reload the data after a short delay to allow the update to complete
+      setTimeout(() => {
+        loadDatabaseInfo();
+      }, 1000);
+    } catch (error) {
+      console.error('Error updating table stats:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update table statistics',
+        variant: 'destructive',
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <div className="max-w-screen-2xl mx-auto space-y-6">
       <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold">Developer Dashboard</h1>
-        <p className="text-purple-100 mt-1">Real-time database monitoring and information</p>
-        <p className="text-purple-200 text-sm mt-2">
-          Table stats (Rows & Size) are updated daily at midnight automatically
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold">Developer Dashboard</h1>
+            <p className="text-purple-100 mt-1">Real-time database monitoring and information</p>
+            <p className="text-purple-200 text-sm mt-2">
+              Table stats (Rows & Size) are updated daily at midnight automatically
+            </p>
+          </div>
+          <Button
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            variant="secondary"
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Updating...' : 'Update Stats'}
+          </Button>
+        </div>
       </div>
 
       {loading ? (
