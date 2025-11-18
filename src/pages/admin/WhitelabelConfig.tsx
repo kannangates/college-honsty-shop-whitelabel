@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Save, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { WHITELABEL_CONFIG } from '@/config';
 
 const WhitelabelConfig = () => {
   const [config, setConfig] = useState('');
@@ -15,11 +16,8 @@ const WhitelabelConfig = () => {
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/whitelabel.json');
-      const data = await response.json();
-      setConfig(JSON.stringify(data, null, 2));
+      setConfig(JSON.stringify(WHITELABEL_CONFIG, null, 2));
     } catch (error) {
-      console.error('Error loading config:', error);
       toast({
         title: 'Error',
         description: 'Failed to load configuration',
