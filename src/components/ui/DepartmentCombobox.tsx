@@ -12,6 +12,7 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandItem,
+  CommandList,
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 
@@ -63,7 +64,7 @@ export const DepartmentCombobox: React.FC<DepartmentComboboxProps> = ({
   const [open, setOpen] = React.useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -79,30 +80,38 @@ export const DepartmentCombobox: React.FC<DepartmentComboboxProps> = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" align="start" side="bottom" sideOffset={4}>
-        <Command className="max-h-[300px]">
+      <PopoverContent
+        className="p-0 w-[400px]"
+        align="start"
+        side="bottom"
+        sideOffset={4}
+        style={{ zIndex: 9999 }}
+      >
+        <Command>
           <CommandInput placeholder="Search department..." className="h-9" />
-          <CommandEmpty>No department found.</CommandEmpty>
-          <CommandGroup className="overflow-y-auto max-h-[250px]">
-            {DEPARTMENT_OPTIONS.map((dept) => (
-              <CommandItem
-                key={dept}
-                value={dept}
-                onSelect={(currentValue) => {
-                  onChange(currentValue);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    'mr-2 h-4 w-4',
-                    value === dept ? 'opacity-100' : 'opacity-0',
-                  )}
-                />
-                {dept}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          <CommandList className="max-h-[300px]">
+            <CommandEmpty>No department found.</CommandEmpty>
+            <CommandGroup>
+              {DEPARTMENT_OPTIONS.map((dept) => (
+                <CommandItem
+                  key={dept}
+                  value={dept}
+                  onSelect={(currentValue) => {
+                    onChange(currentValue);
+                    setOpen(false);
+                  }}
+                >
+                  {dept}
+                  <Check
+                    className={cn(
+                      'ml-auto h-4 w-4',
+                      value === dept ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
