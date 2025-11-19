@@ -10,7 +10,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 
 import { InventoryFilters } from './InventoryFilters';
-
+import { AddProductModal } from './AddProductModal';
 import { EditProductModal } from './EditProductModal';
 import { RestockModal } from './RestockModal';
 
@@ -51,12 +51,14 @@ export const AdminInventoryManagement = () => {
     status: '',
     stockLevel: ''
   });
-const [selectedCategory, setSelectedCategory] = useState('all');
-const [showLowStock, setShowLowStock] = useState(false);
-const [editModalOpen, setEditModalOpen] = useState(false);
-const [selectedForEdit, setSelectedForEdit] = useState<Product | null>(null);
-const [restockModalOpen, setRestockModalOpen] = useState(false);
-const [selectedForRestock, setSelectedForRestock] = useState<Product | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showLowStock, setShowLowStock] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedForEdit, setSelectedForEdit] = useState<Product | null>(null);
+  const [restockModalOpen, setRestockModalOpen] = useState(false);
+  const [selectedForRestock, setSelectedForRestock] = useState<Product | null>(null);
+  const [addLoading, setAddLoading] = useState(false);
 
   const { toast } = useToast();
 
@@ -81,7 +83,7 @@ const [selectedForRestock, setSelectedForRestock] = useState<Product | null>(nul
 
       console.log('📦 Products fetched:', data?.length || 0);
       setProducts(data || []);
-      
+
     } catch (error) {
       console.error('Error in fetchProducts:', error);
       toast({
@@ -145,7 +147,7 @@ const [selectedForRestock, setSelectedForRestock] = useState<Product | null>(nul
     }
 
     if (showLowStock) {
-      filtered = filtered.filter(product => 
+      filtered = filtered.filter(product =>
         (product.shelf_stock || 0) < 10 || (product.warehouse_stock || 0) < 10
       );
     }
@@ -156,64 +158,105 @@ const [selectedForRestock, setSelectedForRestock] = useState<Product | null>(nul
 
 
 
-const openEditModal = (product: Product) => {
-  setSelectedForEdit(product);
-  setEditModalOpen(true);
-};
+  const openEditModal = (product: Product) => {
+    setSelectedForEdit(product);
+    setEditModalOpen(true);
+  };
 
-const closeEditModal = () => {
-  setEditModalOpen(false);
-  setSelectedForEdit(null);
-};
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setSelectedForEdit(null);
+  };
 
-const openRestockModal = (product: Product) => {
-  setSelectedForRestock(product);
-  setRestockModalOpen(true);
-};
+  const openRestockModal = (product: Product) => {
+    setSelectedForRestock(product);
+    setRestockModalOpen(true);
+  };
 
-const closeRestockModal = () => {
-  setRestockModalOpen(false);
-  setSelectedForRestock(null);
-};
+  const closeRestockModal = () => {
+    setRestockModalOpen(false);
+    setSelectedForRestock(null);
+  };
 
-const handleProductUpdate = async (id: string, updates: Partial<Product>) => {
-  try {
-    const mappedUpdates: any = {
-      name: updates.name,
-      category: updates.category,
-      unit_price: (updates as any).price ?? updates.unit_price,
-      image_url: updates.image_url,
-      status: updates.status,
-      updated_at: new Date().toISOString(),
-    };
+  const handleProductUpdate = async (id: string, updates: Partial<Product>) => {
+    try {
+      const mappedUpdates: any = {
+        name: updates.name,
+        category: updates.category,
+        unit_price: (updates as any).price ?? updates.unit_price,
+        image_url: updates.image_url,
+        status: updates.status,
+        updated_at: new Date().toISOString(),
+      };
 
-    const { error } = await supabase
-      .from('products')
-      .update(mappedUpdates)
-      .eq('id', id);
+      const { error } = await supabase
+        .from('products')
+        .update(mappedUpdates)
+        .eq('id', id);
 
-    if (error) throw error;
+      if (error) throw error;
 
+      await fetchProducts();
+      toast({ title: 'Updated', description: 'Product updated successfully' });
+      closeEditModal();
+    } catch (err: any) {
+      console.error('Error updating product:', err);
+      toast({ title: 'Error', description: err.message || 'Failed to update product', variant: 'destructive' });
+      throw err;
+    }
+  };
+
+  const handleStockUpdated = async () => {
+    // Refresh products data after stock operations
     await fetchProducts();
-    toast({ title: 'Updated', description: 'Product updated successfully' });
-    closeEditModal();
-  } catch (err: any) {
-    console.error('Error updating product:', err);
-    toast({ title: 'Error', description: err.message || 'Failed to update product', variant: 'destructive' });
-    throw err;
-  }
-};
+  };
 
-const handleStockUpdated = async () => {
-  // Refresh products data after stock operations
-  await fetchProducts();
-};
+  const openAddModal = () => {
+    setAddModalOpen(true);
+  };
 
-const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
-  if (stock === 0) return 'destructive';
-  if (stock < 10) return 'secondary';
-  return 'default';
-};
+  const closeAddModal = () => {
+    setAddModalOpen(false);
+  };
+
+  const handleAddProduct = async (productData: any) => {
+    setAddLoading(true);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .insert([{
+          name: productData.name,
+          description: productData.description,
+          unit_price: productData.price,
+          image_url: productData.image_url,
+          category: productData.category,
+          status: productData.status,
+          shelf_stock: productData.shelf_stock,
+          warehouse_stock: productData.warehouse_stock,
+          opening_stock: (productData.shelf_stock || 0) + (productData.warehouse_stock || 0),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }]);
+
+      if (error) throw error;
+
+      await fetchProducts();
+      toast({ title: 'Success', description: 'Product added successfully' });
+      closeAddModal();
+    } catch (err: any) {
+      console.error('Error adding product:', err);
+      toast({ title: 'Error', description: err.message || 'Failed to add product', variant: 'destructive' });
+      throw err;
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
+  const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
+    if (stock === 0) return 'destructive';
+    if (stock < 10) return 'secondary';
+    return 'default';
+  };
 
   if (loading) {
     return (
@@ -232,12 +275,19 @@ const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
             Manage product stock levels and inventory operations
           </p>
         </div>
+        <Button
+          onClick={openAddModal}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add Product
+        </Button>
       </div>
 
-{/* Low Stock Alert removed as requested */}
+      {/* Low Stock Alert removed as requested */}
 
       {/* Filters */}
-      <InventoryFilters 
+      <InventoryFilters
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
         showLowStock={showLowStock}
@@ -292,26 +342,26 @@ const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-<div className="flex items-center gap-2">
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={() => openRestockModal(product)}
-    className="flex items-center gap-2"
-  >
-    <Plus className="h-4 w-4" />
-    Restock
-  </Button>
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={() => openEditModal(product)}
-    className="flex items-center gap-2"
-  >
-    <Pencil className="h-4 w-4" />
-    Edit
-  </Button>
-</div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openRestockModal(product)}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Restock
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditModal(product)}
+                          className="flex items-center gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -327,21 +377,29 @@ const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
         </CardContent>
       </Card>
 
-{/* Edit Product Modal */}
-<EditProductModal
-  isOpen={editModalOpen}
-  onClose={closeEditModal}
-  product={selectedForEdit}
-  onUpdate={handleProductUpdate}
-/>
+      {/* Add Product Modal */}
+      <AddProductModal
+        isOpen={addModalOpen}
+        onClose={closeAddModal}
+        onAdd={handleAddProduct}
+        loading={addLoading}
+      />
 
-{/* Restock Modal */}
-<RestockModal
-  isOpen={restockModalOpen}
-  onClose={closeRestockModal}
-  product={selectedForRestock}
-  onStockUpdated={handleStockUpdated}
-/>
+      {/* Edit Product Modal */}
+      <EditProductModal
+        isOpen={editModalOpen}
+        onClose={closeEditModal}
+        product={selectedForEdit}
+        onUpdate={handleProductUpdate}
+      />
+
+      {/* Restock Modal */}
+      <RestockModal
+        isOpen={restockModalOpen}
+        onClose={closeRestockModal}
+        product={selectedForRestock}
+        onStockUpdated={handleStockUpdated}
+      />
     </div>
   );
 };
