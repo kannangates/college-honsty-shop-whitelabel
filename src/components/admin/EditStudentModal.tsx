@@ -118,7 +118,7 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserCog className="h-5 w-5" />
@@ -127,7 +127,7 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
           <DialogDescription>Update student information and settings</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
           <div>
             <Label htmlFor="student_id">Student ID</Label>
             <Input
@@ -179,10 +179,10 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
           <div>
             <Label htmlFor="role">Role</Label>
             <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger id="role">
+                <SelectValue placeholder="Select role" />
               </SelectTrigger>
-              <SelectContent position="popper" sideOffset={5}>
+              <SelectContent position="popper" className="z-[100]" sideOffset={5} align="start">
                 <SelectItem value="student">Student</SelectItem>
                 <SelectItem value="teacher">Teacher</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
@@ -194,10 +194,10 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
           <div>
             <Label htmlFor="shift">Shift</Label>
             <Select value={formData.shift} onValueChange={(value) => setFormData({ ...formData, shift: value })}>
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger id="shift">
+                <SelectValue placeholder="Select shift" />
               </SelectTrigger>
-              <SelectContent position="popper" sideOffset={5}>
+              <SelectContent position="popper" className="z-[100]" sideOffset={5} align="start">
                 <SelectItem value="Morning (1st Shift)">Morning (1st Shift)</SelectItem>
                 <SelectItem value="Evening (2nd Shift)">Evening (2nd Shift)</SelectItem>
                 <SelectItem value="Full Shift">Full Shift</SelectItem>
@@ -219,10 +219,10 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
           <div>
             <Label htmlFor="status">Status</Label>
             <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Select status" />
               </SelectTrigger>
-              <SelectContent position="popper" sideOffset={5}>
+              <SelectContent position="popper" className="z-[100]" sideOffset={5} align="start">
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
