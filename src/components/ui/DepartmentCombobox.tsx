@@ -79,11 +79,11 @@ export const DepartmentCombobox: React.FC<DepartmentComboboxProps> = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)] max-h-[300px] overflow-y-auto" align="start" side="bottom" sideOffset={4}>
-        <Command>
+      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" align="start" side="bottom" sideOffset={4}>
+        <Command className="max-h-[300px]">
           <CommandInput placeholder="Search department..." className="h-9" />
           <CommandEmpty>No department found.</CommandEmpty>
-          <CommandGroup className="max-h-[250px] overflow-y-auto">
+          <CommandGroup className="overflow-y-auto max-h-[250px]">
             {DEPARTMENT_OPTIONS.map((dept) => (
               <CommandItem
                 key={dept}
