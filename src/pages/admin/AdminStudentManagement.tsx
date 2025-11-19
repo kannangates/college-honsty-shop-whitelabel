@@ -396,8 +396,8 @@ const AdminStudentManagement = () => {
                     <TableCell className="text-sm">{student.role}</TableCell>
                     <TableCell className="text-sm">
                       <Badge className={`${student.points > 1000 ? 'bg-yellow-100 text-yellow-800' :
-                          student.points > 800 ? 'bg-green-100 text-green-800' :
-                            'bg-blue-100 text-blue-800'
+                        student.points > 800 ? 'bg-green-100 text-green-800' :
+                          'bg-blue-100 text-blue-800'
                         } text-xs`}>
                         <Trophy className="h-3 w-3 mr-1" />
                         {student.points}
@@ -470,9 +470,10 @@ const AdminStudentManagement = () => {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600">Department</label>
-                  <Input
+                  <DepartmentCombobox
                     value={editForm.department || ''}
-                    onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                    onChange={(value) => setEditForm({ ...editForm, department: value })}
+                    placeholder="Select department"
                     className="text-sm h-8"
                   />
                 </div>
