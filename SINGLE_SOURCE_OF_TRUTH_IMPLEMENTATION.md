@@ -320,7 +320,7 @@ data ✅ **Simplified**: Removed duplicate writes to payments table\
 No breaking changes to existing functionality
 
 The application now has a clean, consistent data model with the `orders` table
-as the authoritative source for all payment information.
+as the authoritative source for all payment information. ₹
 
 ## Payments Table - REMOVED ✅
 

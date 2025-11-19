@@ -62,7 +62,7 @@ const AdminStudentManagement = () => {
   const [departmentFilter, setDepartmentFilter] = useState<string>('All Department');
   const [shiftFilter, setShiftFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  
+
   const [departments, setDepartments] = useState<string[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
@@ -109,7 +109,7 @@ const AdminStudentManagement = () => {
       const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
       const totalStudents = allUsers?.length || 0;
-      const activeThisMonth = allUsers?.filter(user => 
+      const activeThisMonth = allUsers?.filter(user =>
         user.last_signed_in_at && new Date(user.last_signed_in_at) >= startOfThisMonth
       ).length || 0;
       const highestPoints = Math.max(...(allUsers?.map(user => user.points || 0) || [0]));
@@ -138,7 +138,7 @@ const AdminStudentManagement = () => {
       if (error) throw error;
 
       // Update local state
-      setStudents(prev => prev.map(student => 
+      setStudents(prev => prev.map(student =>
         student.id === selectedStudent.id ? { ...student, ...editForm } : student
       ));
 
@@ -159,10 +159,10 @@ const AdminStudentManagement = () => {
 
   const handleExport = (format: 'csv') => {
     const exportHeaders = [
-      'Student ID', 'Name', 'Department', 'Role', 'Points', 
+      'Student ID', 'Name', 'Department', 'Role', 'Points',
       'Status', 'Mobile', 'Shift', 'Created At', 'Last Signed In'
     ];
-    
+
     const exportRows = filteredStudents.map(student => [
       student.student_id,
       student.name,
@@ -232,18 +232,18 @@ const AdminStudentManagement = () => {
       <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
         <div className="flex items-center justify-between">
           <div>
-          <h1 className="text-3xl font-bold">Students Management</h1>
-          <p className="text-purple-100">Manage student accounts and view their progress</p>
+            <h1 className="text-3xl font-bold">Students Management</h1>
+            <p className="text-purple-100">Manage student accounts and view their progress</p>
           </div>
           <div className="flex gap-2">
-            <Button 
+            <Button
               onClick={() => setIsAddDialogOpen(true)}
               className="bg-white/20 hover:bg-white/30 text-white border-white/30 text-sm"
             >
               <UserPlus className="h-4 w-4 mr-1" />
               Add Student
             </Button>
-            <Button 
+            <Button
               onClick={() => setIsBulkUploadOpen(true)}
               variant="outline"
               className="bg-white/20 hover:bg-white/30 text-white border-white/30 text-sm"
@@ -284,8 +284,8 @@ const AdminStudentManagement = () => {
         </Card>
       </div>
 
-            {/* Custom Filter/Search Section */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {/* Custom Filter/Search Section */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
           <Input
             type="text"
@@ -395,24 +395,22 @@ const AdminStudentManagement = () => {
                     <TableCell className="text-sm">{getShiftDisplay(student.shift)}</TableCell>
                     <TableCell className="text-sm">{student.role}</TableCell>
                     <TableCell className="text-sm">
-                      <Badge className={`${
-                        student.points > 1000 ? 'bg-yellow-100 text-yellow-800' : 
-                        student.points > 800 ? 'bg-green-100 text-green-800' : 
-                        'bg-blue-100 text-blue-800'
-                      } text-xs`}>
+                      <Badge className={`${student.points > 1000 ? 'bg-yellow-100 text-yellow-800' :
+                          student.points > 800 ? 'bg-green-100 text-green-800' :
+                            'bg-blue-100 text-blue-800'
+                        } text-xs`}>
                         <Trophy className="h-3 w-3 mr-1" />
                         {student.points}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
-                      <Badge variant="outline" className={`${
-                        student.status === 'active' ? 'text-green-600 border-green-200' : 'text-red-600 border-red-200'
-                      } text-xs`}>
+                      <Badge variant="outline" className={`${student.status === 'active' ? 'text-green-600 border-green-200' : 'text-red-600 border-red-200'
+                        } text-xs`}>
                         {student.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {student.last_signed_in_at 
+                      {student.last_signed_in_at
                         ? new Date(student.last_signed_in_at).toLocaleDateString()
                         : 'Never'
                       }
@@ -449,10 +447,10 @@ const AdminStudentManagement = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-gray-600">Name</label>
-                  <Input 
-                    value={editForm.name || ''} 
-                    onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                    className="text-sm h-8" 
+                  <Input
+                    value={editForm.name || ''}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="text-sm h-8"
                   />
                 </div>
                 <div>
@@ -472,25 +470,25 @@ const AdminStudentManagement = () => {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600">Department</label>
-                  <Input 
-                    value={editForm.department || ''} 
-                    onChange={(e) => setEditForm({...editForm, department: e.target.value})}
-                    className="text-sm h-8" 
+                  <Input
+                    value={editForm.department || ''}
+                    onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                    className="text-sm h-8"
                   />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600">Mobile</label>
-                  <Input 
-                    value={editForm.mobile_number || ''} 
-                    onChange={(e) => setEditForm({...editForm, mobile_number: e.target.value})}
-                    className="text-sm h-8" 
+                  <Input
+                    value={editForm.mobile_number || ''}
+                    onChange={(e) => setEditForm({ ...editForm, mobile_number: e.target.value })}
+                    className="text-sm h-8"
                   />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600">Shift</label>
-                  <Select 
-                    value={editForm.shift || '1'} 
-                    onValueChange={(value) => setEditForm({...editForm, shift: value})}
+                  <Select
+                    value={editForm.shift || '1'}
+                    onValueChange={(value) => setEditForm({ ...editForm, shift: value })}
                   >
                     <SelectTrigger className="text-sm h-8">
                       <SelectValue />
@@ -504,10 +502,10 @@ const AdminStudentManagement = () => {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600">Role</label>
-                  <Select 
-                    value={editForm.role || 'student'} 
-                    onValueChange={(value: 'admin' | 'student' | 'teacher' | 'developer') => 
-                      setEditForm({...editForm, role: value})
+                  <Select
+                    value={editForm.role || 'student'}
+                    onValueChange={(value: 'admin' | 'student' | 'teacher' | 'developer') =>
+                      setEditForm({ ...editForm, role: value })
                     }
                   >
                     <SelectTrigger className="text-sm h-8">
@@ -516,14 +514,16 @@ const AdminStudentManagement = () => {
                     <SelectContent>
                       <SelectItem value="student">Student</SelectItem>
                       <SelectItem value="teacher">Teacher</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="developer">Developer</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600">Status</label>
-                  <Select 
-                    value={editForm.status || 'active'} 
-                    onValueChange={(value) => setEditForm({...editForm, status: value})}
+                  <Select
+                    value={editForm.status || 'active'}
+                    onValueChange={(value) => setEditForm({ ...editForm, status: value })}
                   >
                     <SelectTrigger className="text-sm h-8">
                       <SelectValue />
@@ -536,14 +536,14 @@ const AdminStudentManagement = () => {
                 </div>
               </div>
               <div className="flex gap-2 pt-2">
-                <Button 
+                <Button
                   onClick={handleUpdateStudent}
                   className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm"
                 >
                   Save Changes
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setIsEditDialogOpen(false)}
                   className="text-sm"
                 >
