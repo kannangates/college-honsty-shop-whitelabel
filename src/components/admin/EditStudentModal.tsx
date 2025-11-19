@@ -37,7 +37,7 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
     email: '',
     department: '',
     mobile_number: '',
-    password: '' ,
+    password: '',
     role: '',
     points: '',
     status: '',
@@ -53,7 +53,7 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
         mobile_number: student.mobile_number || '',
         role: student.role || 'student',
         points: (student.points || 0).toString(),
-        password: '' ,
+        password: '',
         status: student.status || 'active',
         shift: student.shift || ''
       });
@@ -63,7 +63,7 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!student) return;
-    
+
     setLoading(true);
 
     try {
@@ -126,7 +126,7 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
           </DialogTitle>
           <DialogDescription>Update student information and settings</DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="student_id">Student ID</Label>
@@ -137,52 +137,52 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
               className="bg-gray-100"
             />
           </div>
-          
+
           <div>
             <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
             />
           </div>
-          
+
           <div>
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
-          
+
           <div>
             <Label htmlFor="department">Department</Label>
             <DepartmentCombobox
               value={formData.department}
-              onChange={(value) => setFormData({...formData, department: value})}
+              onChange={(value) => setFormData({ ...formData, department: value })}
               placeholder="Select department"
             />
           </div>
-          
+
           <div>
             <Label htmlFor="mobile">Mobile Number</Label>
             <Input
               id="mobile"
               value={formData.mobile_number}
-              onChange={(e) => setFormData({...formData, mobile_number: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value })}
             />
           </div>
-          
+
           <div>
             <Label htmlFor="role">Role</Label>
-            <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
+            <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" sideOffset={5}>
                 <SelectItem value="student">Student</SelectItem>
                 <SelectItem value="teacher">Teacher</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
@@ -193,18 +193,18 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
 
           <div>
             <Label htmlFor="shift">Shift</Label>
-            <Select value={formData.shift} onValueChange={(value) => setFormData({...formData, shift: value})}>
+            <Select value={formData.shift} onValueChange={(value) => setFormData({ ...formData, shift: value })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" sideOffset={5}>
                 <SelectItem value="Morning (1st Shift)">Morning (1st Shift)</SelectItem>
                 <SelectItem value="Evening (2nd Shift)">Evening (2nd Shift)</SelectItem>
                 <SelectItem value="Full Shift">Full Shift</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
             <Label htmlFor="points">Points</Label>
             <Input
@@ -212,29 +212,29 @@ export const EditStudentModal = ({ open, onOpenChange, student, onStudentUpdated
               type="number"
               min="0"
               value={formData.points}
-              onChange={(e) => setFormData({...formData, points: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, points: e.target.value })}
             />
           </div>
-          
+
           <div>
             <Label htmlFor="status">Status</Label>
-            <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+            <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" sideOffset={5}>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
-          <div>
-              <Label htmlFor="password">Reset Password</Label>
-              <Input id="password" type="password" value={formData.password} onChange={(e)=>setFormData({...formData,password:e.target.value})}/>
-            </div>
 
-           <div className="flex gap-2 pt-4">
+          <div>
+            <Label htmlFor="password">Reset Password</Label>
+            <Input id="password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+          </div>
+
+          <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={loading} className="flex-1">
               {loading ? 'Updating...' : 'Update Profile'}
             </Button>
