@@ -23,6 +23,7 @@ const AdminPaymentReports = () => {
   const [isPaymentRecordOpen, setIsPaymentRecordOpen] = useState(false);
   const [paymentRecords, setPaymentRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
   const { toast } = useToast();
 
   const fetchPayments = async () => {
@@ -41,7 +42,7 @@ const AdminPaymentReports = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       const formattedData = data.map(payment => ({
         id: payment.id,
         studentId: payment.orders?.users?.student_id || 'Unknown',
@@ -53,7 +54,7 @@ const AdminPaymentReports = () => {
         transactionId: payment.transaction_id || 'N/A',
         orderId: payment.orders?.friendly_id || payment.order_id
       }));
-      
+
       setPaymentRecords(formattedData);
     } catch (error) {
       console.error('Error fetching payments:', error);
@@ -71,9 +72,20 @@ const AdminPaymentReports = () => {
     fetchPayments();
   }, []);
 
+  const handleEditPayment = (payment: any) => {
+    setEditingPayment({
+      id: payment.id,
+      orderId: payment.orderId,
+      transactionId: payment.transactionId,
+      paymentMethod: payment.method,
+      paidAt: payment.date
+    });
+    setIsPaymentRecordOpen(true);
+  };
+
   const handleDeletePayment = async (paymentId: string) => {
     if (!confirm('Are you sure you want to delete this payment record?')) return;
-    
+
     try {
       const { error } = await supabase
         .from('payments')
@@ -81,12 +93,12 @@ const AdminPaymentReports = () => {
         .eq('id', paymentId);
 
       if (error) throw error;
-      
+
       toast({
         title: 'Success',
         description: 'Payment record deleted successfully'
       });
-      
+
       fetchPayments();
     } catch (error) {
       console.error('Error deleting payment:', error);
@@ -217,7 +229,7 @@ const AdminPaymentReports = () => {
   const filteredRecords = useMemo(() => {
     return allRecords.filter(record => {
       const matchesSearch = record.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          record.studentId.toLowerCase().includes(searchTerm.toLowerCase());
+        record.studentId.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || record.status.toLowerCase() === statusFilter;
       const recordDate = new Date(record.date);
       const matchesDate = (!dateRange.from && !dateRange.to) ||
@@ -229,7 +241,7 @@ const AdminPaymentReports = () => {
   }, [allRecords, searchTerm, statusFilter, dateRange]);
 
   // Define columns for shadcn DataTable
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<unknown>[] = [
     { accessorKey: 'studentId', header: 'Student ID' },
     { accessorKey: 'studentName', header: 'Student Name' },
     { accessorKey: 'amount', header: 'Amount', cell: ({ row }) => `₹${row.original.amount.toFixed(2)}` },
@@ -238,15 +250,23 @@ const AdminPaymentReports = () => {
     { accessorKey: 'transactionId', header: 'Transaction ID' },
     { accessorKey: 'orderId', header: 'Order ID' },
     { accessorKey: 'status', header: 'Status' },
-    { 
-      id: 'actions', 
-      header: 'Actions', 
+    {
+      id: 'actions',
+      header: 'Actions',
       cell: ({ row }) => {
         const payment = row.original;
         if (payment.items) return null; // Skip action buttons for static records
-        
+
         return (
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEditPayment(payment)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -347,22 +367,22 @@ const AdminPaymentReports = () => {
 
           {/* Action Buttons */}
           <div className="flex gap-2 w-full lg:w-auto">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={clearFilters}
               className="h-11 px-4 border-gray-200 hover:border-gray-300"
             >
               Clear Filters
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={fetchPayments}
               className="h-11 px-4 border-gray-200 hover:border-gray-300"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button 
+            <Button
               onClick={() => setIsPaymentRecordOpen(true)}
               className="h-11 px-4 bg-green-600 hover:bg-green-700"
             >
@@ -392,10 +412,17 @@ const AdminPaymentReports = () => {
       {/* Payment Record Modal */}
       <PaymentRecordModal
         open={isPaymentRecordOpen}
-        onOpenChange={setIsPaymentRecordOpen}
+        onOpenChange={(open) => {
+          setIsPaymentRecordOpen(open);
+          if (!open) {
+            setEditingPayment(null);
+          }
+        }}
         onRecordAdded={() => {
           fetchPayments();
+          setEditingPayment(null);
         }}
+        editingPayment={editingPayment}
       />
     </div>
   );

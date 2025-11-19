@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Eye, Download, Pencil } from 'lucide-react';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from '@/components/ui/command';
+import { Command, CommandInput, CommandItem, CommandList, CommandEmpty, CommandGroup } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check } from 'lucide-react';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
 import { useDataExport } from '@/hooks/useDataExport';
@@ -57,7 +57,7 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
 
   const handleActionConfirm = async () => {
     if (!pendingAction) return;
-    
+
     setCancellingOrders(prev => new Set(prev).add(pendingAction.orderId));
     try {
       const status = pendingAction.action === 'cancel' ? 'cancelled' : 'unpaid';
@@ -87,7 +87,7 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
     const exportHeaders = [
       'Order ID', 'Student Name', 'Student ID', 'Date', 'Amount', 'Payment Mode', 'Status', 'Items'
     ];
-    
+
     const exportRows = orders.map(order => [
       order.friendly_id || order.id,
       order.users?.name || 'N/A',
@@ -134,7 +134,7 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
               <TableHead>Payment</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
-              
+
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -178,9 +178,51 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
                   <TableCell className="font-medium">₹{order.total_amount}</TableCell>
                   <TableCell>{order.payment_mode || 'N/A'}</TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(order.payment_status)}>
-                      {order.payment_status}
-                    </Badge>
+                    <Popover
+                      open={statusPopoverOpen === order.id}
+                      onOpenChange={(open) => setStatusPopoverOpen(open ? order.id : null)}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "w-24 justify-between",
+                            getStatusColor(order.payment_status)
+                          )}
+                        >
+                          {order.payment_status}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-40 p-0" align="start">
+                        <Command>
+                          <CommandList>
+                            <CommandEmpty>No status found.</CommandEmpty>
+                            <CommandGroup>
+                              {['paid', 'unpaid', 'cancelled'].map((status) => (
+                                <CommandItem
+                                  key={status}
+                                  value={status}
+                                  onSelect={async () => {
+                                    await onUpdateOrderStatus(order.id, status);
+                                    setStatusPopoverOpen(null);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      order.payment_status === status ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {status}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </TableCell>
                   <TableCell>
                     {order.payment_status !== 'cancelled' ? (
@@ -205,14 +247,14 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
                       </Button>
                     )}
                   </TableCell>
-                  
+
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </CardContent>
-      
+
       <ConfirmDialog
         open={confirmDialogOpen}
         onOpenChange={setConfirmDialogOpen}

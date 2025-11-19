@@ -17,6 +17,13 @@ interface PaymentRecordModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRecordAdded: () => void;
+  editingPayment?: {
+    id: string;
+    orderId: string;
+    transactionId: string;
+    paymentMethod: string;
+    paidAt: string;
+  } | null;
 }
 
 interface UnpaidOrder {
@@ -43,7 +50,7 @@ interface OrderWithUser {
 // Payment mode enum type  
 type PaymentMode = 'qr_manual' | 'razorpay' | 'pay_later';
 
-export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: PaymentRecordModalProps) => {
+export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded, editingPayment = null }: PaymentRecordModalProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [orderComboOpen, setOrderComboOpen] = useState(false);
@@ -54,6 +61,24 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
     transaction_id: '',
     paid_at: new Date().toISOString().slice(0, 16)
   });
+
+  // Initialize form data when editing
+  useEffect(() => {
+    if (editingPayment) {
+      setFormData({
+        payment_mode: editingPayment.paymentMethod,
+        transaction_id: editingPayment.transactionId,
+        paid_at: new Date(editingPayment.paidAt).toISOString().slice(0, 16)
+      });
+    } else {
+      setFormData({
+        payment_mode: '',
+        transaction_id: '',
+        paid_at: new Date().toISOString().slice(0, 16)
+      });
+      setSelectedOrders([]);
+    }
+  }, [editingPayment, open]);
 
   const fetchUnpaidOrders = useCallback(async () => {
     try {
@@ -71,7 +96,7 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
 
       if (error) throw error;
 
-      const formattedOrders = data.map((order: any) => ({
+      const formattedOrders = data.map((order: OrderWithUser) => ({
         id: order.id,
         user_id: order.user_id,
         total_amount: order.total_amount,
@@ -99,36 +124,70 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedOrders.length || !formData.payment_mode || !formData.transaction_id) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive',
-      });
-      return;
+
+    // Validation
+    if (editingPayment) {
+      // For editing, only need payment details
+      if (!formData.payment_mode || !formData.transaction_id) {
+        toast({
+          title: 'Error',
+          description: 'Please fill in all required fields',
+          variant: 'destructive',
+        });
+        return;
+      }
+    } else {
+      // For new records, need orders selected
+      if (!selectedOrders.length || !formData.payment_mode || !formData.transaction_id) {
+        toast({
+          title: 'Error',
+          description: 'Please fill in all required fields',
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     setLoading(true);
 
     try {
-      // Update multiple orders
-      const orderIds = selectedOrders.map(order => order.value);
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          payment_status: 'paid',
-          payment_mode: formData.payment_mode as PaymentMode,
-          transaction_id: formData.transaction_id,
-          paid_at: new Date(formData.paid_at).toISOString()
-        })
-        .in('id', orderIds);
+      if (editingPayment) {
+        // Update existing payment record
+        const { error } = await supabase
+          .from('orders')
+          .update({
+            payment_mode: formData.payment_mode as PaymentMode,
+            transaction_id: formData.transaction_id,
+            paid_at: new Date(formData.paid_at).toISOString()
+          })
+          .eq('id', editingPayment.orderId);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: 'Success',
-        description: `Payment records updated successfully for ${selectedOrders.length} orders`,
-      });
+        toast({
+          title: 'Success',
+          description: 'Payment details updated successfully',
+        });
+      } else {
+        // Create new payment records for multiple orders
+        const orderIds = selectedOrders.map(order => order.value);
+        const { error } = await supabase
+          .from('orders')
+          .update({
+            payment_status: 'paid',
+            payment_mode: formData.payment_mode as PaymentMode,
+            transaction_id: formData.transaction_id,
+            paid_at: new Date(formData.paid_at).toISOString()
+          })
+          .in('id', orderIds);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Success',
+          description: `Payment records updated successfully for ${selectedOrders.length} orders`,
+        });
+      }
 
       setSelectedOrders([]);
       setFormData({
@@ -136,7 +195,7 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
         transaction_id: '',
         paid_at: new Date().toISOString().slice(0, 16)
       });
-      
+
       onRecordAdded();
       onOpenChange(false);
       fetchUnpaidOrders(); // Refresh the list
@@ -163,53 +222,59 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Record Payment Transaction
+            {editingPayment ? 'Edit Payment Transaction' : 'Record Payment Transaction'}
           </DialogTitle>
           <DialogDescription>
-            Mark an unpaid order as paid by recording the payment transaction details.
+            {editingPayment
+              ? 'Update the payment transaction details for this order.'
+              : 'Mark an unpaid order as paid by recording the payment transaction details.'}
           </DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label>Select Orders (Multiple Selection)</Label>
-            <MultipleSelector
-              value={selectedOrders}
-              onValueChange={setSelectedOrders}
-              defaultOptions={orderOptions}
-              placeholder="Select orders to mark as paid..."
-              emptyIndicator={() => (
-                <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
-                  No unpaid orders found.
-                </p>
-              )}
-            />
-          </div>
 
-          {selectedOrders.length > 0 && (
-            <div className="p-3 bg-gray-50 rounded-md">
-              <h4 className="font-medium text-sm mb-2">Selected Orders ({selectedOrders.length})</h4>
-              <div className="space-y-1 text-sm">
-                {selectedOrders.slice(0, 3).map((order) => {
-                  const orderData = unpaidOrders.find(o => o.id === order.value);
-                  return orderData ? (
-                    <div key={order.value}>
-                      {orderData.user_name} ({orderData.student_id}) - ₹{orderData.total_amount}
-                    </div>
-                  ) : null;
-                })}
-                {selectedOrders.length > 3 && (
-                  <div className="text-muted-foreground">
-                    +{selectedOrders.length - 3} more orders selected
-                  </div>
-                )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {!editingPayment && (
+            <>
+              <div>
+                <Label>Select Orders (Multiple Selection)</Label>
+                <MultipleSelector
+                  value={selectedOrders}
+                  onValueChange={setSelectedOrders}
+                  defaultOptions={orderOptions}
+                  placeholder="Select orders to mark as paid..."
+                  emptyIndicator={() => (
+                    <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
+                      No unpaid orders found.
+                    </p>
+                  )}
+                />
               </div>
-            </div>
+
+              {selectedOrders.length > 0 && (
+                <div className="p-3 bg-gray-50 rounded-md">
+                  <h4 className="font-medium text-sm mb-2">Selected Orders ({selectedOrders.length})</h4>
+                  <div className="space-y-1 text-sm">
+                    {selectedOrders.slice(0, 3).map((order) => {
+                      const orderData = unpaidOrders.find(o => o.id === order.value);
+                      return orderData ? (
+                        <div key={order.value}>
+                          {orderData.user_name} ({orderData.student_id}) - ₹{orderData.total_amount}
+                        </div>
+                      ) : null;
+                    })}
+                    {selectedOrders.length > 3 && (
+                      <div className="text-muted-foreground">
+                        +{selectedOrders.length - 3} more orders selected
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           )}
-          
+
           <div>
             <Label htmlFor="payment_mode">Payment Method</Label>
-            <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value})}>
+            <Select value={formData.payment_mode} onValueChange={(value) => setFormData({ ...formData, payment_mode: value })}>
               <SelectTrigger>
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
@@ -220,35 +285,37 @@ export const PaymentRecordModal = ({ open, onOpenChange, onRecordAdded }: Paymen
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
             <Label htmlFor="transaction_id">Transaction ID / Reference</Label>
             <Input
               id="transaction_id"
               value={formData.transaction_id}
-              onChange={(e) => setFormData({...formData, transaction_id: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, transaction_id: e.target.value })}
               placeholder="Enter transaction ID or reference number"
               required
             />
           </div>
-          
+
           <div>
             <Label htmlFor="paid_at">Payment Date & Time</Label>
             <Input
               id="paid_at"
               type="datetime-local"
               value={formData.paid_at}
-              onChange={(e) => setFormData({...formData, paid_at: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, paid_at: e.target.value })}
               required
             />
           </div>
-          
+
           <div className="flex gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Recording...' : 'Record Payment'}
+              {loading
+                ? (editingPayment ? 'Updating...' : 'Recording...')
+                : (editingPayment ? 'Update Payment' : 'Record Payment')}
             </Button>
           </div>
         </form>
