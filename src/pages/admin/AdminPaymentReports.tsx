@@ -30,29 +30,33 @@ const AdminPaymentReports = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('payments')
+        .from('orders')
         .select(`
-          *,
-          orders (
-            id,
-            friendly_id,
-            users (name, student_id, email)
-          )
+          id,
+          friendly_id,
+          total_amount,
+          paid_at,
+          payment_mode,
+          transaction_id,
+          payment_status,
+          users (name, student_id, email)
         `)
-        .order('created_at', { ascending: false });
+        .eq('payment_status', 'paid')
+        .not('paid_at', 'is', null)
+        .order('paid_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedData = data.map(payment => ({
-        id: payment.id,
-        studentId: payment.orders?.users?.student_id || 'Unknown',
-        studentName: payment.orders?.users?.name || 'Unknown',
-        amount: payment.amount,
-        date: format(new Date(payment.paid_at), 'yyyy-MM-dd'),
-        method: payment.payment_method || 'Manual',
+      const formattedData = data.map(order => ({
+        id: order.id,
+        studentId: order.users?.student_id || 'Unknown',
+        studentName: order.users?.name || 'Unknown',
+        amount: order.total_amount,
+        date: format(new Date(order.paid_at), 'yyyy-MM-dd'),
+        method: order.payment_mode || 'Manual',
         status: 'Paid' as const,
-        transactionId: payment.transaction_id || 'N/A',
-        orderId: payment.orders?.friendly_id || payment.order_id
+        transactionId: order.transaction_id || 'N/A',
+        orderId: order.friendly_id || order.id.slice(0, 8)
       }));
 
       setPaymentRecords(formattedData);
@@ -83,28 +87,32 @@ const AdminPaymentReports = () => {
     setIsPaymentRecordOpen(true);
   };
 
-  const handleDeletePayment = async (paymentId: string) => {
-    if (!confirm('Are you sure you want to delete this payment record?')) return;
+  const handleDeletePayment = async (orderId: string) => {
+    if (!confirm('Are you sure you want to mark this order as unpaid? This will remove the payment record.')) return;
 
     try {
       const { error } = await supabase
-        .from('payments')
-        .delete()
-        .eq('id', paymentId);
+        .from('orders')
+        .update({
+          payment_status: 'unpaid',
+          transaction_id: null,
+          paid_at: null
+        })
+        .eq('id', orderId);
 
       if (error) throw error;
 
       toast({
         title: 'Success',
-        description: 'Payment record deleted successfully'
+        description: 'Order marked as unpaid successfully'
       });
 
       fetchPayments();
     } catch (error) {
-      console.error('Error deleting payment:', error);
+      console.error('Error updating order:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete payment record',
+        description: 'Failed to update order',
         variant: 'destructive'
       });
     }
@@ -241,7 +249,7 @@ const AdminPaymentReports = () => {
   }, [allRecords, searchTerm, statusFilter, dateRange]);
 
   // Define columns for shadcn DataTable
-  const columns: ColumnDef<unknown>[] = [
+  const columns: ColumnDef<any>[] = [
     { accessorKey: 'studentId', header: 'Student ID' },
     { accessorKey: 'studentName', header: 'Student Name' },
     { accessorKey: 'amount', header: 'Amount', cell: ({ row }) => `₹${row.original.amount.toFixed(2)}` },

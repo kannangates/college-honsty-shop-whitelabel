@@ -31,36 +31,30 @@ export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCa
       if (!user) throw new Error('User not authenticated');
 
       const paidAt = new Date().toISOString();
-      
-      // Insert payment record
-      const { error: paymentError } = await supabase.from('payments').insert({
-        order_id: orderId,
-        amount,
-        transaction_id: transactionId,
-        paid_at: paidAt,
-        user_id: user.id,
-        payment_method: 'qr_manual'
-      });
-      if (paymentError) throw paymentError;
 
-      // Update order status
-      const { error: orderError } = await supabase.from('orders').update({ 
-        payment_status: 'paid', 
+      // Update order status - orders table is the single source of truth
+      const { error: orderError } = await supabase.from('orders').update({
+        payment_status: 'paid',
         paid_at: paidAt,
-        transaction_id: transactionId
+        transaction_id: transactionId,
+        payment_mode: 'qr_manual'
       }).eq('id', orderId);
       if (orderError) throw orderError;
 
-      toast({ 
-        title: 'Payment Successful', 
-        description: 'Your payment has been recorded. You will be logged out now.' 
+      toast({
+        title: 'Payment Successful',
+        description: 'Your payment has been recorded. You will be logged out now.'
       });
-      
+
+      if (onSuccess) {
+        onSuccess();
+      }
+
       // Auto logout after 2 seconds
       setTimeout(() => {
         logout();
       }, 2000);
-      
+
     } catch (err) {
       toast({ title: 'Payment Failed', description: (err as Error).message, variant: 'destructive' });
       setLoading(false);
@@ -76,9 +70,9 @@ export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCa
             <div className="bg-gradient-to-br from-green-50 to-blue-50 flex flex-col items-center justify-center p-8">
               <div className="w-full max-w-md mx-auto">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-                  <img 
-                    src="/static-qr-code.png" 
-                    alt="QR Code" 
+                  <img
+                    src="/static-qr-code.png"
+                    alt="QR Code"
                     className="w-full max-w-xs mx-auto object-contain"
                     style={{ aspectRatio: '1/1' }}
                   />
@@ -100,24 +94,24 @@ export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCa
                       Please complete your payment using the QR code and enter the transaction details below.
                     </p>
                   </div>
-                  
+
                   <div className="space-y-6">
                     <div>
                       <Label htmlFor="transactionId" className="text-gray-700 block mb-2">Transaction ID</Label>
-                      <Input 
-                        id="transactionId" 
-                        value={transactionId} 
-                        onChange={e => setTransactionId(e.target.value)} 
-                        placeholder="Enter your transaction ID" 
+                      <Input
+                        id="transactionId"
+                        value={transactionId}
+                        onChange={e => setTransactionId(e.target.value)}
+                        placeholder="Enter your transaction ID"
                         className="h-12 text-base px-4"
                       />
                       <p className="text-sm text-gray-500 mt-2 text-center">Enter the transaction ID from your payment app</p>
                     </div>
 
                     <div className="space-y-4">
-                      <Button 
-                        onClick={handlePaymentAndLogout} 
-                        disabled={loading} 
+                      <Button
+                        onClick={handlePaymentAndLogout}
+                        disabled={loading}
                         size="lg"
                         className="w-full bg-green-600 hover:bg-green-700 h-12 text-base font-medium flex items-center justify-center gap-2"
                       >
@@ -136,9 +130,9 @@ export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCa
 
                       {onCancel && (
                         <div className="pt-2">
-                          <Button 
-                            variant="ghost" 
-                            onClick={onCancel} 
+                          <Button
+                            variant="ghost"
+                            onClick={onCancel}
                             disabled={loading}
                             className="w-full text-gray-600 hover:bg-gray-50"
                           >
