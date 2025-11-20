@@ -11,6 +11,7 @@ import AdminIntegrations from '@/pages/admin/AdminIntegrations';
 import AdminN8nPage from '@/pages/admin/n8n/AdminN8nPage';
 import AdminPointsBadges from '@/pages/admin/AdminPointsBadges';
 import AdminStockAccounting from '@/pages/admin/AdminStockAccounting';
+import AdminStockAccountingHistory from '@/pages/admin/AdminStockAccountingHistory';
 import AdminPaymentReports from '@/pages/admin/AdminPaymentReports';
 import AdminDeveloper from '@/pages/admin/AdminDeveloper';
 import WhitelabelConfig from '@/pages/admin/WhitelabelConfig';
@@ -37,6 +38,7 @@ export const AdminRoutes = () => {
       <Route path="/n8n" element={<ProtectedLayoutRoute><AdminN8nPage /></ProtectedLayoutRoute>} />
       <Route path="/points-badges" element={<ProtectedLayoutRoute><AdminPointsBadges /></ProtectedLayoutRoute>} />
       <Route path="/stock-accounting" element={<ProtectedLayoutRoute><AdminStockAccounting /></ProtectedLayoutRoute>} />
+      <Route path="/stock-accounting-history" element={<ProtectedLayoutRoute><AdminStockAccountingHistory /></ProtectedLayoutRoute>} />
       <Route path="/payment-reports" element={<ProtectedLayoutRoute><AdminPaymentReports /></ProtectedLayoutRoute>} />
       <Route path="/dev-tools" element={<ProtectedLayoutRoute><AdminDeveloper /></ProtectedLayoutRoute>} />
       <Route path="/whitelabel-config" element={<ProtectedLayoutRoute><WhitelabelConfig /></ProtectedLayoutRoute>} />

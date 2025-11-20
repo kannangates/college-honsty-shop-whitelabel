@@ -1,4 +1,4 @@
-  import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -46,7 +46,7 @@ const AdminPanel = () => {
       title: "Orders Management",
       description: "Track and manage all student orders",
       icon: Package,
-      color: "from-green-500 to-green-600", 
+      color: "from-green-500 to-green-600",
       bgColor: "bg-blue-200",
       path: "/admin/order-management",
       roles: ['admin', 'developer'],
@@ -55,7 +55,7 @@ const AdminPanel = () => {
       title: "Product & Inventory",
       description: "Manage products, stock levels, and daily inventory",
       icon: Package,
-      color: "from-green-500 to-green-600", 
+      color: "from-green-500 to-green-600",
       bgColor: "bg-teal-100",
       path: "/admin/inventory",
       roles: ['admin', 'developer'],
@@ -97,6 +97,15 @@ const AdminPanel = () => {
       roles: ['admin', 'developer'],
     },
     {
+      title: "Stock Accounting History",
+      description: "View and analyze historical stock operations across date ranges",
+      icon: FileText,
+      color: "from-cyan-500 to-cyan-600",
+      bgColor: "bg-cyan-100",
+      path: "/admin/stock-accounting-history",
+      roles: ['admin', 'developer'],
+    },
+    {
       title: "Payment Reports",
       description: "View payment analytics and reports",
       icon: ReceiptIndianRupee,
@@ -133,7 +142,7 @@ const AdminPanel = () => {
       alert("Please select 'Pin notification till date' when targeting a specific student.");
       return;
     }
-    
+
     console.log('Sending announcement:', announcement);
 
     try {
@@ -215,7 +224,7 @@ const AdminPanel = () => {
   console.log("Profile object:", profile);
 
   // map label (combobox value) -> code used in DB
-  const deptCodeFromLabel: Record<string,string> = {
+  const deptCodeFromLabel: Record<string, string> = {
     'All Department': 'all',
     'All Departments': 'all',
     'Computer Science': 'computer_science',
@@ -230,7 +239,7 @@ const AdminPanel = () => {
     <div className="space-y-4 text-sm text-left">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <Shield className="h-8 w-8" />
           <div>
             <h1 className="text-3xl font-bold">Admin Panel</h1>
@@ -238,7 +247,7 @@ const AdminPanel = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Admin Sections Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {adminSections
@@ -247,8 +256,8 @@ const AdminPanel = () => {
             return profile?.role && section.roles.includes(profile.role);
           })
           .map((section, index) => (
-            <Card 
-              key={index} 
+            <Card
+              key={index}
               className={`border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer ${section.bgColor}`}
               onClick={() => navigate(section.path)}
             >
@@ -267,7 +276,7 @@ const AdminPanel = () => {
                 </Button>
               </CardContent>
             </Card>
-        ))}
+          ))}
       </div>
 
       {/* Quick Actions */}
@@ -282,7 +291,7 @@ const AdminPanel = () => {
             <CardDescription className="text-sm">View and edit the whitelabel.json configuration file</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
+            <Button
               onClick={() => navigate('/admin/whitelabel-config')}
               className="w-full bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm"
             >
@@ -291,12 +300,12 @@ const AdminPanel = () => {
           </CardContent>
         </Card>
 
-        
+
         {/* Quick Announcements */}
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Mail className="h-5 w-5" />  
+              <Mail className="h-5 w-5" />
               Quick Announcements
             </CardTitle>
             <CardDescription className="text-sm">Send notifications to all students</CardDescription>
@@ -322,7 +331,7 @@ const AdminPanel = () => {
                     <Input
                       id="title"
                       value={announcement.title}
-                      onChange={(e) => setAnnouncement({...announcement, title: e.target.value})}
+                      onChange={(e) => setAnnouncement({ ...announcement, title: e.target.value })}
                       placeholder="Enter announcement title"
                       className="text-sm h-8"
                     />
@@ -332,7 +341,7 @@ const AdminPanel = () => {
                     <Textarea
                       id="description"
                       value={announcement.description}
-                      onChange={(e) => setAnnouncement({...announcement, description: e.target.value})}
+                      onChange={(e) => setAnnouncement({ ...announcement, description: e.target.value })}
                       placeholder="Enter announcement description"
                       className="text-sm"
                       rows={4}
@@ -406,14 +415,14 @@ const AdminPanel = () => {
                   </div>
 
                   <div className="flex gap-2 pt-2 justify-end">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => setAnnouncementDialogOpen(false)}
                       className="text-sm"
                     >
                       Cancel
                     </Button>
-                    <Button 
+                    <Button
                       onClick={handleSendAnnouncement}
                       className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm"
                     >
@@ -441,7 +450,7 @@ const AdminPanel = () => {
             <CardDescription className="text-sm">Manage serverless functions and APIs</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
+            <Button
               onClick={() => navigate('/admin/edge-functions')}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm hover:from-purple-700 hover:to-pink-700"
             >
