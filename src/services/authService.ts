@@ -84,7 +84,7 @@ export class AuthService {
         return { success: false, error: validation.errors.join(', ') };
       }
 
-      
+
 
       // Create user in Supabase Auth with email confirmation disabled
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -96,7 +96,7 @@ export class AuthService {
             name: data.name,
             student_id: data.student_id,
             department: data.department,
-            
+
             role: data.role,
             shift: data.shift,
             points: data.points,
@@ -105,7 +105,7 @@ export class AuthService {
           captchaToken: data.captchaToken
         }
       });
-      
+
       console.log('📨 Supabase auth.signUp response:', {
         authData,
         authError
@@ -128,7 +128,7 @@ export class AuthService {
           name: data.name,
           email: data.email,
           department: data.department,
-          
+
           role: data.role,
           shift: data.shift,
           points: data.points,
@@ -178,10 +178,10 @@ export class AuthService {
       sessionStorage.setItem('supabase_session', JSON.stringify(signInData.session));
       sessionStorage.setItem('user_profile', JSON.stringify(profileData));
 
-      return { 
-        success: true, 
-        session: signInData.session, 
-        profile: profileData 
+      return {
+        success: true,
+        session: signInData.session,
+        profile: profileData
       };
     } catch (error) {
       return { success: false, error: (error as Error).message };
@@ -231,17 +231,12 @@ export class AuthService {
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() - PASSWORD_EXPIRY_DAYS);
 
-      // If password is expired, return a special response
+      // If password is expired, set a flag but allow login
       if (passwordChangedAt < expiryDate) {
-        // Sign out the user since their password is expired
-        await supabase.auth.signOut();
-        
-        return { 
-          success: false, 
-          error: 'Your password has expired. Please reset your password.',
-          requiresPasswordReset: true,
-          userId: signInData.session.user.id
-        };
+        // Set a flag in user metadata to force password change
+        await supabase.auth.updateUser({
+          data: { must_change_password: true, password_expired: true }
+        });
       }
 
       // Update last signed in timestamp
@@ -254,10 +249,10 @@ export class AuthService {
       sessionStorage.setItem('supabase_session', JSON.stringify(signInData.session));
       sessionStorage.setItem('user_profile', JSON.stringify(profileData));
 
-      return { 
-        success: true, 
-        session: signInData.session, 
-        profile: profileData 
+      return {
+        success: true,
+        session: signInData.session,
+        profile: profileData
       };
     } catch (error) {
       return { success: false, error: (error as Error).message };
@@ -308,7 +303,7 @@ export class AuthService {
     // Clear sessionStorage
     sessionStorage.removeItem('supabase_session');
     sessionStorage.removeItem('user_profile');
-    
+
     // Sign out from Supabase
     await supabase.auth.signOut();
   }
@@ -338,7 +333,7 @@ export class AuthService {
       // Log success but don't reveal if the email exists in the system
       console.log('Password reset email sent successfully');
       NotificationService.showSuccess(
-        WHITELABEL_CONFIG.messages?.auth?.passwordResetSent || 
+        WHITELABEL_CONFIG.messages?.auth?.passwordResetSent ||
         'If an account with that email exists, you will receive a password reset link.'
       );
 
@@ -346,9 +341,9 @@ export class AuthService {
     } catch (error) {
       console.error('Error in sendPasswordResetEmail:', error);
       NotificationService.handleEmailError(error, 'password_reset');
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to send password reset email' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to send password reset email'
       };
     }
   }

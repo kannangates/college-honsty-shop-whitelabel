@@ -44,25 +44,25 @@ const Settings = () => {
 
   const handleUpdateProfile = async () => {
     if (!profile) return;
-    
+
     // Check if any fields have been modified
-    const hasChanges = 
+    const hasChanges =
       formData.name !== (profile.name || '') ||
       formData.mobile_number !== (profile.mobile_number || '') ||
       formData.department !== (profile.department || '');
-    
+
     if (!hasChanges) {
-      toast({ 
-        title: "No Changes", 
-        description: "No changes detected. Please modify at least one field.", 
-        variant: "destructive" 
+      toast({
+        title: "No Changes",
+        description: "No changes detected. Please modify at least one field.",
+        variant: "destructive"
       });
       return;
     }
 
     // Only validate fields that are being updated
     const updateData: Record<string, string> = {};
-    
+
     // Validate and include name if changed
     if (formData.name !== (profile.name || '')) {
       if (!validName(formData.name)) {
@@ -71,7 +71,7 @@ const Settings = () => {
       }
       updateData.name = formData.name;
     }
-    
+
     // Validate and include mobile_number if changed
     if (formData.mobile_number !== (profile.mobile_number || '')) {
       if (formData.mobile_number.trim() !== '') { // Only validate if not empty
@@ -82,7 +82,7 @@ const Settings = () => {
       }
       updateData.mobile_number = formData.mobile_number;
     }
-    
+
     // Validate and include department if changed
     if (formData.department !== (profile.department || '')) {
       if (!validDept(formData.department)) {
@@ -91,10 +91,10 @@ const Settings = () => {
       }
       updateData.department = formData.department;
     }
-    
+
     // Add timestamp
     updateData.updated_at = new Date().toISOString();
-    
+
     setLoading(true);
     try {
       const { error } = await supabase
@@ -139,8 +139,21 @@ const Settings = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password: pwdData.newPassword });
       if (error) throw error;
-      // clear metadata flag
-      await supabase.auth.updateUser({ data: { must_change_password: false } });
+
+      // Clear metadata flags
+      await supabase.auth.updateUser({
+        data: {
+          must_change_password: false,
+          password_expired: false
+        }
+      });
+
+      // Update password_changed_at in users table
+      await supabase
+        .from('users')
+        .update({ password_changed_at: new Date().toISOString() })
+        .eq('id', profile.id);
+
       toast({ title: 'Password Updated', description: 'Your password has been changed successfully.' });
       setPwdData({ newPassword: '', confirmPassword: '' });
     } catch (error: unknown) {
@@ -158,10 +171,10 @@ const Settings = () => {
         migration_notes: 'User profile export for system migration'
       };
 
-      const blob = new Blob([JSON.stringify(migrationData, null, 2)], { 
-        type: 'application/json' 
+      const blob = new Blob([JSON.stringify(migrationData, null, 2)], {
+        type: 'application/json'
       });
-      
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -307,31 +320,31 @@ const Settings = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="newPassword">New Password</Label>
-                    <Input id="newPassword" type="password" value={pwdData.newPassword} onChange={(e)=>setPwdData({...pwdData,newPassword:e.target.value})}/>
+                    <Input id="newPassword" type="password" value={pwdData.newPassword} onChange={(e) => setPwdData({ ...pwdData, newPassword: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input id="confirmPassword" type="password" value={pwdData.confirmPassword} onChange={(e)=>setPwdData({...pwdData,confirmPassword:e.target.value})}/>
+                    <Input id="confirmPassword" type="password" value={pwdData.confirmPassword} onChange={(e) => setPwdData({ ...pwdData, confirmPassword: e.target.value })} />
                   </div>
                   <Button onClick={handleChangePassword} disabled={loading} className="rounded-xl">
-                    {loading? 'Updating...' : 'Submit'}
+                    {loading ? 'Updating...' : 'Submit'}
                   </Button>
                 </CardContent>
               </Card>
               {/* Security Settings */}
               <Card className="border-0 shadow-lg">
                 <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Security Settings
-                </CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Security Settings
+                  </CardTitle>
                   <CardDescription>
-                  Enhance your account security with two-factor authentication
-                </CardDescription>
+                    Enhance your account security with two-factor authentication
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                <MFASetup />
-              </CardContent>
+                  <MFASetup />
+                </CardContent>
               </Card>
             </div>
           </div>

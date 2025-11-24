@@ -32,6 +32,9 @@ export function PasswordChangePrompt() {
     }
   }, [user]);
 
+  // Check if password is expired (not just needs change)
+  const isPasswordExpired = user?.user_metadata?.password_expired === true;
+
   const dismissForever = async () => {
     if (!user) return;
     try {
@@ -40,9 +43,9 @@ export function PasswordChangePrompt() {
         data: { must_change_password: false }
       });
       setOpen(false);
-      toast({ 
-        title: 'Password Choice Saved', 
-        description: 'You chose to keep your current password. You can change it anytime in Settings.' 
+      toast({
+        title: 'Password Choice Saved',
+        description: 'You chose to keep your current password. You can change it anytime in Settings.'
       });
     } catch (error) {
       console.error('Failed to update user metadata:', error);
@@ -58,29 +61,36 @@ export function PasswordChangePrompt() {
   if (!user) return null;
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={isPasswordExpired ? undefined : setOpen}>
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>Update your password</AlertDialogTitle>
+          <AlertDialogTitle>
+            {isPasswordExpired ? '🔐 Password Expired' : 'Update your password'}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            Your account was created by an administrator. Would you like to keep the provided password or set a new one now?
+            {isPasswordExpired
+              ? 'Your password has expired for security reasons. You must change it now to continue using your account.'
+              : 'Your account was created by an administrator. Would you like to keep the provided password or set a new one now?'
+            }
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel asChild>
-            <button
-              className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700"
-              onClick={dismissForever}
-            >
-              Keep Same Password
-            </button>
-          </AlertDialogCancel>
+          {!isPasswordExpired && (
+            <AlertDialogCancel asChild>
+              <button
+                className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700"
+                onClick={dismissForever}
+              >
+                Keep Same Password
+              </button>
+            </AlertDialogCancel>
+          )}
           <AlertDialogAction asChild>
             <button
               className="px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 text-white"
               onClick={goChangePassword}
             >
-              Change Password
+              {isPasswordExpired ? 'Change Password Now' : 'Change Password'}
             </button>
           </AlertDialogAction>
         </AlertDialogFooter>
