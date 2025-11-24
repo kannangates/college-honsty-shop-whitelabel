@@ -24,8 +24,14 @@ export function PasswordChangePrompt() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    // Debug logging
+    console.log('🔐 PasswordChangePrompt - User metadata:', user?.user_metadata);
+    console.log('🔐 must_change_password:', user?.user_metadata?.must_change_password);
+    console.log('🔐 password_expired:', user?.user_metadata?.password_expired);
+
     // Only show the prompt if the user has the must_change_password flag
     if (user?.user_metadata?.must_change_password === true) {
+      console.log('🔐 Opening password change prompt');
       setOpen(true);
     } else {
       setOpen(false);

@@ -232,11 +232,23 @@ export class AuthService {
       expiryDate.setDate(expiryDate.getDate() - PASSWORD_EXPIRY_DAYS);
 
       // If password is expired, set a flag but allow login
+      let finalSession = signInData.session;
       if (passwordChangedAt < expiryDate) {
+        console.log('⚠️ Password expired! Setting metadata flags...');
         // Set a flag in user metadata to force password change
-        await supabase.auth.updateUser({
+        const { data: updateData } = await supabase.auth.updateUser({
           data: { must_change_password: true, password_expired: true }
         });
+
+        console.log('✅ Metadata updated:', updateData?.user?.user_metadata);
+
+        // Use the updated session with new metadata
+        if (updateData?.user) {
+          finalSession = {
+            ...signInData.session,
+            user: updateData.user
+          };
+        }
       }
 
       // Update last signed in timestamp
@@ -246,12 +258,12 @@ export class AuthService {
         .eq('id', signInData.session.user.id);
 
       // Store complete session in sessionStorage
-      sessionStorage.setItem('supabase_session', JSON.stringify(signInData.session));
+      sessionStorage.setItem('supabase_session', JSON.stringify(finalSession));
       sessionStorage.setItem('user_profile', JSON.stringify(profileData));
 
       return {
         success: true,
-        session: signInData.session,
+        session: finalSession,
         profile: profileData
       };
     } catch (error) {
