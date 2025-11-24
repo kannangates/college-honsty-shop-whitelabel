@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Users, Search, UserPlus, Trophy, RefreshCw, Download, Eye, Edit, Upload } from 'lucide-react';
+import { Users, Search, UserPlus, Trophy, RefreshCw, Download, Eye, Edit, Upload, KeyRound } from 'lucide-react';
 import { AddStudentModal } from '@/components/admin/AddStudentModal';
 import { BulkUploadModal } from '@/components/admin/BulkUploadModal';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +14,7 @@ import { useDataExport } from '@/hooks/useDataExport';
 import { useToast } from '@/hooks/use-toast';
 import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
 import { Shield } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
 interface Student {
   id: string;
@@ -66,6 +67,12 @@ const AdminStudentManagement = () => {
   const [departments, setDepartments] = useState<string[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [isPasswordResetDialogOpen, setIsPasswordResetDialogOpen] = useState(false);
+  const [resetPasswordForm, setResetPasswordForm] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const { exportData, isExporting } = useDataExport();
   const { toast } = useToast();
@@ -215,6 +222,63 @@ const AdminStudentManagement = () => {
       role: student.role // Now properly typed
     });
     setIsEditDialogOpen(true);
+  };
+
+  const handleOpenPasswordReset = (student: Student) => {
+    setSelectedStudent(student);
+    setResetPasswordForm({ newPassword: '', confirmPassword: '' });
+    setIsPasswordResetDialogOpen(true);
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedStudent) return;
+
+    if (resetPasswordForm.newPassword.length < 6) {
+      toast({
+        title: 'Error',
+        description: 'Password must be at least 6 characters long',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword) {
+      toast({
+        title: 'Error',
+        description: 'Passwords do not match',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      // Use Supabase Admin API to update user password
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: {
+          userId: selectedStudent.id,
+          newPassword: resetPasswordForm.newPassword
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: `Password updated successfully for ${selectedStudent.name}. Share the new password with the student securely.`,
+      });
+      setIsPasswordResetDialogOpen(false);
+      setResetPasswordForm({ newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reset password. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
 
   const getShiftDisplay = (shift: string) => {
@@ -425,6 +489,15 @@ const AdminStudentManagement = () => {
                           <Edit className="h-3 w-3 mr-1" />
                           Edit
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenPasswordReset(student)}
+                          className="text-xs h-7 border-orange-300 text-orange-600 hover:bg-orange-50"
+                        >
+                          <KeyRound className="h-3 w-3 mr-1" />
+                          Reset
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -569,6 +642,73 @@ const AdminStudentManagement = () => {
         onOpenChange={setIsBulkUploadOpen}
         onUploadComplete={fetchStudents}
       />
+
+      {/* Password Reset Dialog */}
+      <Dialog open={isPasswordResetDialogOpen} onOpenChange={setIsPasswordResetDialogOpen}>
+        <DialogContent className="text-sm max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-orange-600" />
+              Reset Password
+            </DialogTitle>
+            <DialogDescription>
+              Set a new password for {selectedStudent?.name} ({selectedStudent?.email})
+            </DialogDescription>
+          </DialogHeader>
+          {selectedStudent && (
+            <div className="space-y-4">
+              <div className="p-3 border rounded-lg bg-amber-50 border-amber-200">
+                <p className="text-xs text-amber-800">
+                  ⚠️ After resetting, share the new password with the student securely via external communication (phone, in-person, etc.)
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">New Password</Label>
+                  <Input
+                    type="password"
+                    placeholder="Enter new password (min 6 characters)"
+                    value={resetPasswordForm.newPassword}
+                    onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, newPassword: e.target.value })}
+                    className="text-sm h-9 mt-1"
+                    disabled={isResettingPassword}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">Confirm Password</Label>
+                  <Input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={resetPasswordForm.confirmPassword}
+                    onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, confirmPassword: e.target.value })}
+                    className="text-sm h-9 mt-1"
+                    disabled={isResettingPassword}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={handleResetPassword}
+                  disabled={isResettingPassword || !resetPasswordForm.newPassword || !resetPasswordForm.confirmPassword}
+                  className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm flex-1"
+                >
+                  {isResettingPassword ? 'Resetting...' : 'Reset Password'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPasswordResetDialogOpen(false)}
+                  disabled={isResettingPassword}
+                  className="text-sm"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
