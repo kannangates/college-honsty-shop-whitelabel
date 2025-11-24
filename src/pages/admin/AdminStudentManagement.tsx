@@ -1,19 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Users, Search, UserPlus, Trophy, RefreshCw, Download, Eye, Edit, Upload, KeyRound } from 'lucide-react';
+import { UserPlus, Trophy, RefreshCw, Download, Edit, Upload, KeyRound } from 'lucide-react';
 import { AddStudentModal } from '@/components/admin/AddStudentModal';
 import { BulkUploadModal } from '@/components/admin/BulkUploadModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useDataExport } from '@/hooks/useDataExport';
 import { useToast } from '@/hooks/use-toast';
 import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
-import { Shield } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 
 interface Student {
@@ -64,7 +63,6 @@ const AdminStudentManagement = () => {
   const [shiftFilter, setShiftFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
 
-  const [departments, setDepartments] = useState<string[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isPasswordResetDialogOpen, setIsPasswordResetDialogOpen] = useState(false);
