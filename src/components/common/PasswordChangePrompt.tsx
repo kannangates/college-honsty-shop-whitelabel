@@ -18,12 +18,16 @@ import { supabase } from '@/integrations/supabase/client';
  * Shows a one-time password-change prompt for users flagged with user_metadata.must_change_password === true.
  */
 export function PasswordChangePrompt() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [hasShown, setHasShown] = useState(false);
 
   useEffect(() => {
+    // Only show once per session to prevent multiple dialogs
+    if (hasShown) return;
+
     // Debug logging
     console.log('🔐 PasswordChangePrompt - User metadata:', user?.user_metadata);
     console.log('🔐 must_change_password:', user?.user_metadata?.must_change_password);
@@ -33,10 +37,11 @@ export function PasswordChangePrompt() {
     if (user?.user_metadata?.must_change_password === true) {
       console.log('🔐 Opening password change prompt');
       setOpen(true);
+      setHasShown(true);
     } else {
       setOpen(false);
     }
-  }, [user]);
+  }, [user, hasShown]);
 
   // Check if password is expired (not just needs change)
   const isPasswordExpired = user?.user_metadata?.password_expired === true;
@@ -64,6 +69,14 @@ export function PasswordChangePrompt() {
     setOpen(false);
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -80,7 +93,15 @@ export function PasswordChangePrompt() {
             }
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
+        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+          {isPasswordExpired && (
+            <button
+              className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 order-last sm:order-first"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          )}
           {!isPasswordExpired && (
             <AlertDialogCancel asChild>
               <button

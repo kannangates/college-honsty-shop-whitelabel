@@ -14,7 +14,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const [authMode, setAuthMode] = useState<'login' | 'recovery'>(initialMode);
   const [themeLoaded, setThemeLoaded] = useState(false);
   const theme = WHITELABEL_CONFIG.branding;
-  
+
   // Initialize ISO compliance for this component
   const { trackUserAction, recordError } = useISOCompliance('AuthPage');
 
@@ -37,7 +37,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   if (loading || !themeLoaded) {
     return <LoadingSpinner fullScreen text="Loading your experience... ✨" />;
   }
-  
+
   if (user) return <Navigate to="/dashboard" replace />;
 
   const handleImageError = (error: Error) => {
@@ -46,8 +46,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   };
 
   const handleToggleForm = async (mode: 'login' | 'recovery') => {
-    await trackUserAction('toggle_auth_form', { 
-      switching_to: mode 
+    await trackUserAction('toggle_auth_form', {
+      switching_to: mode
     });
     setAuthMode(mode);
   };
@@ -82,7 +82,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur opacity-30"></div>
             <EnhancedImage
-              src="/college-logo.jpg"
+              src={theme.logo.url}
               alt="College Logo"
               className="relative w-16 h-16 md:w-20 md:h-20 object-cover rounded-2xl shadow-xl border-2 border-white/30 backdrop-blur-sm"
               fallbackSrc={theme.logo.fallback}
