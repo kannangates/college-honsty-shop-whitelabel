@@ -57,39 +57,32 @@ const WhitelabelConfig = () => {
         branding: parsedEditableConfig.branding,
       };
 
-      // Save directly to database
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: existingConfig } = await (supabase as any)
-        .from('whitelabel_config')
-        .select('id')
-        .limit(1)
-        .single();
-
-      if (existingConfig) {
-        // Update existing config
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from('whitelabel_config')
-          .update({
-            config: mergedConfig,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingConfig.id);
-
-        if (error) throw error;
-      } else {
-        // Insert new config
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from('whitelabel_config')
-          .insert({ config: mergedConfig });
-
-        if (error) throw error;
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
       }
+
+      // Send to backend API to update the file
+      const response = await fetch('/api/whitelabel/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ config: mergedConfig }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update configuration');
+      }
+
+      const result = await response.json();
 
       toast({
         title: 'Success',
-        description: 'Configuration updated successfully. Refresh the page to see changes.',
+        description: result.message || 'Configuration updated successfully. Please restart the server to apply changes.',
       });
     } catch (error) {
       console.error('Error saving config:', error);
@@ -150,7 +143,8 @@ const WhitelabelConfig = () => {
             disabled={loading}
           />
           <p className="text-sm text-muted-foreground mt-2">
-            Edit only the "app" and "branding" sections above. Changes will take effect after saving and refreshing the page.
+            Edit only the "app" and "branding" sections above. Click "Save Changes" to update the whitelabel.json file.
+            You'll need to restart the server to see the changes take effect.
           </p>
         </CardContent>
       </Card>

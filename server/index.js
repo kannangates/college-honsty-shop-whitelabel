@@ -5,6 +5,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { createServer as createViteServer } from 'vite';
 import mfaRoutes from './routes/mfa.js';
+import whitelabelRoutes from './routes/whitelabel.js';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -28,6 +29,7 @@ app.use(cookieParser());
 
 // API Routes
 app.use('/api/mfa', mfaRoutes);
+app.use('/api/whitelabel', whitelabelRoutes);
 
 // In development, use Vite's dev server
 if (process.env.NODE_ENV !== 'production') {
