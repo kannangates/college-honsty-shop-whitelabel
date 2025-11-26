@@ -12,6 +12,39 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if requesting user is admin
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !userProfile || userProfile.role !== 'admin') {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { operation, ...body } = await req.json();
     console.log(`👥 User management operation: ${operation}`);
 
@@ -33,8 +66,8 @@ Deno.serve(async (req) => {
     console.error('❌ Error in user management:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
-      { 
-        status: 400, 
+      {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
@@ -43,7 +76,7 @@ Deno.serve(async (req) => {
 
 async function fetchLeaderboard(supabase: SupabaseClient) {
   console.log('🏆 Fetching leaderboard data');
-  
+
   const { data, error } = await supabase
     .from('users')
     .select('id, student_id, name, points, role, status')
@@ -55,7 +88,7 @@ async function fetchLeaderboard(supabase: SupabaseClient) {
 
   return new Response(
     JSON.stringify({ users: data }),
-    { 
+    {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     }
   );
@@ -63,7 +96,7 @@ async function fetchLeaderboard(supabase: SupabaseClient) {
 
 async function updateLastSignin(supabase: SupabaseClient, userId: string) {
   console.log('🕐 Updating last signin for user:', userId);
-  
+
   const { error } = await supabase
     .from('users')
     .update({ last_signed_in_at: new Date().toISOString() })
@@ -73,7 +106,7 @@ async function updateLastSignin(supabase: SupabaseClient, userId: string) {
 
   return new Response(
     JSON.stringify({ success: true }),
-    { 
+    {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     }
   );
@@ -81,7 +114,7 @@ async function updateLastSignin(supabase: SupabaseClient, userId: string) {
 
 async function fetchUsers(supabase: SupabaseClient) {
   console.log('📋 Fetching all users');
-  
+
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -91,7 +124,7 @@ async function fetchUsers(supabase: SupabaseClient) {
 
   return new Response(
     JSON.stringify({ users: data }),
-    { 
+    {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     }
   );
@@ -108,7 +141,7 @@ interface UserUpdate {
 
 async function updateUser(supabase: SupabaseClient, userData: UserUpdate) {
   console.log('✏️ Updating user:', userData.id);
-  
+
   const { data, error } = await supabase
     .from('users')
     .update({
@@ -126,7 +159,7 @@ async function updateUser(supabase: SupabaseClient, userData: UserUpdate) {
 
   return new Response(
     JSON.stringify({ user: data[0] }),
-    { 
+    {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     }
   );
@@ -134,7 +167,7 @@ async function updateUser(supabase: SupabaseClient, userData: UserUpdate) {
 
 async function getUserStats(supabase: SupabaseClient) {
   console.log('📊 Getting user statistics');
-  
+
   // Total students
   const { count: totalStudents, error: totalError } = await supabase
     .from('users')
@@ -145,7 +178,7 @@ async function getUserStats(supabase: SupabaseClient) {
   // Active this month
   const currentMonth = new Date();
   const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-  
+
   const { count: activeThisMonth, error: activeError } = await supabase
     .from('users')
     .select('*', { count: 'exact', head: true })
@@ -179,7 +212,7 @@ async function getUserStats(supabase: SupabaseClient) {
       highestPoints: highestPointsData[0]?.points || 0,
       departments: uniqueDepartments
     }),
-    { 
+    {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     }
   );

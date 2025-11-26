@@ -69,11 +69,13 @@ const handler = async (req: Request): Promise<Response> => {
       department,
       email,
       password,
-      role = "student",
       shift = "Morning (1st Shift)",
       points = 100,
       userMetadata = {}
     } = bodyData;
+
+    // Security: Force role to "student" - never accept from client to prevent privilege escalation
+    const role = "student";
 
     log("📥 Incoming Payload:", {
       studentId,
