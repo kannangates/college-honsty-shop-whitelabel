@@ -40,6 +40,12 @@ interface Order {
 const formatOrderId = (order: Order) =>
   order.friendly_id || `${order.id.substring(0, 8)}...`;
 
+const buildPaymentUrl = (order: Order) => {
+  const friendlyOrderId = order.friendly_id || order.id;
+  const encodedOrderId = encodeURIComponent(friendlyOrderId);
+  return `/payment?mode=pay_now&orderId=${encodedOrderId}`;
+};
+
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -169,7 +175,7 @@ const MyOrders = () => {
                               <TableCell>
                                 <Button
                                   variant="destructive"
-                                  onClick={() => navigate(`/payment?mode=pay_now&orderId=${order.id}&amount=${order.total_amount}`)}
+                                  onClick={() => navigate(buildPaymentUrl(order))}
                                   aria-label="Pay Now"
                                   size="sm"
                                 >
@@ -203,7 +209,7 @@ const MyOrders = () => {
                       </div>
                       <Button
                         variant="destructive"
-                        onClick={() => navigate(`/payment?mode=pay_now&orderId=${order.id}&amount=${order.total_amount}`)}
+                        onClick={() => navigate(buildPaymentUrl(order))}
                         aria-label="Pay Now"
                         className="mt-4 w-full"
                       >

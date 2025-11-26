@@ -21,6 +21,12 @@ interface CartItem {
   image_url?: string;
 }
 
+interface OrderRecord {
+  id: string;
+  friendly_id: string | null;
+  total_amount: number;
+}
+
 export const useCart = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -57,7 +63,7 @@ export const useCart = () => {
     return items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
   };
 
-  const checkout = async (paymentMode: 'immediate' | 'later') => {
+  const checkout = async (paymentMode: 'immediate' | 'later'): Promise<OrderRecord | null> => {
     if (!user?.id || items.length === 0) return null;
 
     setIsLoading(true);
@@ -77,8 +83,8 @@ export const useCart = () => {
           payment_mode: dbPaymentMode,
           paid_at: paymentMode === 'immediate' ? new Date().toISOString() : null,
         })
-        .select()
-        .single();
+        .select('id,friendly_id,total_amount')
+        .single<OrderRecord>();
 
       if (orderError) throw orderError;
 
@@ -118,7 +124,7 @@ export const useCart = () => {
       
       toast({
         title: 'Order Placed Successfully!',
-        description: `Order #${order.id.slice(0, 8)} has been created.`,
+        description: `Order #${order.friendly_id || order.id.slice(0, 8)} has been created.`,
       });
 
       return order;

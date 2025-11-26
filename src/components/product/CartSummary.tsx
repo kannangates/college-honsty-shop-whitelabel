@@ -19,7 +19,7 @@ interface CartSummaryProps {
   items: CartItem[];
   updateQuantity: (productId: string, quantity: number) => void;
   totalPrice: number;
-  checkout: (mode: 'immediate' | 'later') => Promise<{ id: string } | null>;
+  checkout: (mode: 'immediate' | 'later') => Promise<{ id: string; friendly_id?: string | null } | null>;
 }
 
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
@@ -32,12 +32,18 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
   const [confirmMode, setConfirmMode] = useState<'pay_now' | 'pay_later' | null>(null);
   const navigate = useNavigate();
 
+  const navigateToPayment = (mode: 'pay_now' | 'pay_later', order: { id: string; friendly_id?: string | null }) => {
+    const friendlyOrderId = order.friendly_id || order.id;
+    const encodedOrderId = encodeURIComponent(friendlyOrderId);
+    navigate(`/payment?mode=${mode}&orderId=${encodedOrderId}`);
+  };
+
   const handlePayNow = async () => {
     setLoadingPayNow(true);
     try {
       const order = await checkout('immediate');
       if (order) {
-        navigate(`/payment?mode=pay_now&orderId=${order.id}&amount=${totalPrice}`);
+        navigateToPayment('pay_now', order);
       }
     } catch (error) {
       console.error('Error creating order:', error);
@@ -51,7 +57,7 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
     try {
       const order = await checkout('later');
       if (order) {
-        navigate(`/payment?mode=pay_later&orderId=${order.id}&amount=${totalPrice}`);
+        navigateToPayment('pay_later', order);
       }
     } catch (error) {
       console.error('Error creating order:', error);
