@@ -74,8 +74,17 @@ const WhitelabelConfig = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update configuration');
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          console.error('Server error details:', errorData);
+          throw new Error(errorData.error || 'Failed to update configuration');
+        } else {
+          const textError = await response.text();
+          console.error('Server error (non-JSON):', textError);
+          throw new Error(`Server error: ${response.status}. Make sure the server is running on port 8080 with 'npm run dev'`);
+        }
       }
 
       const result = await response.json();

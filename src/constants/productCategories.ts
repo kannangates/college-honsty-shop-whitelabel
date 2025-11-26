@@ -9,7 +9,6 @@ export const PRODUCT_CATEGORIES = [
   'Paper Products',
   'Pens',
   'Personal Care',
-  'Personal Care',
   'Stationery',
   'Tech Accessories',
   'Others'

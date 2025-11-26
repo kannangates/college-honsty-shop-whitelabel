@@ -1,14 +1,14 @@
 {
   "app": {
-    "name": "College Honesty Shop",
+    "name": "Shasun Honesty Shop",
     "welcome_points": 100,
     "tagline": "No Cameras 📷 | No Cashiers 💳 | Just Character 🫡",
     "subtitle": "🛡️ Honor in Every Transaction 🤝",
     "description": "A modern, secure, and ISO-compliant honesty shop management system built with enterprise-grade security and performance optimization."
   },
   "branding": {
-    "college_name": "Your College Name",
-    "portal_name": "Your College Honesty Shop Portal",
+    "college_name": "Shasun College",
+    "portal_name": "Shasun College Honesty Shop Portal",
     "colors": {
       "primary": "#3b82f6",
       "secondary": "#64748b",
@@ -42,13 +42,28 @@
       "mobile_number": "Enter your mobile number"
     },
     "shift_options": [
-      { "value": "Morning (1st Shift)", "label": "Morning (1st Shift)" },
-      { "value": "Evening (2nd Shift)", "label": "Evening (2nd Shift)" },
-      { "value": "Full Shift", "label": "Full Shift" }
+      {
+        "value": "Morning (1st Shift)",
+        "label": "Morning (1st Shift)"
+      },
+      {
+        "value": "Evening (2nd Shift)",
+        "label": "Evening (2nd Shift)"
+      },
+      {
+        "value": "Full Shift",
+        "label": "Full Shift"
+      }
     ],
     "role_options": [
-      { "value": "student", "label": "Student" },
-      { "value": "teacher", "label": "Teacher" }
+      {
+        "value": "student",
+        "label": "Student"
+      },
+      {
+        "value": "teacher",
+        "label": "Teacher"
+      }
     ]
   },
   "messages": {
@@ -149,4 +164,4 @@
   "admin": {
     "access_note": "Super Admin Access: Check with Radhika"
   }
-} 
+}

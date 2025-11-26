@@ -20,32 +20,55 @@ const requireAdminOrDeveloper = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      console.error('❌ No authorization header');
+      return res.status(401).json({ error: 'Unauthorized: No token provided' });
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    // Use the anon key client to verify the user's JWT token
+    const anonClient = createClient(
+      process.env.VITE_SUPABASE_URL || 'https://vkuagjkrpbagrchsqmsf.supabase.co',
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
+    );
+
+    const { data: { user }, error } = await anonClient.auth.getUser(token);
 
     if (error || !user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      console.error('❌ Auth error:', error?.message || 'No user found');
+      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
 
-    // Check user role
-    const { data: userData } = await supabase
+    console.log('✅ User authenticated:', user.email);
+
+    // Always query the users table for the current role (source of truth)
+    console.log('🔍 Querying users table for role...');
+    const { data: userData, error: roleError } = await supabase
       .from('users')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    if (!userData || (userData.role !== 'admin' && userData.role !== 'developer')) {
-      return res.status(403).json({ error: 'Admin or Developer access required' });
+    if (roleError) {
+      console.error('❌ Error fetching user role:', roleError);
+      return res.status(500).json({ error: 'Failed to verify user role: ' + roleError.message });
+    }
+
+    const userRole = userData?.role;
+    console.log('👤 User role from database:', userRole);
+
+    // Allow admin or developer roles
+    const allowedRoles = ['admin', 'developer'];
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      console.error('❌ Insufficient permissions. Role:', userRole);
+      return res.status(403).json({ error: 'Admin or Developer access required. Your role: ' + (userRole || 'none') });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    console.error('Auth error:', error);
-    res.status(401).json({ error: 'Authentication failed' });
+    console.error('❌ Auth error:', error);
+    res.status(401).json({ error: 'Authentication failed: ' + error.message });
   }
 };
 
