@@ -147,30 +147,6 @@ Deno.serve(async (req) => {
   }
 });
 
-    switch (validOp) {
-      case 'sync': {
-        return await syncInventoryData(supabase, validDate);
-      }
-      case 'save': {
-        const requestBody = await req.json();
-        
-        // Validate save request body
-        const saveValidation = dailyInventorySaveSchema.safeParse(requestBody);
-        if (!saveValidation.success) {
-          return new Response(
-            JSON.stringify({
-              error: 'Validation failed',
-              details: saveValidation.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
-            }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        return await saveInventoryData(supabase, saveValidation.data.data, validDate);
-      }
-      case 'export': {
-        return await exportInventoryData(supabase, validDate, validFormat);
-      }
 async function syncInventoryData(supabase: SupabaseClient, date: string) {
   console.log(`🔄 Syncing inventory data for ${date}`);
 
