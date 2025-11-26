@@ -3,15 +3,23 @@
  * Centralized list of product categories used across the application
  */
 export const PRODUCT_CATEGORIES = [
-  'Beverages',
-  'Snacks',
-  'Dairy',
-  'Bakery',
-  'Frozen Foods',
-  'Groceries',
+  'Art Supplies',
+  'Books',
+  'Clothing',
+  'Paper Products',
+  'Pens',
   'Personal Care',
-  'Household',
+  'Personal Care',
+  'Stationery',
+  'Tech Accessories',
   'Others'
 ] as const;
 
 export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
+
+
+
+
+
+
+
