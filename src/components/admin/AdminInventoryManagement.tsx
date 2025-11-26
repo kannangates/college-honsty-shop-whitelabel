@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
+import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 
 import { InventoryFilters } from './InventoryFilters';
 import { AddProductModal } from './AddProductModal';
@@ -43,7 +44,6 @@ export const AdminInventoryManagement = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState<string[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState<InventoryFiltersState>({
     search: '',
@@ -97,22 +97,7 @@ export const AdminInventoryManagement = () => {
   };
 
   const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('category')
-        .not('category', 'is', null);
-
-      if (error) {
-        console.error('Error fetching categories:', error);
-        return;
-      }
-
-      const uniqueCategories = [...new Set(data.map(item => item.category))];
-      setCategories(uniqueCategories);
-    } catch (error) {
-      console.error('Error in fetchCategories:', error);
-    }
+    // Categories are now defined in constants, no need to fetch
   };
 
   const fetchLowStockProducts = async () => {
@@ -292,7 +277,7 @@ export const AdminInventoryManagement = () => {
         onCategoryChange={setSelectedCategory}
         showLowStock={showLowStock}
         onLowStockToggle={() => setShowLowStock(!showLowStock)}
-        categories={categories}
+        categories={PRODUCT_CATEGORIES}
         lowStockCount={lowStockProducts.length}
       />
 

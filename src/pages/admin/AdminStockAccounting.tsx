@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG } from '@/config';
 import { Loader2, Save } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 
 // Product as stored in DB
 interface Product {
@@ -97,8 +98,8 @@ const AdminStockAccounting = () => {
       if (operationsError) throw operationsError;
 
       // Type assertion for operationsData with proper handling
-      const opsData: StockOperationRow[] = (operationsData ?? []).map((op: Omit<StockOperationRow, 'updated_at' | 'warehouse_stock'> & { 
-        updated_at?: string | null; 
+      const opsData: StockOperationRow[] = (operationsData ?? []).map((op: Omit<StockOperationRow, 'updated_at' | 'warehouse_stock'> & {
+        updated_at?: string | null;
         warehouse_stock?: number;
       }) => ({
         ...op,
@@ -281,12 +282,12 @@ const AdminStockAccounting = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-      <div className="flex items-center justify-between">
-      <div>
-          <h1 className="text-3xl font-bold">Daily Stock Accounting</h1>
-          <p className="text-purple-100">Manage the stock operations for today</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Daily Stock Accounting</h1>
+            <p className="text-purple-100">Manage the stock operations for today</p>
           </div>
-          </div>
+        </div>
       </div>
 
       {/* Filters Section */}
@@ -300,7 +301,7 @@ const AdminStockAccounting = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {Array.from(new Set(products.map(p => p.category))).map((category) => (
+            {PRODUCT_CATEGORIES.map((category) => (
               <SelectItem key={category} value={category}>
                 {category}
               </SelectItem>
@@ -373,34 +374,34 @@ const AdminStockAccounting = () => {
                 const stolenStock =
                   estimatedClosingStock - (operation.actual_closing_stock || 0) - (operation.wastage_stock || 0);
                 return (
-                <TableRow key={`${operation.product_id}-${operation.created_at}`}>
-                  <TableCell className="font-medium">
-                    {operation.product?.name || 'Unknown Product'}
-                  </TableCell>
+                  <TableRow key={`${operation.product_id}-${operation.created_at}`}>
+                    <TableCell className="font-medium">
+                      {operation.product?.name || 'Unknown Product'}
+                    </TableCell>
                     <TableCell>{operation.opening_stock}</TableCell>
                     <TableCell>{operation.additional_stock}</TableCell>
                     <TableCell className="text-right font-medium">{estimatedClosingStock}</TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min="0"
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
                         value={operation.actual_closing_stock}
                         onChange={(e) => handleOperationChange(operation.product_id, 'actual_closing_stock', Number(e.target.value))}
-                      className="text-right"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={operation.wastage_stock}
-                      onChange={(e) => handleOperationChange(operation.product_id, 'wastage_stock', Number(e.target.value))}
-                      className="text-right"
-                    />
-                  </TableCell>
+                        className="text-right"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={operation.wastage_stock}
+                        onChange={(e) => handleOperationChange(operation.product_id, 'wastage_stock', Number(e.target.value))}
+                        className="text-right"
+                      />
+                    </TableCell>
                     <TableCell className="text-right font-medium">{stolenStock}</TableCell>
                     <TableCell>{sales}</TableCell>
-                </TableRow>
+                  </TableRow>
                 );
               })}
             </TableBody>

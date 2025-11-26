@@ -9,6 +9,7 @@ import { History, Calendar, AlertTriangle, Loader2, Filter, Download } from 'luc
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
+import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 
 // Product interface (reused from existing pages)
 interface Product {
@@ -253,11 +254,8 @@ const AdminStockAccountingHistory = () => {
     }
   }, [filters.startDate, filters.endDate, toast]);
 
-  // Get unique categories from records
-  const uniqueCategories = useMemo(() => {
-    const categories = new Set(records.map(r => r.product.category));
-    return Array.from(categories).sort();
-  }, [records]);
+  // Use centralized product categories
+  const uniqueCategories = PRODUCT_CATEGORIES;
 
   // Get unique products from records
   const uniqueProducts = useMemo(() => {

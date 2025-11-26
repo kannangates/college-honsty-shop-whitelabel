@@ -3,7 +3,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Package2, AlertCircle } from 'lucide-react';
+import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 
 interface ProductInput {
   name: string;
@@ -97,7 +99,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             Enter the details for the new product. All fields marked with * are required.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-6 py-4">
           <div className="grid gap-4">
             <div className="space-y-2">
@@ -165,15 +167,27 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 <Label htmlFor="add-category" className="text-sm font-medium flex items-center">
                   Category *
                 </Label>
-                <Input
-                  id="add-category"
-                  name="category"
+                <Select
                   value={formData.category}
-                  onChange={handleChange}
-                  className={`h-10 ${errors.category ? 'border-red-500 focus:ring-red-500' : 'focus:ring-blue-500'}`}
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ ...prev, category: value }));
+                    if (errors.category) {
+                      setErrors(prev => ({ ...prev, category: '' }));
+                    }
+                  }}
                   disabled={loading}
-                  placeholder="Enter category"
-                />
+                >
+                  <SelectTrigger className={`h-10 ${errors.category ? 'border-red-500 focus:ring-red-500' : 'focus:ring-blue-500'}`}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRODUCT_CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {errors.category && (
                   <div className="flex items-center gap-1 text-sm text-red-600">
                     <AlertCircle className="h-4 w-4" />
