@@ -2,16 +2,12 @@
 // supabase/functions/auth-login/index.ts
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { authLoginSchema } from "../_shared/schemas.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-interface LoginRequest {
-  studentId: string;
-  password: string;
-}
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("🔐 Login function called");
@@ -36,15 +32,24 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
     // 2) Parse request body
-    const { studentId, password } = (await req.json()) as LoginRequest;
-    console.log("🔑 Login attempt for student ID:", studentId);
+    const requestBody = await req.json();
+    const validationResult = authLoginSchema.safeParse(requestBody);
 
-    if (!studentId || !password) {
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: "Missing studentId or password." }),
+        JSON.stringify({
+          error: "Validation failed",
+          details: validationResult.error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message
+          }))
+        }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    const { studentId, password } = validationResult.data;
+    console.log("🔑 Login attempt for student ID:", studentId);
 
     // 3) Lookup in your 'users' table by student_id
     const { data: userData, error: userError } = await supabase

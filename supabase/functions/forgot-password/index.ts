@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8';
+import { forgotPasswordSchema } from '../_shared/schemas.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -47,6 +48,22 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+        const requestBody = await req.json();
+    
+        // Validate input with Zod schema
+        const validationResult = forgotPasswordSchema.safeParse(requestBody);
+        if (!validationResult.success) {
+          return new Response(
+            JSON.stringify({
+              error: 'Validation failed',
+              details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const { studentId } = validationResult.data;
+        console.log('Password reset request for student ID:', studentId);
 
     // Find user by student ID
     console.log('Looking up user with student ID:', studentId);

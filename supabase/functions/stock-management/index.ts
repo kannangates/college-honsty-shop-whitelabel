@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { stockOperationSchema } from '../_shared/schemas.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -49,14 +50,22 @@ serve(async (req: Request) => {
       );
     }
 
-    const { operation, productId, quantity } = await req.json();
+    const requestBody = await req.json();
 
-    if (!operation || !productId) {
+    // Validate input with Zod schema
+    const validationResult = stockOperationSchema.safeParse(requestBody);
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Missing required fields: operation and productId' }),
+        JSON.stringify({
+          success: false,
+          error: 'Validation failed',
+          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const { operation, productId, quantity } = validationResult.data;
 
     switch (operation) {
       case 'restock_warehouse': {

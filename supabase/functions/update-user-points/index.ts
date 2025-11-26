@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
+import { updatePointsSchema } from '../_shared/schemas.ts';
 
 interface UpdatePointsRequest {
   studentId: string;
@@ -51,15 +52,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { studentId, points, reason }: UpdatePointsRequest = await req.json();
-    console.log('💰 Updating points for student:', studentId, 'points:', points, 'reason:', reason);
+    const requestBody = await req.json();
 
-    if (!studentId || points === undefined || !reason) {
+    // Validate input with Zod schema
+    const validationResult = updatePointsSchema.safeParse(requestBody);
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: studentId, points, or reason' }),
+        JSON.stringify({
+          error: 'Validation failed',
+          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const { studentId, points, reason } = validationResult.data;
+    console.log('💰 Updating points for student:', studentId, 'points:', points, 'reason:', reason);
 
     // First, get the current user data
     const { data: userData, error: userError } = await supabase
@@ -67,7 +75,6 @@ Deno.serve(async (req) => {
       .select('id, name, points, department')
       .eq('student_id', studentId)
       .single();
-
     if (userError || !userData) {
       console.log('❌ User not found:', studentId);
       return new Response(

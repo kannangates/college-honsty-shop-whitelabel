@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { emailRequestSchema } from '../_shared/schemas.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,16 +24,21 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { 
-      to, 
-      subject, 
-      htmlBody, 
-      plainTextBody, 
-      cc, 
-      replyTo, 
-      fromName = "Shasun Honesty Shop",
-      fromEmail 
-    }: EmailRequest = await req.json();
+    const requestBody = await req.json();
+
+    // Validate input with Zod schema
+    const validationResult = emailRequestSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Validation failed',
+          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const { to, subject, htmlBody, plainTextBody, cc, replyTo, fromName, fromEmail } = validationResult.data;
 
     // Get Gmail credentials from Supabase secrets
     const gmailUser = Deno.env.get('GMAIL_USER');

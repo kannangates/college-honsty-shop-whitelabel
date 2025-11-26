@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.53.0';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,6 +26,22 @@ Deno.serve(async (req) => {
     if (statsError) {
       throw new Error(`Failed to get table stats: ${statsError.message}`);
     }
+        // Validate optional query parameters
+        const url = new URL(req.url);
+        const refreshParam = url.searchParams.get('refresh');
+    
+        const refreshSchema = z.enum(['true', 'false']).optional();
+        const refreshValidation = refreshSchema.safeParse(refreshParam);
+    
+        if (!refreshValidation.success) {
+          return new Response(
+            JSON.stringify({
+              error: 'Invalid refresh parameter',
+              details: refreshValidation.error.issues.map(e => ({ field: 'refresh', message: e.message }))
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
 
     console.log(`✅ Table stats updated successfully. Found ${tableStats?.length || 0} tables.`);
 

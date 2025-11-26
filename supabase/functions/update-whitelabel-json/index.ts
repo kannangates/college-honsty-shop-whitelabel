@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { configSchema } from '../_shared/schemas.ts';
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -60,14 +61,30 @@ Deno.serve(async (req: Request) => {
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+            // Validate config with Zod schema
+            const configValidation = configSchema.safeParse(config);
+            if (!configValidation.success) {
+              return new Response(
+                JSON.stringify({
+                  error: 'Config validation failed',
+                  details: configValidation.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+                }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            }
+
+            const validatedConfig = configValidation.data;
 
       // Write the config to whitelabel.json file
       const configJson = JSON.stringify(config, null, 2);
 
+  const configJson = JSON.stringify(validatedConfig, null, 2);
       try {
         // For now, we'll just return success since file writing in edge functions has limitations
         console.log('Whitelabel config received:', configJson);
 
+  // Write the config to whitelabel.json file
+  const configJson = JSON.stringify(validatedConfig, null, 2);
         return new Response(
           JSON.stringify({ success: true, message: 'Whitelabel configuration updated successfully' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -79,6 +96,12 @@ Deno.serve(async (req: Request) => {
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+            // Write the config to whitelabel.json file
+            const configJson = JSON.stringify(validatedConfig, null, 2);
+      
+            try {
+              // For now, we'll just return success since file writing in edge functions has limitations
+              console.log('Whitelabel config received:', configJson);
     }
 
     return new Response(

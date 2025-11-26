@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
 import { logAdminAction } from '../_shared/auditLog.ts';
+import { orderManagementSchema } from '../_shared/schemas.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -52,7 +53,30 @@ serve(async (req: Request) => {
       );
     }
 
-    const { operation, ...params } = await req.json()
+    const requestBody = await req.json();
+
+    // Validate input with Zod schema
+    const validationResult = orderManagementSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      type ZodIssue = { path: Array<string | number>; message: string };
+      const issues = (validationResult as unknown as { error: { issues: ZodIssue[] } }).error.issues as ZodIssue[];
+      return new Response(
+        JSON.stringify({
+          error: 'Validation failed',
+          details: issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const operation = validationResult.data.operation;
+    const params = validationResult.data as unknown as {
+      id?: string;
+      payment_status?: 'paid' | 'unpaid' | 'pending' | 'refunded';
+      order_status?: 'pending' | 'processing' | 'completed' | 'cancelled';
+      transaction_id?: string;
+      updated_by?: string;
+    };
 
     // Get IP and User Agent for audit logging
     const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
@@ -152,7 +176,9 @@ serve(async (req: Request) => {
       }
 
       case 'update_order': {
-        const { id, ...updateData } = params
+        const id = params.id;
+        const updateData: Record<string, unknown> = { ...(params as Record<string, unknown>) };
+        delete updateData.id;
 
         // Get current order data before update to check status change
         const { data: currentOrder, error: currentOrderError } = await supabase

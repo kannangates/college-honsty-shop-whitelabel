@@ -1,6 +1,7 @@
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -43,6 +44,22 @@ Deno.serve(async (req) => {
       console.error('❌ Error fetching schema:', error);
       throw error;
     }
+        // Validate optional query parameters
+        const url = new URL(req.url);
+        const includeParam = url.searchParams.get('include');
+    
+        const includeSchema = z.enum(['functions', 'triggers', 'views']).optional();
+        const includeValidation = includeSchema.safeParse(includeParam);
+    
+        if (!includeValidation.success) {
+          return new Response(
+            JSON.stringify({
+              error: 'Invalid include parameter',
+              details: includeValidation.error.issues.map(e => ({ field: 'include', message: e.message }))
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
 
     console.log('✅ Database schema fetched successfully');
     

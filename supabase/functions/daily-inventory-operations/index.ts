@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { dailyInventorySaveSchema, inventoryOperationSchema } from '../_shared/schemas.ts'
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 interface InventoryRow {
   product_id: string;
@@ -70,7 +72,50 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const operation = url.searchParams.get('operation') || 'sync';
     const date = url.searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const format = url.searchParams.get('format') || 'excel';
+    
+    // Validate query parameters
+    const operationSchema = z.enum(['sync', 'save', 'export']);
+    const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, use YYYY-MM-DD');
+    const formatSchema = z.enum(['excel', 'csv', 'json']);
+    
+    const validatedOperation = operationSchema.safeParse(operation);
+    const validatedDate = dateSchema.safeParse(date);
+    const validatedFormat = formatSchema.safeParse(format);
+    
+    if (!validatedOperation.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid operation',
+          details: validatedOperation.error.issues.map(e => ({ field: 'operation', message: e.message }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!validatedDate.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid date',
+          details: validatedDate.error.issues.map(e => ({ field: 'date', message: e.message }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!validatedFormat.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid format',
+          details: validatedFormat.error.issues.map(e => ({ field: 'format', message: e.message }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
+    const validOp = validatedOperation.data;
+    const validDate = validatedDate.data;
+    const validFormat = validatedFormat.data;
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -102,6 +147,30 @@ Deno.serve(async (req) => {
   }
 });
 
+    switch (validOp) {
+      case 'sync': {
+        return await syncInventoryData(supabase, validDate);
+      }
+      case 'save': {
+        const requestBody = await req.json();
+        
+        // Validate save request body
+        const saveValidation = dailyInventorySaveSchema.safeParse(requestBody);
+        if (!saveValidation.success) {
+          return new Response(
+            JSON.stringify({
+              error: 'Validation failed',
+              details: saveValidation.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        return await saveInventoryData(supabase, saveValidation.data.data, validDate);
+      }
+      case 'export': {
+        return await exportInventoryData(supabase, validDate, validFormat);
+      }
 async function syncInventoryData(supabase: SupabaseClient, date: string) {
   console.log(`🔄 Syncing inventory data for ${date}`);
 

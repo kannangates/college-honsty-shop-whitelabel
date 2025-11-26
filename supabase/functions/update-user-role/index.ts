@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { updateRoleSchema } from '../_shared/schemas.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,24 +44,20 @@ serve(async (req) => {
       );
     }
 
-    // Get request body
-    const { userId, newRole } = await req.json();
-
-    if (!userId || !newRole) {
+    // Parse and validate request body
+    const requestBody = await req.json();
+    const validationResult = updateRoleSchema.safeParse(requestBody);
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: "userId and newRole are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: 'Validation failed',
+          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validate role
-    const validRoles = ["student", "teacher", "admin", "developer"];
-    if (!validRoles.includes(newRole)) {
-      return new Response(
-        JSON.stringify({ error: `Invalid role. Must be one of: ${validRoles.join(", ")}` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const { userId, newRole } = validationResult.data;
 
     // Update role in users table
     const { error: updateError } = await supabase
@@ -75,7 +72,6 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
     // Get current user metadata
     const { data: targetUser, error: getUserError } = await supabase.auth.admin.getUserById(userId);
 

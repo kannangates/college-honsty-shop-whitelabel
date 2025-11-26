@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { logAdminAction } from '../_shared/auditLog.ts';
+import { userManagementSchema } from '../_shared/schemas.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -46,7 +47,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { operation, ...body } = await req.json();
+    const requestBody = await req.json();
+
+    // Validate input with Zod schema
+    const validationResult = userManagementSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      type ZodIssue = { path: Array<string | number>; message: string };
+      const issues = (validationResult as unknown as { error: { issues: ZodIssue[] } }).error.issues as ZodIssue[];
+      return new Response(
+        JSON.stringify({
+          error: 'Validation failed',
+          details: issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { operation } = validationResult.data;
     console.log(`👥 User management operation: ${operation}`);
 
     // Get IP and User Agent for audit logging
@@ -59,11 +76,19 @@ Deno.serve(async (req) => {
       case 'fetch_leaderboard':
         return await fetchLeaderboard(supabase, user.id, userProfile.role, ipAddress, userAgent);
       case 'update_user':
-        return await updateUser(supabase, body, user.id, userProfile.role, ipAddress, userAgent);
+        if ('id' in validationResult.data) {
+          const updateData = validationResult.data as unknown as UserUpdate;
+          return await updateUser(supabase, updateData, user.id, userProfile.role, ipAddress, userAgent);
+        }
+        throw new Error('Invalid update_user data');
       case 'get_stats':
         return await getUserStats(supabase, user.id, userProfile.role, ipAddress, userAgent);
       case 'update_last_signin':
-        return await updateLastSignin(supabase, body.userId);
+        if ('userId' in validationResult.data) {
+          const data = validationResult.data as unknown as { userId: string };
+          return await updateLastSignin(supabase, data.userId);
+        }
+        throw new Error('Invalid update_last_signin data');
       default:
         throw new Error('Invalid operation');
     }

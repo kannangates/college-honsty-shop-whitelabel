@@ -2,6 +2,7 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 interface OrderRow { total_amount: number }
 interface ProductRow { name: string; current_stock: number; opening_stock: number }
@@ -32,6 +33,22 @@ Deno.serve(async (req: Request) => {
       } catch (error) {
         console.log('Could not get user from auth header:', error);
       }
+          // Validate optional query parameters
+          const url = new URL(req.url);
+          const cacheParam = url.searchParams.get('cache');
+    
+          const cacheSchema = z.enum(['true', 'false']).optional();
+          const cacheValidation = cacheSchema.safeParse(cacheParam);
+    
+          if (!cacheValidation.success) {
+            return new Response(
+              JSON.stringify({
+                error: 'Invalid cache parameter',
+                details: cacheValidation.error.issues.map(e => ({ field: 'cache', message: e.message }))
+              }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
     }
 
     // Refresh rankings only if needed (cache for 5 minutes)

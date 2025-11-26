@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8';
+import { adminResetPasswordSchema } from '../_shared/schemas.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -73,23 +74,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Parse request body
-    const { userId, newPassword }: AdminResetPasswordRequest = await req.json();
+    // Parse and validate request body
+    const requestBody = await req.json();
+    const validationResult = adminResetPasswordSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Validation failed',
+          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { userId, newPassword } = validationResult.data;
     console.log('Admin password reset request for user:', userId);
-
-    if (!userId || !newPassword) {
-      return new Response(
-        JSON.stringify({ error: 'User ID and new password are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (newPassword.length < 6) {
-      return new Response(
-        JSON.stringify({ error: 'Password must be at least 6 characters long' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     // Update user password using admin API
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(

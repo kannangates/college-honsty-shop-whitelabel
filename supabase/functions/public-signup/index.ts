@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { publicSignupSchema } from '../_shared/schemas.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,16 +64,31 @@ const handler = async (req: Request): Promise<Response> => {
 
     log("🔍 Parsed body data:", bodyData);
 
+    // Validate input with Zod schema
+    const validationResult = publicSignupSchema.safeParse(bodyData);
+    if (!validationResult.success) {
+      type ZodIssue = { path: Array<string | number>; message: string };
+      const issues = (validationResult as unknown as { error: { issues: ZodIssue[] } }).error.issues as ZodIssue[];
+      log("❌ Validation failed:", issues);
+      return new Response(
+        JSON.stringify({
+          error: "Validation failed",
+          details: issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const {
       studentId,
       name,
       department,
       email,
       password,
-      shift = "Morning (1st Shift)",
-      points = 100,
-      userMetadata = {}
-    } = bodyData;
+      shift,
+      points,
+      userMetadata
+    } = validationResult.data;
 
     // Security: Force role to "student" - never accept from client to prevent privilege escalation
     const role = "student";
@@ -89,25 +105,6 @@ const handler = async (req: Request): Promise<Response> => {
       origin: req.headers.get("origin"),
       ip: req.headers.get("x-forwarded-for")
     });
-
-    if (!studentId || !name || !department || !email || !password) {
-      log("❌ Missing required fields");
-      log("🔍 About to return missing fields error");
-      return new Response(
-        JSON.stringify({ error: "Missing required fields." }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const validShifts = ['Morning (1st Shift)', 'Evening (2nd Shift)', 'Full Shift'];
-    if (shift && !validShifts.includes(shift)) {
-      log("❌ Invalid shift value:", shift);
-      log("🔍 About to return invalid shift error");
-      return new Response(
-        JSON.stringify({ error: "Invalid shift value." }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
 
     log("🔍 Checking for existing user in users table...");
     const { data: existingUser, error: existingError } = await supabase

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
+import { badgeAwardRequestSchema } from '../_shared/schemas.ts';
 
 interface BadgeAwardResult {
   newBadges: string[];
@@ -34,12 +35,21 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { userId, orderId } = await req.json()
+    const requestBody = await req.json();
 
-    if (!userId) {
-      throw new Error('User ID is required')
+    // Validate input with Zod schema
+    const validationResult = badgeAwardRequestSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Validation failed',
+          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
+    const { userId, orderId } = validationResult.data;
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
