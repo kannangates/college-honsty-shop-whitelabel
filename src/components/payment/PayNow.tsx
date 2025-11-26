@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/useAuth';
 import { LogOut, Loader2 } from 'lucide-react';
+import QRCode from 'qrcode';
+import { WHITELABEL_CONFIG } from '@/config';
 
 interface PayNowProps {
   orderId: string;
@@ -17,8 +19,80 @@ interface PayNowProps {
 export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCancel }) => {
   const [transactionId, setTransactionId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [qrSrc, setQrSrc] = useState<string | null>(null);
   const { toast } = useToast();
   const { logout } = useAuth();
+
+  const paymentConfig = WHITELABEL_CONFIG?.app?.payment;
+  const fallbackQr = paymentConfig?.qr?.fallback_image ?? '/static-qr-code.png';
+  const shouldUseDynamicQr = Boolean(
+    paymentConfig?.experience === 'dynamic_qr' &&
+    paymentConfig?.upi?.vpa &&
+    amount > 0
+  );
+
+  const upiPayload = useMemo(() => {
+    if (!shouldUseDynamicQr || !paymentConfig?.upi?.vpa) {
+      return null;
+    }
+
+    const params = new URLSearchParams();
+    params.set('pa', paymentConfig.upi.vpa);
+    if (paymentConfig.upi.payee_name) {
+      params.set('pn', paymentConfig.upi.payee_name);
+    }
+    params.set('cu', 'INR');
+    params.set('am', amount.toFixed(2));
+
+    const notePrefix = paymentConfig.upi.note_prefix ?? 'Order';
+    const shortOrderRef = orderId.slice(-6).toUpperCase();
+    params.set('tn', `${notePrefix} ${shortOrderRef}`);
+    params.set('tr', orderId);
+
+    return `upi://pay?${params.toString()}`;
+  }, [
+    shouldUseDynamicQr,
+    paymentConfig?.upi?.payee_name,
+    paymentConfig?.upi?.note_prefix,
+    paymentConfig?.upi?.vpa,
+    amount,
+    orderId
+  ]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!upiPayload) {
+      setQrSrc(null);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    QRCode.toDataURL(upiPayload, {
+      width: 512,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    })
+      .then(dataUrl => {
+        if (isMounted) {
+          setQrSrc(dataUrl);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to generate QR code', error);
+        if (isMounted) {
+          setQrSrc(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [upiPayload]);
 
   const handlePaymentAndLogout = async () => {
     if (!transactionId.trim()) {
@@ -71,8 +145,8 @@ export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCa
               <div className="w-full max-w-md mx-auto">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
                   <img
-                    src="/static-qr-code.png"
-                    alt="QR Code"
+                    src={qrSrc ?? fallbackQr}
+                    alt={shouldUseDynamicQr ? 'Dynamic payment QR' : 'Static payment QR'}
                     className="w-full max-w-xs mx-auto object-contain"
                     style={{ aspectRatio: '1/1' }}
                   />
@@ -80,6 +154,11 @@ export const PayNow: React.FC<PayNowProps> = ({ orderId, amount, onSuccess, onCa
                 <div className="text-center">
                   <div className="text-sm text-gray-500 mb-1 font-medium">Amount to Pay</div>
                   <div className="text-5xl font-bold text-green-600">₹{amount.toFixed(2)}</div>
+                  {shouldUseDynamicQr && (
+                    <p className="text-sm text-gray-500 mt-3">
+                      Scan the QR code—your UPI app will already have the amount filled in.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

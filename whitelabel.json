@@ -4,7 +4,18 @@
     "welcome_points": 100,
     "tagline": "No Cameras 📷 | No Cashiers 💳 | Just Character 🫡",
     "subtitle": "🛡️ Honor in Every Transaction 🤝",
-    "description": "A modern, secure, and ISO-compliant honesty shop management system built with enterprise-grade security and performance optimization."
+    "description": "A modern, secure, and ISO-compliant honesty shop management system built with enterprise-grade security and performance optimization.",
+    "payment": {
+      "experience": "dynamic_qr",
+      "upi": {
+        "vpa": "shasunhonesty@upi",
+        "payee_name": "Shasun Honesty Shop",
+        "note_prefix": "Order"
+      },
+      "qr": {
+        "fallback_image": "/static-qr-code.png"
+      }
+    }
   },
   "branding": {
     "college_name": "Shasun College",

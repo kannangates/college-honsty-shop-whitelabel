@@ -40,6 +40,17 @@ declare module '../whitelabel.json' {
       tagline: string;
       subtitle: string;
       description: string;
+      payment?: {
+        experience?: 'static_qr' | 'dynamic_qr';
+        upi?: {
+          vpa?: string;
+          payee_name?: string;
+          note_prefix?: string;
+        };
+        qr?: {
+          fallback_image?: string;
+        };
+      };
     };
     branding: {
       college_name: string;
