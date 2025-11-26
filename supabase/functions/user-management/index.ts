@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { logAdminAction } from '../_shared/auditLog.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -48,15 +49,19 @@ Deno.serve(async (req) => {
     const { operation, ...body } = await req.json();
     console.log(`👥 User management operation: ${operation}`);
 
+    // Get IP and User Agent for audit logging
+    const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+
     switch (operation) {
       case 'fetch_users':
-        return await fetchUsers(supabase);
+        return await fetchUsers(supabase, user.id, userProfile.role, ipAddress, userAgent);
       case 'fetch_leaderboard':
-        return await fetchLeaderboard(supabase);
+        return await fetchLeaderboard(supabase, user.id, userProfile.role, ipAddress, userAgent);
       case 'update_user':
-        return await updateUser(supabase, body);
+        return await updateUser(supabase, body, user.id, userProfile.role, ipAddress, userAgent);
       case 'get_stats':
-        return await getUserStats(supabase);
+        return await getUserStats(supabase, user.id, userProfile.role, ipAddress, userAgent);
       case 'update_last_signin':
         return await updateLastSignin(supabase, body.userId);
       default:
@@ -74,8 +79,20 @@ Deno.serve(async (req) => {
   }
 });
 
-async function fetchLeaderboard(supabase: SupabaseClient) {
+async function fetchLeaderboard(supabase: SupabaseClient, userId: string, userRole: string, ipAddress: string, userAgent: string) {
   console.log('🏆 Fetching leaderboard data');
+
+  // Audit log: Admin accessing student data
+  await logAdminAction({
+    supabase,
+    userId,
+    userRole,
+    action: 'SELECT',
+    tableName: 'users',
+    newValues: { operation: 'fetch_leaderboard', note: 'Admin accessed student leaderboard with PII' },
+    ipAddress,
+    userAgent
+  });
 
   const { data, error } = await supabase
     .from('users')
@@ -112,8 +129,20 @@ async function updateLastSignin(supabase: SupabaseClient, userId: string) {
   );
 }
 
-async function fetchUsers(supabase: SupabaseClient) {
+async function fetchUsers(supabase: SupabaseClient, userId: string, userRole: string, ipAddress: string, userAgent: string) {
   console.log('📋 Fetching all users');
+
+  // Audit log: Admin accessing all user data with PII
+  await logAdminAction({
+    supabase,
+    userId,
+    userRole,
+    action: 'SELECT',
+    tableName: 'users',
+    newValues: { operation: 'fetch_users', note: 'Admin accessed all user data with PII (names, emails, student IDs)' },
+    ipAddress,
+    userAgent
+  });
 
   const { data, error } = await supabase
     .from('users')
@@ -137,10 +166,24 @@ interface UserUpdate {
   department?: string;
   mobile_number?: string;
   status?: string;
+  [key: string]: string | undefined;
 }
 
-async function updateUser(supabase: SupabaseClient, userData: UserUpdate) {
+async function updateUser(supabase: SupabaseClient, userData: UserUpdate, userId: string, userRole: string, ipAddress: string, userAgent: string) {
   console.log('✏️ Updating user:', userData.id);
+
+  // Audit log: Admin updating user data
+  await logAdminAction({
+    supabase,
+    userId,
+    userRole,
+    action: 'UPDATE',
+    tableName: 'users',
+    recordId: userData.id,
+    newValues: userData,
+    ipAddress,
+    userAgent
+  });
 
   const { data, error } = await supabase
     .from('users')
@@ -165,8 +208,20 @@ async function updateUser(supabase: SupabaseClient, userData: UserUpdate) {
   );
 }
 
-async function getUserStats(supabase: SupabaseClient) {
+async function getUserStats(supabase: SupabaseClient, userId: string, userRole: string, ipAddress: string, userAgent: string) {
   console.log('📊 Getting user statistics');
+
+  // Audit log: Admin accessing user statistics
+  await logAdminAction({
+    supabase,
+    userId,
+    userRole,
+    action: 'SELECT',
+    tableName: 'users',
+    newValues: { operation: 'get_stats', note: 'Admin accessed user statistics' },
+    ipAddress,
+    userAgent
+  });
 
   // Total students
   const { count: totalStudents, error: totalError } = await supabase

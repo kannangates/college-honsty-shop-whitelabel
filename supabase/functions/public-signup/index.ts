@@ -145,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const emailExists = existingAuthUsers.users.some((u) => u.email === email);
+    const emailExists = existingAuthUsers.users.some((u: { email?: string }) => u.email === email);
     if (emailExists) {
       log("❌ Email already in use:", email);
       log("🔍 About to return duplicate email error");

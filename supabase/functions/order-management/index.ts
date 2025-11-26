@@ -1,7 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
+import { logAdminAction } from '../_shared/auditLog.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,10 +19,59 @@ serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if requesting user is admin
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !userProfile || userProfile.role !== 'admin') {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { operation, ...params } = await req.json()
+
+    // Get IP and User Agent for audit logging
+    const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const userAgent = req.headers.get('user-agent') || 'unknown';
 
     switch (operation) {
       case 'fetch_orders': {
+        // Audit log: Admin accessing all orders with PII
+        await logAdminAction({
+          supabase,
+          userId: user.id,
+          userRole: userProfile.role,
+          action: 'SELECT',
+          tableName: 'orders',
+          newValues: { operation: 'fetch_orders', note: 'Admin accessed all orders with customer PII' },
+          ipAddress,
+          userAgent
+        });
+
         const { data: orders, error } = await supabase
           .from('orders')
           .select(`
@@ -43,8 +93,20 @@ serve(async (req: Request) => {
       }
 
       case 'get_stats': {
+        // Audit log: Admin accessing financial metrics
+        await logAdminAction({
+          supabase,
+          userId: user.id,
+          userRole: userProfile.role,
+          action: 'SELECT',
+          tableName: 'orders',
+          newValues: { operation: 'get_stats', note: 'Admin accessed revenue and financial metrics' },
+          ipAddress,
+          userAgent
+        });
+
         const today = new Date().toISOString().split('T')[0]
-        
+
         // Today's orders count
         const { count: todayOrders } = await supabase
           .from('orders')
@@ -91,7 +153,7 @@ serve(async (req: Request) => {
 
       case 'update_order': {
         const { id, ...updateData } = params
-        
+
         // Get current order data before update to check status change
         const { data: currentOrder, error: currentOrderError } = await supabase
           .from('orders')
@@ -113,6 +175,20 @@ serve(async (req: Request) => {
 
         if (error) throw error
 
+        // Audit log: Admin modified order
+        await logAdminAction({
+          supabase,
+          userId: user.id,
+          userRole: userProfile.role,
+          action: 'UPDATE',
+          tableName: 'orders',
+          recordId: id,
+          oldValues: { payment_status: currentOrder.payment_status },
+          newValues: updateData,
+          ipAddress,
+          userAgent
+        });
+
         // If payment_status is set to 'paid', trigger n8n webhook
         if (updateData.payment_status === 'paid') {
           await triggerN8nWebhook('points', {
@@ -125,9 +201,9 @@ serve(async (req: Request) => {
         }
 
         return new Response(
-          JSON.stringify({ 
-            order: data[0], 
-            previousStatus: currentOrder.payment_status 
+          JSON.stringify({
+            order: data[0],
+            previousStatus: currentOrder.payment_status
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
