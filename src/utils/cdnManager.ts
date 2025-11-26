@@ -16,7 +16,7 @@ export class CDNManager {
   private static instance: CDNManager;
   private cache = new Map<string, string>();
   private performanceCache = new Map<string, number>();
-  
+
   private readonly config: CDNConfig = {
     provider: 'jsdelivr',
     baseUrl: 'https://cdn.jsdelivr.net',
@@ -75,7 +75,12 @@ export class CDNManager {
         link.rel = 'preload';
         link.as = 'image';
         link.href = optimizedUrl;
-        link.crossOrigin = 'anonymous';
+
+        // Only add crossOrigin for external URLs (CDN resources)
+        if (!optimizedUrl.startsWith('/') && !optimizedUrl.startsWith('./')) {
+          link.crossOrigin = 'anonymous';
+        }
+
         document.head.appendChild(link);
       } catch (error) {
         console.warn(`⚠️ Failed to preload image: ${url}`, error);
@@ -102,21 +107,21 @@ export class CDNManager {
 
     const img = new Image();
     const startTime = performance.now();
-    
+
     img.onload = () => {
       const loadTime = performance.now() - startTime;
       this.performanceCache.set(url, loadTime);
-      
+
       // Only log if it's actually slow (>3 seconds)
       if (loadTime > 3000) {
         console.warn(`⚠️ Slow image load detected: ${loadTime.toFixed(2)}ms for ${url}`);
       }
     };
-    
+
     img.onerror = () => {
       console.error(`❌ Failed to load image: ${url}`);
     };
-    
+
     img.src = this.optimizeImageUrl(url);
   }
 

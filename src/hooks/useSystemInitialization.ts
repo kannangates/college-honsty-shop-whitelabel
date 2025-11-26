@@ -57,21 +57,17 @@ export const useSystemInitialization = () => {
       setTimeout(() => {
         try {
           const cdnManager = CDNManager.getInstance();
-          
-          // Preload critical images with retry mechanism
+
+          // Only preload the logo since it's used immediately on all pages
+          // Badge images are not currently used in the app, so no need to preload
           const criticalImages = [
-            WHITELABEL_CONFIG.branding.logo.url,
-            WHITELABEL_CONFIG.badge_images.achievement_badge,
-            WHITELABEL_CONFIG.badge_images.honor_badge,
-            WHITELABEL_CONFIG.badge_images.excellence_badge
+            WHITELABEL_CONFIG.branding.logo.url
           ];
-          
+
           cdnManager.preloadImages(criticalImages);
-          
-          // Track performance for each critical image
-          criticalImages.forEach(url => {
-            cdnManager.trackImagePerformance(url);
-          });
+
+          // Track performance for the logo
+          cdnManager.trackImagePerformance(WHITELABEL_CONFIG.branding.logo.url);
         } catch (error) {
           console.error('❌ CDN manager failed to initialize:', error);
         }
@@ -82,7 +78,7 @@ export const useSystemInitialization = () => {
         try {
           const dbOptimizer = DatabaseOptimizer.getInstance();
           await dbOptimizer.optimizeConnections();
-          
+
           // Get initial optimization analysis
           const analysisPromise = dbOptimizer.analyzePerformance();
           analysisPromise.catch(error => {
@@ -124,10 +120,10 @@ export const useSystemInitialization = () => {
 
       // End performance timing with correct ID
       performanceMonitor.endTiming(initTimingId, 'api');
-      
+
     } catch (error) {
       console.error('❌ Enhanced system initialization failed:', error);
-      
+
       // Log error for monitoring using public method with correct signature
       try {
         const alertManager = AlertManager.getInstance();
@@ -141,7 +137,7 @@ export const useSystemInitialization = () => {
           acknowledged: false,
           source: 'system_initialization'
         };
-        
+
         // Since createAlert is private, we'll just log the error
         console.error('System initialization error details:', errorAlert);
       } catch (logError) {
