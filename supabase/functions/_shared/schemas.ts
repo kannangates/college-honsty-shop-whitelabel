@@ -100,7 +100,13 @@ export const stockOperationSchema = z.object({
 // User management operation schema
 export const userManagementSchema = z.discriminatedUnion('operation', [
   z.object({
-    operation: z.literal('fetch_users')
+    operation: z.literal('fetch_user_summary')
+  }),
+  z.object({
+    operation: z.literal('fetch_user_details'),
+    targetUserId: uuidSchema,
+    reason: reasonSchema,
+    mfaToken: mfaTokenSchema
   }),
   z.object({
     operation: z.literal('fetch_leaderboard')
@@ -151,6 +157,11 @@ export const reasonSchema = z.string()
   .min(1, 'Reason is required')
   .max(500, 'Reason must be 500 characters or less')
   .trim();
+
+export const mfaTokenSchema = z.string()
+  .min(6, 'MFA token must be at least 6 digits')
+  .max(10, 'MFA token must be 10 digits or less')
+  .regex(/^[0-9]+$/, 'MFA token must be numeric');
 
 // Points adjustment
 export const pointsSchema = z.number()

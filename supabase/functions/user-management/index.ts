@@ -1,7 +1,10 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import speakeasy from 'npm:speakeasy@2.0.0';
 import { corsHeaders } from '../_shared/cors.ts';
 import { logAdminAction } from '../_shared/auditLog.ts';
 import { userManagementSchema } from '../_shared/schemas.ts';
+
+const PII_FIELDS = ['student_id', 'email', 'mobile_number'];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -71,8 +74,17 @@ Deno.serve(async (req) => {
     const userAgent = req.headers.get('user-agent') || 'unknown';
 
     switch (operation) {
-      case 'fetch_users':
-        return await fetchUsers(supabase, user.id, userProfile.role, ipAddress, userAgent);
+      case 'fetch_user_summary':
+        return await fetchUserSummary(supabase, user.id, userProfile.role, ipAddress, userAgent);
+      case 'fetch_user_details':
+        return await fetchUserDetails(
+          supabase,
+          validationResult.data as SensitiveAccessRequest,
+          user.id,
+          userProfile.role,
+          ipAddress,
+          userAgent
+        );
       case 'fetch_leaderboard':
         return await fetchLeaderboard(supabase, user.id, userProfile.role, ipAddress, userAgent);
       case 'update_user':
@@ -154,30 +166,92 @@ async function updateLastSignin(supabase: SupabaseClient, userId: string) {
   );
 }
 
-async function fetchUsers(supabase: SupabaseClient, userId: string, userRole: string, ipAddress: string, userAgent: string) {
-  console.log('📋 Fetching all users');
+async function fetchUserSummary(supabase: SupabaseClient, userId: string, userRole: string, ipAddress: string, userAgent: string) {
+  console.log('📋 Fetching user roster (summary only)');
 
-  // Audit log: Admin accessing all user data with PII
   await logAdminAction({
     supabase,
     userId,
     userRole,
     action: 'SELECT',
     tableName: 'users',
-    newValues: { operation: 'fetch_users', note: 'Admin accessed all user data with PII (names, emails, student IDs)' },
+    newValues: { operation: 'fetch_user_summary', note: 'Admin accessed masked user roster. PII fields withheld.' },
     ipAddress,
     userAgent
   });
 
   const { data, error } = await supabase
     .from('users')
-    .select('*')
+    .select('id, student_id, name, department, role, points, status, shift, created_at, updated_at, last_signed_in_at')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
 
+  const sanitizedUsers = (data || []).map((user) => ({
+    id: user.id,
+    name: user.name,
+    department: user.department,
+    role: user.role,
+    points: user.points,
+    status: user.status,
+    shift: user.shift,
+    created_at: user.created_at,
+    updated_at: user.updated_at,
+    last_signed_in_at: user.last_signed_in_at,
+    masked_student_id: maskStudentId(user.student_id)
+  }));
+
   return new Response(
-    JSON.stringify({ users: data }),
+    JSON.stringify({ users: sanitizedUsers }),
+    {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    }
+  );
+}
+
+async function fetchUserDetails(
+  supabase: SupabaseClient,
+  request: SensitiveAccessRequest,
+  userId: string,
+  userRole: string,
+  ipAddress: string,
+  userAgent: string
+) {
+  console.log('🔐 Fetching sensitive user details');
+
+  await ensureMFAIsValid(supabase, userId, request.mfaToken);
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, student_id, name, email, department, mobile_number, status, role, points, shift, created_at, updated_at, last_signed_in_at')
+    .eq('id', request.targetUserId)
+    .single();
+
+  if (error) throw error;
+
+  await logAdminAction({
+    supabase,
+    userId,
+    userRole,
+    action: 'SELECT',
+    tableName: 'users',
+    recordId: request.targetUserId,
+    newValues: {
+      operation: 'fetch_user_details',
+      reason: request.reason,
+      pii_fields: PII_FIELDS
+    },
+    ipAddress,
+    userAgent
+  });
+
+  return new Response(
+    JSON.stringify({
+      user: {
+        ...data,
+        masked_student_id: maskStudentId(data.student_id)
+      }
+    }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     }
@@ -192,6 +266,12 @@ interface UserUpdate {
   mobile_number?: string;
   status?: string;
   [key: string]: string | undefined;
+}
+
+interface SensitiveAccessRequest {
+  targetUserId: string;
+  reason: string;
+  mfaToken: string;
 }
 
 async function updateUser(supabase: SupabaseClient, userData: UserUpdate, userId: string, userRole: string, ipAddress: string, userAgent: string) {
@@ -296,4 +376,50 @@ async function getUserStats(supabase: SupabaseClient, userId: string, userRole: 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     }
   );
+}
+
+function maskStudentId(studentId?: string | null): string {
+  if (!studentId) return '***';
+  const normalized = studentId.trim();
+  if (normalized.length <= 3) {
+    return `${'*'.repeat(Math.max(0, normalized.length - 1))}${normalized.slice(-1)}`;
+  }
+
+  const visibleCharacters = Math.min(3, normalized.length);
+  const maskedCharacters = Math.max(0, normalized.length - visibleCharacters);
+
+  return `${'*'.repeat(maskedCharacters)}${normalized.slice(-visibleCharacters)}`;
+}
+
+async function ensureMFAIsValid(supabase: SupabaseClient, adminUserId: string, mfaToken: string): Promise<void> {
+  if (!mfaToken) {
+    throw new Error('MFA token is required to view sensitive student data.');
+  }
+
+  const sanitizedToken = mfaToken.replace(/\s+/g, '');
+
+  const { data, error } = await supabase
+    .from('user_mfa')
+    .select('secret, enabled')
+    .eq('user_id', adminUserId)
+    .single();
+
+  if (error || !data) {
+    throw new Error('MFA is not configured for this administrator account.');
+  }
+
+  if (!data.enabled) {
+    throw new Error('Enable MFA before accessing PII.');
+  }
+
+  const verified = speakeasy.totp.verify({
+    secret: data.secret,
+    encoding: 'base32',
+    token: sanitizedToken,
+    window: 1
+  });
+
+  if (!verified) {
+    throw new Error('Invalid MFA token. Please use a fresh code from your authenticator app.');
+  }
 }

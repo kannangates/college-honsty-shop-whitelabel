@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { UserPlus, Trophy, RefreshCw, Download, Edit, Upload, KeyRound } from 'lucide-react';
+import { UserPlus, Trophy, RefreshCw, Download, Edit, Upload, KeyRound, Shield } from 'lucide-react';
 import { AddStudentModal } from '@/components/admin/AddStudentModal';
 import { BulkUploadModal } from '@/components/admin/BulkUploadModal';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,13 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
 import { Label } from '@/components/ui/label';
 
-interface Student {
+interface StudentSummary {
   id: string;
-  student_id: string;
   name: string;
-  email: string;
-  mobile_number?: string;
-  role: 'admin' | 'student' | 'teacher' | 'developer'; // Properly typed role
+  role: 'admin' | 'student' | 'teacher' | 'developer';
   points: number;
   created_at: string;
   updated_at: string;
@@ -29,6 +27,13 @@ interface Student {
   shift: string;
   status: string;
   last_signed_in_at?: string;
+  masked_student_id: string;
+}
+
+interface SensitiveStudent extends StudentSummary {
+  student_id: string;
+  email: string;
+  mobile_number?: string | null;
 }
 
 interface UserStats {
@@ -40,9 +45,10 @@ interface UserStats {
 
 const AdminStudentManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [selectedSummaryStudent, setSelectedSummaryStudent] = useState<StudentSummary | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<SensitiveStudent | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<StudentSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<UserStats>({
     totalStudents: 0,
@@ -62,6 +68,13 @@ const AdminStudentManagement = () => {
   const [departmentFilter, setDepartmentFilter] = useState<string>('All Department');
   const [shiftFilter, setShiftFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [piiDialog, setPiiDialog] = useState({
+    open: false,
+    studentId: '',
+    reason: '',
+    mfaToken: '',
+    loading: false,
+  });
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
@@ -78,13 +91,12 @@ const AdminStudentManagement = () => {
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.functions.invoke('user-management', {
+        body: { operation: 'fetch_user_summary' }
+      });
 
       if (error) throw error;
-      setStudents(data || []);
+      setStudents((data?.users as StudentSummary[]) || []);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({
@@ -95,7 +107,7 @@ const AdminStudentManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, supabase]);
 
   useEffect(() => {
     fetchStudents();
@@ -104,27 +116,17 @@ const AdminStudentManagement = () => {
 
   const fetchStats = async () => {
     try {
-      const { data: allUsers, error } = await supabase
-        .from('users')
-        .select('points, created_at, last_signed_in_at, department');
+      const { data, error } = await supabase.functions.invoke('user-management', {
+        body: { operation: 'get_stats' }
+      });
 
       if (error) throw error;
 
-      const now = new Date();
-      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-      const totalStudents = allUsers?.length || 0;
-      const activeThisMonth = allUsers?.filter(user =>
-        user.last_signed_in_at && new Date(user.last_signed_in_at) >= startOfThisMonth
-      ).length || 0;
-      const highestPoints = Math.max(...(allUsers?.map(user => user.points || 0) || [0]));
-      const departments = new Set(allUsers?.map(user => user.department).filter(Boolean)).size;
-
       setStats({
-        totalStudents,
-        activeThisMonth,
-        highestPoints,
-        departments
+        totalStudents: data?.totalStudents || 0,
+        activeThisMonth: data?.activeThisMonth || 0,
+        highestPoints: data?.highestPoints || 0,
+        departments: data?.departments || 0
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -135,17 +137,40 @@ const AdminStudentManagement = () => {
     if (!selectedStudent) return;
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update(editForm)
-        .eq('id', selectedStudent.id);
+      const mobileNumber = editForm.mobile_number?.trim() === ''
+        ? undefined
+        : editForm.mobile_number;
+
+      const { data, error } = await supabase.functions.invoke('user-management', {
+        body: {
+          operation: 'update_user',
+          id: selectedStudent.id,
+          name: editForm.name,
+          email: selectedStudent.email,
+          department: editForm.department,
+          mobile_number: mobileNumber,
+          status: editForm.status
+        }
+      });
 
       if (error) throw error;
 
-      // Update local state
-      setStudents(prev => prev.map(student =>
-        student.id === selectedStudent.id ? { ...student, ...editForm } : student
-      ));
+      const updatedUser = data?.user as SensitiveStudent | undefined;
+
+      if (updatedUser) {
+        setSelectedStudent(updatedUser);
+        setSelectedSummaryStudent(prev =>
+          prev && prev.id === updatedUser.id
+            ? { ...prev, name: updatedUser.name, department: updatedUser.department, status: updatedUser.status, role: updatedUser.role, points: updatedUser.points, shift: updatedUser.shift }
+            : prev
+        );
+
+        setStudents(prev => prev.map(student =>
+          student.id === updatedUser.id
+            ? { ...student, name: updatedUser.name, department: updatedUser.department, status: updatedUser.status, role: updatedUser.role, points: updatedUser.points, shift: updatedUser.shift }
+            : student
+        ));
+      }
 
       setIsEditDialogOpen(false);
       toast({
@@ -164,18 +189,17 @@ const AdminStudentManagement = () => {
 
   const handleExport = (format: 'csv') => {
     const exportHeaders = [
-      'Student ID', 'Name', 'Department', 'Role', 'Points',
-      'Status', 'Mobile', 'Shift', 'Created At', 'Last Signed In'
+      'Student ID (masked)', 'Name', 'Department', 'Role', 'Points',
+      'Status', 'Shift', 'Created At', 'Last Signed In'
     ];
 
     const exportRows = filteredStudents.map(student => [
-      student.student_id,
+      student.masked_student_id,
       student.name,
       student.department || 'N/A',
       student.role,
       student.points,
       student.status,
-      student.mobile_number || 'N/A',
       student.shift === '1' ? 'Morning (1st Shift)' : student.shift === '2' ? 'Evening (2nd Shift)' : 'Full Day',
       new Date(student.created_at).toLocaleDateString(),
       student.last_signed_in_at ? new Date(student.last_signed_in_at).toLocaleDateString() : 'Never'
@@ -192,7 +216,7 @@ const AdminStudentManagement = () => {
   const filteredStudents = students.filter(student => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.masked_student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (student.department && student.department.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesDepartment =
@@ -208,28 +232,102 @@ const AdminStudentManagement = () => {
     return matchesSearch && matchesDepartment && matchesShift && matchesRole;
   });
 
-  const handleEditProfile = (student: Student) => {
-    setSelectedStudent(student);
-    setEditForm({
-      name: student.name,
-      email: student.email,
-      department: student.department,
-      mobile_number: student.mobile_number,
-      status: student.status,
-      shift: student.shift,
-      role: student.role // Now properly typed
+  const handleEditProfile = (student: StudentSummary) => {
+    setSelectedSummaryStudent(student);
+    setSelectedStudent(null);
+    setEditForm({});
+    setPiiDialog({
+      open: true,
+      studentId: student.id,
+      reason: '',
+      mfaToken: '',
+      loading: false,
     });
-    setIsEditDialogOpen(true);
   };
 
-  const handleOpenPasswordReset = (student: Student) => {
-    setSelectedStudent(student);
+  const unlockSensitiveStudent = async () => {
+    if (!piiDialog.studentId) return;
+
+    if (!piiDialog.reason.trim()) {
+      toast({
+        title: 'Reason required',
+        description: 'Please document why you need to view PII.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!piiDialog.mfaToken.trim()) {
+      toast({
+        title: 'MFA token required',
+        description: 'Enter the 6-digit code from your authenticator app.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setPiiDialog(prev => ({ ...prev, loading: true }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke('user-management', {
+        body: {
+          operation: 'fetch_user_details',
+          targetUserId: piiDialog.studentId,
+          reason: piiDialog.reason.trim(),
+          mfaToken: piiDialog.mfaToken.trim(),
+        }
+      });
+
+      if (error) throw error;
+
+      const sensitiveUser = data?.user as SensitiveStudent | undefined;
+
+      if (!sensitiveUser) {
+        throw new Error('Unable to load sensitive student data');
+      }
+
+      setSelectedStudent(sensitiveUser);
+      setEditForm({
+        name: sensitiveUser.name,
+        email: sensitiveUser.email,
+        department: sensitiveUser.department,
+        mobile_number: sensitiveUser.mobile_number || '',
+        status: sensitiveUser.status,
+        shift: sensitiveUser.shift,
+        role: sensitiveUser.role
+      });
+      setIsEditDialogOpen(true);
+      toast({
+        title: 'PII access granted',
+        description: `Sensitive data unlocked for ${sensitiveUser.name}. This access has been fully audited.`,
+      });
+    } catch (error) {
+      console.error('Error fetching sensitive student data:', error);
+      toast({
+        title: 'Access denied',
+        description: error instanceof Error ? error.message : 'Failed to unlock PII',
+        variant: 'destructive',
+      });
+    } finally {
+      setPiiDialog({
+        open: false,
+        studentId: '',
+        reason: '',
+        mfaToken: '',
+        loading: false,
+      });
+    }
+  };
+
+  const handleOpenPasswordReset = (student: StudentSummary) => {
+    setSelectedSummaryStudent(student);
+    setSelectedStudent(null);
     setResetPasswordForm({ newPassword: '', confirmPassword: '' });
     setIsPasswordResetDialogOpen(true);
   };
 
   const handleResetPassword = async () => {
-    if (!selectedStudent) return;
+    if (!selectedSummaryStudent) return;
 
     if (resetPasswordForm.newPassword.length < 6) {
       toast({
@@ -254,7 +352,7 @@ const AdminStudentManagement = () => {
       // Use Supabase Admin API to update user password
       const { data, error } = await supabase.functions.invoke('admin-reset-password', {
         body: {
-          userId: selectedStudent.id,
+          userId: selectedSummaryStudent.id,
           newPassword: resetPasswordForm.newPassword
         }
       });
@@ -263,7 +361,7 @@ const AdminStudentManagement = () => {
 
       toast({
         title: 'Success',
-        description: `Password updated successfully for ${selectedStudent.name}. Share the new password with the student securely.`,
+        description: `Password updated successfully for ${selectedSummaryStudent.name}. Share the new password with the student securely.`,
       });
       setIsPasswordResetDialogOpen(false);
       setResetPasswordForm({ newPassword: '', confirmPassword: '' });
@@ -346,6 +444,15 @@ const AdminStudentManagement = () => {
         </Card>
       </div>
 
+      {/* Compliance Reminder */}
+      <div className="flex items-start gap-3 p-3 rounded-lg border border-indigo-100 bg-indigo-50 text-xs text-indigo-900">
+        <Shield className="h-5 w-5 mt-0.5 text-indigo-600" />
+        <div>
+          <p className="font-medium">PII Guardrail Enabled</p>
+          <p>Emails, student IDs, and mobile numbers stay masked until you document a reason and verify with MFA. Every access is written to <code className="font-mono bg-white/70 px-1 py-0.5 rounded">admin_audit_log</code>.</p>
+        </div>
+      </div>
+
       {/* Custom Filter/Search Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
@@ -423,7 +530,7 @@ const AdminStudentManagement = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs">Student ID</TableHead>
+                <TableHead className="text-xs">Student ID (masked)</TableHead>
                 <TableHead className="text-xs">Name</TableHead>
                 <TableHead className="text-xs">Department</TableHead>
                 <TableHead className="text-xs">Shift</TableHead>
@@ -450,8 +557,8 @@ const AdminStudentManagement = () => {
                 </TableRow>
               ) : (
                 filteredStudents.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium text-sm">{student.student_id}</TableCell>
+                    <TableRow key={student.id}>
+                    <TableCell className="font-medium text-sm font-mono">{student.masked_student_id}</TableCell>
                     <TableCell className="text-sm">{student.name}</TableCell>
                     <TableCell className="text-sm">{student.department || 'N/A'}</TableCell>
                     <TableCell className="text-sm">{getShiftDisplay(student.shift)}</TableCell>
@@ -505,6 +612,76 @@ const AdminStudentManagement = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Sensitive Data Access Dialog */}
+      <Dialog
+        open={piiDialog.open}
+        onOpenChange={(open) =>
+          setPiiDialog(prev =>
+            open
+              ? { ...prev, open }
+              : { open: false, studentId: '', reason: '', mfaToken: '', loading: false }
+          )
+        }
+      >
+        <DialogContent className="text-sm max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-indigo-600" />
+              Confirm PII Access
+            </DialogTitle>
+            <DialogDescription>
+              Provide a business reason and confirm via MFA before viewing email, student ID, or mobile number.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs font-medium text-gray-700">Reason for access</Label>
+              <Textarea
+                value={piiDialog.reason}
+                onChange={(e) => setPiiDialog(prev => ({ ...prev, reason: e.target.value }))}
+                placeholder="e.g., Student requested contact information update"
+                className="text-sm mt-1"
+                rows={3}
+                disabled={piiDialog.loading}
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-medium text-gray-700">MFA Token</Label>
+              <Input
+                type="text"
+                maxLength={6}
+                inputMode="numeric"
+                value={piiDialog.mfaToken}
+                onChange={(e) => setPiiDialog(prev => ({ ...prev, mfaToken: e.target.value.replace(/[^0-9]/g, '') }))}
+                placeholder="123456"
+                className="text-sm h-9 mt-1"
+                disabled={piiDialog.loading}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Generated by your authenticator app. Every access is logged in the audit trail.
+              </p>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button
+                onClick={unlockSensitiveStudent}
+                disabled={piiDialog.loading}
+                className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm flex-1"
+              >
+                {piiDialog.loading ? 'Verifying...' : 'Unlock PII'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setPiiDialog({ open: false, studentId: '', reason: '', mfaToken: '', loading: false })}
+                disabled={piiDialog.loading}
+                className="text-sm"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Profile Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -650,10 +827,10 @@ const AdminStudentManagement = () => {
               Reset Password
             </DialogTitle>
             <DialogDescription>
-              Set a new password for {selectedStudent?.name} ({selectedStudent?.email})
+              Set a new password for {selectedSummaryStudent?.name || 'the selected student'} (ID: {selectedSummaryStudent?.masked_student_id || 'restricted'})
             </DialogDescription>
           </DialogHeader>
-          {selectedStudent && (
+          {selectedSummaryStudent && (
             <div className="space-y-4">
               <div className="p-3 border rounded-lg bg-amber-50 border-amber-200">
                 <p className="text-xs text-amber-800">

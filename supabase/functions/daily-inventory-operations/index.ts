@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// @ts-nocheck
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { dailyInventorySaveSchema, inventoryOperationSchema } from '../_shared/schemas.ts'
@@ -73,16 +73,16 @@ Deno.serve(async (req) => {
     const operation = url.searchParams.get('operation') || 'sync';
     const date = url.searchParams.get('date') || new Date().toISOString().split('T')[0];
     const format = url.searchParams.get('format') || 'excel';
-    
+
     // Validate query parameters
     const operationSchema = z.enum(['sync', 'save', 'export']);
     const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, use YYYY-MM-DD');
     const formatSchema = z.enum(['excel', 'csv', 'json']);
-    
+
     const validatedOperation = operationSchema.safeParse(operation);
     const validatedDate = dateSchema.safeParse(date);
     const validatedFormat = formatSchema.safeParse(format);
-    
+
     if (!validatedOperation.success) {
       return new Response(
         JSON.stringify({
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
+
     if (!validatedDate.success) {
       return new Response(
         JSON.stringify({
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
+
     if (!validatedFormat.success) {
       return new Response(
         JSON.stringify({
@@ -139,8 +139,8 @@ Deno.serve(async (req) => {
     console.error('❌ Error in daily inventory operations:', error);
     return new Response(
       JSON.stringify({ error: (error as Error).message }),
-      { 
-        status: 400, 
+      {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
@@ -205,10 +205,10 @@ async function syncInventoryData(supabase: SupabaseClient, date: string) {
     ];
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         records: allRecords,
-        synced: newRecords.length 
+        synced: newRecords.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -247,9 +247,9 @@ async function saveInventoryData(supabase: SupabaseClient, inventoryRows: Invent
     await Promise.all(updates);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        saved: inventoryRows.length 
+      JSON.stringify({
+        success: true,
+        saved: inventoryRows.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -291,10 +291,10 @@ async function exportInventoryData(supabase: SupabaseClient, date: string, forma
       });
     } else {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           records: records || [],
-          format 
+          format
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

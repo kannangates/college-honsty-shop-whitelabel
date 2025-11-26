@@ -37,6 +37,16 @@ interface Order {
   }[];
 }
 
+const formatOrderId = (order: Order) =>
+  order.friendly_id || `${order.id.substring(0, 8)}...`;
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2
+  }).format(value);
+
 const MyOrders = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -133,40 +143,76 @@ const MyOrders = () => {
                 <p className="text-gray-500">All your orders are paid!</p>
               </div>
             ) : (
-              <ScrollArea className="h-[300px] w-full">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {unpaidOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.friendly_id || order.id.substring(0, 8) + '...'}</TableCell>
-                        <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>₹{order.total_amount}</TableCell>
-                        <TableCell>
-                          <Badge variant="destructive">{order.payment_status}</Badge>
-                        </TableCell>
-                        <TableCell>
-  <Button
-    variant="destructive"
-    onClick={() => navigate(`/payment?mode=pay_now&orderId=${order.id}&amount=${order.total_amount}`)}
-    aria-label="Pay Now"
-  >
-    Pay Now
-  </Button>
-</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
+              <>
+                <div className="hidden md:block">
+                  <ScrollArea className="max-h-[320px] w-full">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Order ID</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {unpaidOrders.map((order) => (
+                            <TableRow key={order.id}>
+                              <TableCell className="font-medium">{formatOrderId(order)}</TableCell>
+                              <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                              <TableCell>{formatCurrency(order.total_amount)}</TableCell>
+                              <TableCell>
+                                <Badge variant="destructive" className="capitalize">{order.payment_status}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => navigate(`/payment?mode=pay_now&orderId=${order.id}&amount=${order.total_amount}`)}
+                                  aria-label="Pay Now"
+                                  size="sm"
+                                >
+                                  Pay Now
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                <div className="space-y-3 md:hidden">
+                  {unpaidOrders.map(order => (
+                    <div key={order.id} className="rounded-lg border border-red-100 bg-red-50/50 p-4 shadow-sm">
+                      <div className="flex flex-wrap items-center justify-between text-sm font-medium text-gray-900 gap-2">
+                        <span className="text-xs uppercase tracking-wide text-red-500">Pending</span>
+                        <span className="font-mono">{formatOrderId(order)}</span>
+                      </div>
+                      <div className="mt-3 space-y-1 text-sm text-gray-700">
+                        <p className="flex justify-between">
+                          <span>Date:</span>
+                          <span>{new Date(order.created_at).toLocaleDateString()}</span>
+                        </p>
+                        <p className="flex justify-between font-semibold">
+                          <span>Amount:</span>
+                          <span>{formatCurrency(order.total_amount)}</span>
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        onClick={() => navigate(`/payment?mode=pay_now&orderId=${order.id}&amount=${order.total_amount}`)}
+                        aria-label="Pay Now"
+                        className="mt-4 w-full"
+                      >
+                        Pay Now
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -192,41 +238,77 @@ const MyOrders = () => {
                 <p className="text-gray-500">Start shopping now!</p>
               </div>
             ) : (
-              <ScrollArea className="h-[300px] w-full">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Invoice</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {allOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.friendly_id || order.id.substring(0, 8) + '...'}</TableCell>
-                        <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>₹{order.total_amount}</TableCell>
-                        <TableCell>
-                          <Badge variant={order.payment_status === 'paid' ? 'default' : 'destructive'}>
-                            {order.payment_status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <InvoiceGenerator 
-                            order={{
-                              ...order,
-                              user: order.users || { name: 'Unknown', email: 'unknown@email.com' }
-                            }} 
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
+              <>
+                <div className="hidden md:block">
+                  <ScrollArea className="max-h-[320px] w-full">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Order ID</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Invoice</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {allOrders.map((order) => (
+                            <TableRow key={order.id}>
+                              <TableCell className="font-medium">{formatOrderId(order)}</TableCell>
+                              <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                              <TableCell>{formatCurrency(order.total_amount)}</TableCell>
+                              <TableCell>
+                                <Badge variant={order.payment_status === 'paid' ? 'default' : 'destructive'} className="capitalize">
+                                  {order.payment_status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <InvoiceGenerator 
+                                  order={{
+                                    ...order,
+                                    user: order.users || { name: 'Unknown', email: 'unknown@email.com' }
+                                  }} 
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                <div className="space-y-3 md:hidden">
+                  {allOrders.map(order => (
+                    <div key={order.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                        <div>
+                          <p className="font-semibold text-gray-900">{formatOrderId(order)}</p>
+                          <p className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <Badge variant={order.payment_status === 'paid' ? 'default' : 'destructive'} className="capitalize">
+                          {order.payment_status}
+                        </Badge>
+                      </div>
+                      <div className="mt-3 text-sm text-gray-700">
+                        <p className="font-medium">Amount: <span className="font-semibold">{formatCurrency(order.total_amount)}</span></p>
+                        {order.transaction_id && (
+                          <p className="text-xs text-gray-500 mt-1">Txn ID: {order.transaction_id}</p>
+                        )}
+                      </div>
+                      <div className="mt-4">
+                        <InvoiceGenerator 
+                          order={{
+                            ...order,
+                            user: order.users || { name: 'Unknown', email: 'unknown@email.com' }
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
