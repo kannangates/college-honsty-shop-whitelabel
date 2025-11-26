@@ -29,23 +29,24 @@ Deno.serve(async (req) => {
     console.log(`✅ Table stats updated successfully. Found ${tableStats?.length || 0} tables.`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: 'Table stats updated',
         tables: tableStats?.length || 0,
         timestamp: new Date().toISOString()
       }),
-      { 
+      {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
     );
   } catch (error) {
     console.error('❌ Error updating table stats:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
+      JSON.stringify({
+        success: false,
+        error: errorMessage
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

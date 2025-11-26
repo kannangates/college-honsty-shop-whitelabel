@@ -19,32 +19,33 @@ serve(async (req) => {
 
   try {
     const { operation, productId, quantity, source } = await req.json();
-    
+
     console.log(`Stock operation: ${operation}, Product: ${productId}, Quantity: ${quantity}, Source: ${source}`);
 
     switch (operation) {
       case 'restock_warehouse':
         return await restockWarehouse(productId, quantity, source);
-      
+
       case 'restock_shelf':
         return await restockShelf(productId, quantity, source);
-      
+
       case 'adjust_shelf_stock':
         return await adjustShelfStock(productId, quantity, source);
-      
+
       case 'get_stock_status':
         return await getStockStatus(productId);
-      
+
       default:
         throw new Error(`Unknown operation: ${operation}`);
     }
   } catch (error) {
     console.error('Stock management error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      JSON.stringify({ error: errorMessage }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
@@ -65,7 +66,7 @@ async function restockWarehouse(productId: string, quantity: number, source: str
   // Update warehouse stock
   const { data, error } = await supabase
     .from('products')
-    .update({ 
+    .update({
       warehouse_stock: newWarehouseStock,
       updated_at: new Date().toISOString()
     })
@@ -87,10 +88,10 @@ async function restockWarehouse(productId: string, quantity: number, source: str
   console.log(`Warehouse restocked: ${product.name} +${quantity} (new total: ${newWarehouseStock})`);
 
   return new Response(
-    JSON.stringify({ 
-      success: true, 
+    JSON.stringify({
+      success: true,
       data,
-      message: `Warehouse stock increased by ${quantity}` 
+      message: `Warehouse stock increased by ${quantity}`
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
@@ -120,7 +121,7 @@ async function restockShelf(productId: string, quantity: number, source: string)
   // Update both stocks
   const { data, error } = await supabase
     .from('products')
-    .update({ 
+    .update({
       warehouse_stock: newWarehouseStock,
       shelf_stock: newShelfStock,
       updated_at: new Date().toISOString()
@@ -143,10 +144,10 @@ async function restockShelf(productId: string, quantity: number, source: string)
   console.log(`Shelf restocked: ${product.name} +${quantity} from warehouse (warehouse: ${newWarehouseStock}, shelf: ${newShelfStock})`);
 
   return new Response(
-    JSON.stringify({ 
-      success: true, 
+    JSON.stringify({
+      success: true,
       data,
-      message: `Shelf stock increased by ${quantity} from warehouse` 
+      message: `Shelf stock increased by ${quantity} from warehouse`
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
@@ -173,7 +174,7 @@ async function adjustShelfStock(productId: string, quantity: number, source: str
   // Update shelf stock
   const { data, error } = await supabase
     .from('products')
-    .update({ 
+    .update({
       shelf_stock: newShelfStock,
       updated_at: new Date().toISOString()
     })
@@ -196,10 +197,10 @@ async function adjustShelfStock(productId: string, quantity: number, source: str
   console.log(`Shelf stock ${operation}: ${product.name} ${quantity > 0 ? '+' : ''}${quantity} (new total: ${newShelfStock})`);
 
   return new Response(
-    JSON.stringify({ 
-      success: true, 
+    JSON.stringify({
+      success: true,
       data,
-      message: `Shelf stock ${operation} by ${Math.abs(quantity)}` 
+      message: `Shelf stock ${operation} by ${Math.abs(quantity)}`
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
