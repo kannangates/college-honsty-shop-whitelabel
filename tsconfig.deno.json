@@ -4,18 +4,16 @@
     "lib": [
       "DOM",
       "DOM.Iterable",
-      "ESNext",
-      "deno.ns"
+      "ESNext"
     ],
     "module": "ESNext",
     "moduleResolution": "node",
     "strict": true,
     "allowJs": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": [
-      "https://deno.land/x/types@0.1.0/index.d.ts"
-    ]
+    "skipLibCheck": true
   },
-  "include": ["supabase/functions/**/*.ts"]
+  "include": [
+    "supabase/functions/**/*.ts"
+  ]
 }
