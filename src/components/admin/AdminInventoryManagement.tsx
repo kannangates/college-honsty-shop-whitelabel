@@ -211,7 +211,6 @@ export const AdminInventoryManagement = () => {
         .from('products')
         .insert([{
           name: productData.name,
-          description: productData.description,
           unit_price: productData.price,
           image_url: productData.image_url,
           category: productData.category,

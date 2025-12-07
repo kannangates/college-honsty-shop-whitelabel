@@ -50,10 +50,12 @@ export function PasswordChangePrompt() {
     if (!user) return;
     try {
       // Use the regular user API instead of admin API
-      await supabase.auth.updateUser({
-        data: { must_change_password: false }
+      const { error } = await supabase.auth.updateUser({
+        data: { must_change_password: false, password_expired: false }
       });
+      if (error) throw error;
       setOpen(false);
+      setHasShown(true);
       toast({
         title: 'Password Choice Saved',
         description: 'You chose to keep your current password. You can change it anytime in Settings.'
@@ -64,7 +66,15 @@ export function PasswordChangePrompt() {
     }
   };
 
-  const goChangePassword = () => {
+  const goChangePassword = async () => {
+    // Clear the flag when user chooses to change password
+    try {
+      await supabase.auth.updateUser({
+        data: { must_change_password: false, password_expired: false }
+      });
+    } catch (error) {
+      console.error('Failed to clear password flag:', error);
+    }
     navigate('/settings#password');
     setOpen(false);
   };
