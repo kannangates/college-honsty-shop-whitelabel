@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       .eq('id', user.id)
       .single();
 
-    if (profileError || !userProfile || userProfile.role !== 'admin') {
+    if (profileError || !userProfile || !['admin', 'developer'].includes(userProfile.role)) {
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -265,7 +265,7 @@ interface UserUpdate {
   department?: string;
   mobile_number?: string;
   status?: string;
-  [key: string]: string | undefined;
+  role?: 'admin' | 'student' | 'teacher' | 'developer';
 }
 
 interface SensitiveAccessRequest {

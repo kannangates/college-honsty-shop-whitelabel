@@ -149,7 +149,8 @@ const AdminStudentManagement = () => {
           email: selectedStudent.email,
           department: editForm.department,
           mobile_number: mobileNumber,
-          status: editForm.status
+          status: editForm.status,
+          role: editForm.role
         }
       });
 
