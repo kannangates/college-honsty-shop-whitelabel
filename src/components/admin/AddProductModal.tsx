@@ -9,7 +9,6 @@ import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 
 interface ProductInput {
   name: string;
-  description?: string;
   price?: number;
   image_url?: string;
   category: string;
@@ -33,7 +32,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<ProductInput>({
     name: '',
-    description: '',
     price: 0,
     image_url: '',
     category: '',
@@ -47,7 +45,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     if (!isOpen) {
       setFormData({
         name: '',
-        description: '',
         price: 0,
         image_url: '',
         category: '',
@@ -122,22 +119,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 </div>
               )}
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="add-description" className="text-sm font-medium">
-                Description
-              </Label>
-              <Input
-                id="add-description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                disabled={loading}
-                placeholder="Enter product description"
-                className="h-10 focus:ring-blue-500"
-              />
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="add-price" className="text-sm font-medium flex items-center">

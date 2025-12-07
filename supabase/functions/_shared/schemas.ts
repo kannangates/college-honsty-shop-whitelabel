@@ -118,7 +118,8 @@ export const userManagementSchema = z.discriminatedUnion('operation', [
     email: emailSchema.optional(),
     department: departmentSchema.optional(),
     mobile_number: mobileNumberSchema,
-    status: z.enum(['active', 'inactive', 'suspended']).optional()
+    status: z.enum(['active', 'inactive', 'suspended']).optional(),
+    role: z.enum(['student', 'teacher', 'admin', 'developer']).optional()
   }),
   z.object({
     operation: z.literal('get_stats')
