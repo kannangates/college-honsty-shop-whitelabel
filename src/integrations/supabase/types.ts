@@ -175,6 +175,7 @@ export type Database = {
           actual_closing_stock: number | null
           additional_stock: number | null
           created_at: string | null
+          created_by: string | null
           estimated_closing_stock: number | null
           id: string
           opening_stock: number
@@ -189,6 +190,7 @@ export type Database = {
           actual_closing_stock?: number | null
           additional_stock?: number | null
           created_at?: string | null
+          created_by?: string | null
           estimated_closing_stock?: number | null
           id?: string
           opening_stock: number
@@ -203,6 +205,7 @@ export type Database = {
           actual_closing_stock?: number | null
           additional_stock?: number | null
           created_at?: string | null
+          created_by?: string | null
           estimated_closing_stock?: number | null
           id?: string
           opening_stock?: number
@@ -594,54 +597,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "orders_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      payments: {
-        Row: {
-          amount: number
-          created_at: string
-          id: string
-          order_id: string | null
-          paid_at: string
-          payment_method: string | null
-          transaction_id: string
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          id?: string
-          order_id?: string | null
-          paid_at?: string
-          payment_method?: string | null
-          transaction_id: string
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          id?: string
-          order_id?: string | null
-          paid_at?: string
-          payment_method?: string | null
-          transaction_id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payments_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
