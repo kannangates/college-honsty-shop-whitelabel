@@ -298,12 +298,25 @@ async function updateUser(supabase: SupabaseClient, userData: UserUpdate, userId
       department: userData.department,
       mobile_number: userData.mobile_number,
       status: userData.status,
+      role: userData.role,
       updated_at: new Date().toISOString()
     })
     .eq('id', userData.id)
     .select();
 
   if (error) throw error;
+
+  // Also update auth.users metadata to keep in sync
+  if (userData.role) {
+    try {
+      await supabase.auth.admin.updateUserById(userData.id, {
+        user_metadata: { role: userData.role }
+      });
+    } catch (metaError) {
+      console.warn('Failed to update auth metadata:', metaError);
+      // Continue - the users table update succeeded
+    }
+  }
 
   return new Response(
     JSON.stringify({ user: data[0] }),
