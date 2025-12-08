@@ -376,24 +376,6 @@ const AdminPanel = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="studentId" className="text-xs">Student ID</Label>
-                    <Input
-                      id="studentId"
-                      type="text"
-                      value={announcement.studentId}
-                      onChange={(e) => {
-                        const studentId = e.target.value;
-                        setAnnouncement(prev => ({
-                          ...prev,
-                          studentId,
-                          department: studentId.trim() !== '' ? '' : prev.department,
-                        }));
-                      }}
-                      placeholder="Enter student ID (optional)"
-                      className="text-sm h-8"
-                    />
-                  </div>
-                  <div>
                     <Label htmlFor="department" className="text-xs">Target Department</Label>
                     <DepartmentCombobox
                       value={announcement.department}

@@ -1,13 +1,23 @@
 {
   "version": "5",
   "specifiers": {
-    "npm:@types/node@*": "22.15.15"
+    "npm:@types/node@*": "22.15.15",
+    "npm:speakeasy@2.0.0": "2.0.0"
   },
   "npm": {
     "@types/node@22.15.15": {
       "integrity": "sha512-R5muMcZob3/Jjchn5LcO8jdKwSCbzqmPB6ruBxMcf9kbxtniZHP327s6C37iOfuw8mbKK3cAQa7sEl7afLrQ8A==",
       "dependencies": [
         "undici-types"
+      ]
+    },
+    "base32.js@0.0.1": {
+      "integrity": "sha512-EGHIRiegFa62/SsA1J+Xs2tIzludPdzM064N9wjbiEgHnGnJ1V0WEpA4pEwCYT5nDvZk3ubf0shqaCS7k6xeUQ=="
+    },
+    "speakeasy@2.0.0": {
+      "integrity": "sha512-lW2A2s5LKi8rwu77ewisuUOtlCydF/hmQSOJjpTqTj1gZLkNgTaYnyvfxy2WBr4T/h+9c4g8HIITfj83OkFQFw==",
+      "dependencies": [
+        "base32.js"
       ]
     },
     "undici-types@6.21.0": {
@@ -117,5 +127,10 @@
     "https://esm.sh/whatwg-url@5.0.0?target=denonext": "f001a2cadf81312d214ca330033f474e74d81a003e21e8c5d70a1f46dc97b02d",
     "https://esm.sh/ws@8.18.3/denonext/ws.mjs": "063ab2c92e0908d060e4de414b74e941fbd1b3ccedfce35cc965703a8a3f86c1",
     "https://esm.sh/ws@8.18.3?target=denonext": "a5ca9d7990fc419fd8b8d06d0855bb64688769e6bb887ba07d36c13172f882b5"
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:speakeasy@2.0.0"
+    ]
   }
 }

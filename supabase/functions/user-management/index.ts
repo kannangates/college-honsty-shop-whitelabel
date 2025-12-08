@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import speakeasy from 'npm:speakeasy@2.0.0';
+import * as speakeasy from 'speakeasy';
 import { corsHeaders } from '../_shared/cors.ts';
 import { logAdminAction } from '../_shared/auditLog.ts';
 import { userManagementSchema } from '../_shared/schemas.ts';
@@ -258,7 +258,7 @@ async function fetchUserDetails(
   );
 }
 
-interface UserUpdate {
+interface UserUpdate extends Record<string, unknown> {
   id: string;
   name?: string;
   email?: string;

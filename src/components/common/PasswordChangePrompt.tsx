@@ -12,6 +12,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import { AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -106,18 +107,28 @@ export function PasswordChangePrompt() {
 
   return (
     <AlertDialog open={open} onOpenChange={isPasswordExpired ? undefined : setOpen}>
-      <AlertDialogContent className="sm:max-w-md">
+      <AlertDialogContent className={`sm:max-w-md ${isPasswordExpired ? 'border-2 border-amber-500' : ''}`}>
+        {isPasswordExpired && (
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500" />
+        )}
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            {isPasswordExpired ? '🔐 Password Expired' : 'Update your password'}
+          <AlertDialogTitle className={`flex items-center gap-2 ${isPasswordExpired ? 'text-amber-700' : ''}`}>
+            {isPasswordExpired && <AlertTriangle className="h-6 w-6 text-amber-600" />}
+            {isPasswordExpired ? 'Password Expired - Action Required' : 'Update your password'}
           </AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogDescription className={isPasswordExpired ? 'text-amber-900/80' : ''}>
             {isPasswordExpired
               ? 'Your password has expired for security reasons. You must change it now to continue using your account.'
               : 'Your account was created by an administrator. Would you like to keep the provided password or set a new one now?'
             }
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {isPasswordExpired && (
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm text-amber-800">
+            <p className="font-medium mb-1">⚠️ Security Notice</p>
+            <p>For your account security, passwords must be changed regularly. Please update your password to continue.</p>
+          </div>
+        )}
         <AlertDialogFooter className="flex-col sm:flex-row gap-2">
           {isPasswordExpired && (
             <button
@@ -139,7 +150,10 @@ export function PasswordChangePrompt() {
           )}
           <AlertDialogAction asChild>
             <button
-              className="px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 text-white"
+              className={`px-4 py-2 rounded-md text-white ${isPasswordExpired
+                  ? 'bg-amber-600 hover:bg-amber-700'
+                  : 'bg-purple-600 hover:bg-purple-700'
+                }`}
               onClick={goChangePassword}
             >
               {isPasswordExpired ? 'Change Password Now' : 'Change Password'}
