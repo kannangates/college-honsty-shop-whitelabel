@@ -47,7 +47,16 @@ export const useCart = () => {
   };
 
   const removeFromCart = (productId: string) => {
-    setItems(items.filter(item => item.id !== productId));
+    const existingItem = items.find((item: CartItem) => item.id === productId);
+    if (existingItem && existingItem.quantity > 1) {
+      // Reduce quantity by 1 if more than 1
+      setItems(items.map(item => 
+        item.id === productId ? { ...item, quantity: item.quantity - 1 } : item
+      ));
+    } else {
+      // Remove item if quantity is 1 or less
+      setItems(items.filter(item => item.id !== productId));
+    }
   };
 
   const clearCart = () => {
@@ -71,17 +80,19 @@ export const useCart = () => {
       const totalAmount = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
 
       // Map payment modes to database enum values
+      // For 'immediate' (Pay Now), we create as unpaid since user still needs to enter transaction ID
+      // For 'later' (Pay Later), we create as unpaid
       const dbPaymentMode = paymentMode === 'immediate' ? 'qr_manual' : 'pay_later';
 
-      // Create order
+      // Create order - always starts as unpaid, will be marked paid when transaction ID is entered
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
           total_amount: totalAmount,
-          payment_status: paymentMode === 'immediate' ? 'paid' : 'unpaid',
+          payment_status: 'unpaid', // Always start as unpaid
           payment_mode: dbPaymentMode,
-          paid_at: paymentMode === 'immediate' ? new Date().toISOString() : null,
+          paid_at: null, // Will be set when payment is confirmed
         })
         .select('id,friendly_id,total_amount')
         .single<OrderRecord>();
@@ -150,7 +161,8 @@ export const useCart = () => {
     removeFromCart, // Backwards compatibility
     updateQuantity: (productId: string, quantity: number) => {
       if (quantity <= 0) {
-        removeFromCart(productId);
+        // Remove the item completely
+        setItems(items.filter(item => item.id !== productId));
       } else {
         setItems(items.map(item => 
           item.id === productId ? { ...item, quantity } : item

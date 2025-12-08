@@ -11,7 +11,6 @@ import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 interface Product {
   id: string;
   name: string;
-  description?: string;
   price?: number;
   image_url?: string;
   category: string;
@@ -45,7 +44,6 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
     if (product) {
       setFormData({
         name: product.name,
-        description: product.description || '',
         price: product.price || 0,
         image_url: product.image_url || '',
         category: product.category,
@@ -129,20 +127,6 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                   {errors.name}
                 </div>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-description" className="text-sm font-medium">
-                Description
-              </Label>
-              <Input
-                id="edit-description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="h-10 focus:ring-blue-500"
-                disabled={loading}
-              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
