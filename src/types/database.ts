@@ -25,10 +25,9 @@ export interface DatabaseProduct {
   image_url: string | null;
 }
 
-// Application Product type
+// Application Product type (extends database product with computed fields)
 export interface Product extends DatabaseProduct {
-  description?: string;
-  price: number;
+  price: number; // Alias for unit_price
 }
 
 // User type

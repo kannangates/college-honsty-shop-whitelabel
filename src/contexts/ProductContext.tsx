@@ -36,7 +36,6 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       } else {
         const transformedProducts: Product[] = (data || []).map((item: DatabaseProduct) => ({
           ...item,
-          description: '',
           price: item.unit_price
         }));
         setProducts(transformedProducts);
@@ -61,7 +60,6 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       } else if (data && data[0]) {
         const transformedProduct: Product = {
           ...(data[0] as DatabaseProduct),
-          description: '',
           price: data[0].unit_price
         };
         setProducts(prevProducts => [...prevProducts, transformedProduct]);
@@ -87,7 +85,6 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       } else if (data && data[0]) {
         const transformedProduct: Product = {
           ...(data[0] as DatabaseProduct),
-          description: '',
           price: data[0].unit_price
         };
         setProducts(prevProducts =>

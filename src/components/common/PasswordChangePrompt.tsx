@@ -28,6 +28,13 @@ export function PasswordChangePrompt() {
     // Only show once per session to prevent multiple dialogs
     if (hasShown) return;
 
+    // Check session storage to prevent showing again after user action
+    const dismissed = sessionStorage.getItem('password_change_dismissed');
+    if (dismissed === 'true') {
+      setHasShown(true);
+      return;
+    }
+
     // Debug logging
     console.log('🔐 PasswordChangePrompt - User metadata:', user?.user_metadata);
     console.log('🔐 must_change_password:', user?.user_metadata?.must_change_password);
@@ -54,6 +61,8 @@ export function PasswordChangePrompt() {
         data: { must_change_password: false, password_expired: false }
       });
       if (error) throw error;
+      // Mark as dismissed in session storage
+      sessionStorage.setItem('password_change_dismissed', 'true');
       setOpen(false);
       setHasShown(true);
       toast({
@@ -62,6 +71,10 @@ export function PasswordChangePrompt() {
       });
     } catch (error) {
       console.error('Failed to update user metadata:', error);
+      // Still dismiss the dialog even if metadata update fails
+      sessionStorage.setItem('password_change_dismissed', 'true');
+      setOpen(false);
+      setHasShown(true);
       toast({ title: 'Error', description: 'Failed to update user metadata', variant: 'destructive' });
     }
   };
@@ -75,6 +88,8 @@ export function PasswordChangePrompt() {
     } catch (error) {
       console.error('Failed to clear password flag:', error);
     }
+    // Mark as dismissed in session storage
+    sessionStorage.setItem('password_change_dismissed', 'true');
     navigate('/settings#password');
     setOpen(false);
   };

@@ -28,7 +28,6 @@ interface Product {
   updated_at: string;
   is_archived: boolean;
   image_url?: string;
-  description?: string;
   updated_by?: string;
 }
 

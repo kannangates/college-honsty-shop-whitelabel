@@ -1,1 +1,55 @@
 project_id = "vkuagjkrpbagrchsqmsf"
+
+[functions.user-management]
+verify_jwt = true
+
+[functions.admin-reset-password]
+verify_jwt = true
+
+[functions.auth-login]
+verify_jwt = false
+
+[functions.auth-signup]
+verify_jwt = false
+
+[functions.public-signup]
+verify_jwt = false
+
+[functions.forgot-password]
+verify_jwt = false
+
+[functions.award-badges]
+verify_jwt = true
+
+[functions.daily-inventory-operations]
+verify_jwt = true
+
+[functions.dashboard-data]
+verify_jwt = true
+
+[functions.get-database-schema]
+verify_jwt = true
+
+[functions.order-management]
+verify_jwt = true
+
+[functions.send-email]
+verify_jwt = true
+
+[functions.stock-management]
+verify_jwt = true
+
+[functions.update-table-stats]
+verify_jwt = true
+
+[functions.update-user-points]
+verify_jwt = true
+
+[functions.update-user-role]
+verify_jwt = true
+
+[functions.update-whitelabel-json]
+verify_jwt = true
+
+[functions.verify-captcha]
+verify_jwt = false
