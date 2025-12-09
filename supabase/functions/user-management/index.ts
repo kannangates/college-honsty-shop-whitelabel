@@ -1,8 +1,8 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import * as speakeasy from 'speakeasy';
 import { corsHeaders } from '../_shared/cors.ts';
 import { logAdminAction } from '../_shared/auditLog.ts';
 import { userManagementSchema } from '../_shared/schemas.ts';
+import { verifyTOTP } from '../_shared/totp.ts';
 
 const PII_FIELDS = ['student_id', 'email', 'mobile_number'];
 
@@ -425,12 +425,8 @@ async function ensureMFAIsValid(supabase: SupabaseClient, adminUserId: string, m
     throw new Error('Enable MFA before accessing PII.');
   }
 
-  const verified = speakeasy.totp.verify({
-    secret: data.secret,
-    encoding: 'base32',
-    token: sanitizedToken,
-    window: 1
-  });
+  // Use our pure JS TOTP implementation
+  const verified = await verifyTOTP(sanitizedToken, data.secret, 1, 30);
 
   if (!verified) {
     throw new Error('Invalid MFA token. Please use a fresh code from your authenticator app.');
