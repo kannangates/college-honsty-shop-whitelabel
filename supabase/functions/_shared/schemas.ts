@@ -1,6 +1,6 @@
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
-// Common field validations
+// Common field validations - ORDERED BY DEPENDENCY
 export const studentIdSchema = z.string()
   .min(1, 'Student ID is required')
   .max(50, 'Student ID must be 50 characters or less')
@@ -27,6 +27,31 @@ export const roleSchema = z.enum(['student', 'teacher', 'admin', 'developer'])
 export const shiftSchema = z.enum(['Morning (1st Shift)', 'Evening (2nd Shift)', 'Full Shift'])
   .default('Morning (1st Shift)');
 
+// Define these BEFORE they're used in other schemas
+export const departmentSchema = z.string()
+  .min(1, 'Department is required')
+  .max(100, 'Department must be 100 characters or less')
+  .trim();
+
+export const reasonSchema = z.string()
+  .min(1, 'Reason is required')
+  .max(500, 'Reason must be 500 characters or less')
+  .trim();
+
+export const mfaTokenSchema = z.string()
+  .min(6, 'MFA token must be at least 6 digits')
+  .max(10, 'MFA token must be 10 digits or less')
+  .regex(/^[0-9]+$/, 'MFA token must be numeric');
+
+export const mobileNumberSchema = z.string()
+  .max(20, 'Mobile number must be 20 characters or less')
+  .regex(/^[0-9+\-() ]*$/, 'Invalid mobile number format')
+  .optional();
+
+export const uuidSchema = z.string()
+  .uuid('Invalid UUID format');
+
+// Now define schemas that use the above
 export const authLoginSchema = z.object({
   studentId: studentIdSchema,
   password: passwordSchema
@@ -44,19 +69,6 @@ export const authSignupSchema = z.object({
   userMetadata: z.record(z.unknown()).optional().default({}),
   skipCaptcha: z.boolean().optional().default(false)
 });
-
-export const departmentSchema = z.string()
-  .min(1, 'Department is required')
-  .max(100, 'Department must be 100 characters or less')
-  .trim();
-
-export const mobileNumberSchema = z.string()
-  .max(20, 'Mobile number must be 20 characters or less')
-  .regex(/^[0-9+\-() ]*$/, 'Invalid mobile number format')
-  .optional();
-
-export const uuidSchema = z.string()
-  .uuid('Invalid UUID format');
 
 // Public signup schema
 export const publicSignupSchema = z.object({
@@ -152,17 +164,6 @@ export const orderManagementSchema = z.discriminatedUnion('operation', [
 export const newPasswordSchema = z.string()
   .min(8, 'New password must be at least 8 characters')
   .max(128, 'New password must be 128 characters or less');
-
-// Reason for points update
-export const reasonSchema = z.string()
-  .min(1, 'Reason is required')
-  .max(500, 'Reason must be 500 characters or less')
-  .trim();
-
-export const mfaTokenSchema = z.string()
-  .min(6, 'MFA token must be at least 6 digits')
-  .max(10, 'MFA token must be 10 digits or less')
-  .regex(/^[0-9]+$/, 'MFA token must be numeric');
 
 // Points adjustment
 export const pointsSchema = z.number()
