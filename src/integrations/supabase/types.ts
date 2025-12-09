@@ -920,6 +920,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string | null
@@ -988,6 +1009,10 @@ export type Database = {
         }[]
       }
       generate_friendly_order_id: { Args: never; Returns: string }
+      get_current_app_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       get_current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
@@ -1027,6 +1052,13 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      has_app_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
@@ -1039,6 +1071,7 @@ export type Database = {
       update_top_students_rankings: { Args: never; Returns: undefined }
     }
     Enums: {
+      app_role: "admin" | "student" | "teacher" | "developer"
       notification_type:
         | "top_rank_change"
         | "badge_earned"
@@ -1173,6 +1206,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "student", "teacher", "developer"],
       notification_type: [
         "top_rank_change",
         "badge_earned",
