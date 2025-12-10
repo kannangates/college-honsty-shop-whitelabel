@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
+import { AdminProtectedRoute } from '@/components/layout/AdminProtectedRoute';
 import { Layout } from '@/components/layout/Layout';
 import AdminPanel from '@/pages/AdminPanel';
 import AdminStudentManagement from '@/pages/admin/AdminStudentManagement';
@@ -19,32 +18,32 @@ import EdgeFunctionsPage from '@/pages/admin/EdgeFunctions';
 import AdminAuditLogs from '@/pages/admin/AdminAuditLogs';
 import ISOCompliance from '@/pages/ISOCompliance';
 
-const ProtectedLayoutRoute = ({ children }: { children: React.ReactNode }) => (
-  <ProtectedRoute>
+const AdminLayoutRoute = ({ children }: { children: React.ReactNode }) => (
+  <AdminProtectedRoute>
     <Layout>
       {children}
     </Layout>
-  </ProtectedRoute>
+  </AdminProtectedRoute>
 );
 
 export const AdminRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<ProtectedLayoutRoute><AdminPanel /></ProtectedLayoutRoute>} />
-      <Route path="/student-management" element={<ProtectedLayoutRoute><AdminStudentManagement /></ProtectedLayoutRoute>} />
-      <Route path="/order-management" element={<ProtectedLayoutRoute><AdminOrderManagement /></ProtectedLayoutRoute>} />
-      <Route path="/inventory" element={<ProtectedLayoutRoute><AdminInventory /></ProtectedLayoutRoute>} />
-      <Route path="/integrations" element={<ProtectedLayoutRoute><AdminIntegrations /></ProtectedLayoutRoute>} />
-      <Route path="/n8n" element={<ProtectedLayoutRoute><AdminN8nPage /></ProtectedLayoutRoute>} />
-      <Route path="/points-badges" element={<ProtectedLayoutRoute><AdminPointsBadges /></ProtectedLayoutRoute>} />
-      <Route path="/stock-accounting" element={<ProtectedLayoutRoute><AdminStockAccounting /></ProtectedLayoutRoute>} />
-      <Route path="/stock-accounting-history" element={<ProtectedLayoutRoute><AdminStockAccountingHistory /></ProtectedLayoutRoute>} />
-      <Route path="/payment-reports" element={<ProtectedLayoutRoute><AdminPaymentReports /></ProtectedLayoutRoute>} />
-      <Route path="/dev-tools" element={<ProtectedLayoutRoute><AdminDeveloper /></ProtectedLayoutRoute>} />
-      <Route path="/whitelabel-config" element={<ProtectedLayoutRoute><WhitelabelConfig /></ProtectedLayoutRoute>} />
-      <Route path="/edge-functions" element={<ProtectedLayoutRoute><EdgeFunctionsPage /></ProtectedLayoutRoute>} />
-      <Route path="/audit-logs" element={<ProtectedLayoutRoute><AdminAuditLogs /></ProtectedLayoutRoute>} />
-      <Route path="/iso-compliance" element={<ProtectedLayoutRoute><ISOCompliance /></ProtectedLayoutRoute>} />
+      <Route path="/" element={<AdminLayoutRoute><AdminPanel /></AdminLayoutRoute>} />
+      <Route path="/student-management" element={<AdminLayoutRoute><AdminStudentManagement /></AdminLayoutRoute>} />
+      <Route path="/order-management" element={<AdminLayoutRoute><AdminOrderManagement /></AdminLayoutRoute>} />
+      <Route path="/inventory" element={<AdminLayoutRoute><AdminInventory /></AdminLayoutRoute>} />
+      <Route path="/integrations" element={<AdminLayoutRoute><AdminIntegrations /></AdminLayoutRoute>} />
+      <Route path="/n8n" element={<AdminLayoutRoute><AdminN8nPage /></AdminLayoutRoute>} />
+      <Route path="/points-badges" element={<AdminLayoutRoute><AdminPointsBadges /></AdminLayoutRoute>} />
+      <Route path="/stock-accounting" element={<AdminLayoutRoute><AdminStockAccounting /></AdminLayoutRoute>} />
+      <Route path="/stock-accounting-history" element={<AdminLayoutRoute><AdminStockAccountingHistory /></AdminLayoutRoute>} />
+      <Route path="/payment-reports" element={<AdminLayoutRoute><AdminPaymentReports /></AdminLayoutRoute>} />
+      <Route path="/dev-tools" element={<AdminLayoutRoute><AdminDeveloper /></AdminLayoutRoute>} />
+      <Route path="/whitelabel-config" element={<AdminLayoutRoute><WhitelabelConfig /></AdminLayoutRoute>} />
+      <Route path="/edge-functions" element={<AdminLayoutRoute><EdgeFunctionsPage /></AdminLayoutRoute>} />
+      <Route path="/audit-logs" element={<AdminLayoutRoute><AdminAuditLogs /></AdminLayoutRoute>} />
+      <Route path="/iso-compliance" element={<AdminLayoutRoute><ISOCompliance /></AdminLayoutRoute>} />
     </Routes>
   );
 };
