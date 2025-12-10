@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Package, Pencil, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -61,7 +61,7 @@ export const AdminInventoryManagement = () => {
 
   const { toast } = useToast();
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     console.log('📦 Fetching products...');
     setLoading(true);
     try {
@@ -93,7 +93,7 @@ export const AdminInventoryManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const fetchCategories = async () => {
     // Categories are now defined in constants, no need to fetch
@@ -121,7 +121,7 @@ export const AdminInventoryManagement = () => {
     fetchProducts();
     fetchCategories();
     fetchLowStockProducts();
-  }, []);
+  }, [fetchProducts]);
 
   useEffect(() => {
     let filtered = products;
@@ -164,10 +164,10 @@ export const AdminInventoryManagement = () => {
 
   const handleProductUpdate = async (id: string, updates: Partial<Product>) => {
     try {
-      const mappedUpdates: any = {
+      const mappedUpdates: Partial<Product> = {
         name: updates.name,
         category: updates.category,
-        unit_price: (updates as any).price ?? updates.unit_price,
+        unit_price: (updates as Product & { price?: number }).price ?? updates.unit_price,
         image_url: updates.image_url,
         status: updates.status,
         updated_at: new Date().toISOString(),
@@ -183,9 +183,10 @@ export const AdminInventoryManagement = () => {
       await fetchProducts();
       toast({ title: 'Updated', description: 'Product updated successfully' });
       closeEditModal();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update product';
       console.error('Error updating product:', err);
-      toast({ title: 'Error', description: err.message || 'Failed to update product', variant: 'destructive' });
+      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
       throw err;
     }
   };
@@ -203,7 +204,17 @@ export const AdminInventoryManagement = () => {
     setAddModalOpen(false);
   };
 
-  const handleAddProduct = async (productData: any) => {
+  interface ProductData {
+    name: string;
+    price: number;
+    image_url?: string;
+    category: string;
+    status: string;
+    shelf_stock: number;
+    warehouse_stock: number;
+  }
+
+  const handleAddProduct = async (productData: ProductData) => {
     setAddLoading(true);
     try {
       const { error } = await supabase
@@ -226,9 +237,10 @@ export const AdminInventoryManagement = () => {
       await fetchProducts();
       toast({ title: 'Success', description: 'Product added successfully' });
       closeAddModal();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add product';
       console.error('Error adding product:', err);
-      toast({ title: 'Error', description: err.message || 'Failed to add product', variant: 'destructive' });
+      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
       throw err;
     } finally {
       setAddLoading(false);

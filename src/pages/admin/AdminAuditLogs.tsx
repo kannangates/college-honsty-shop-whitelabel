@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,8 @@ interface AuditLog {
   action: string;
   table_name: string;
   record_id: string | null;
-  old_values: any;
-  new_values: any;
+  old_values: Record<string, unknown> | null;
+  new_values: Record<string, unknown> | null;
   ip_address: string | null;
   user_agent: string | null;
   created_at: string;
@@ -56,7 +56,7 @@ const AdminAuditLogs = () => {
   useEffect(() => {
     fetchUsers();
     fetchLogs();
-  }, []);
+  }, [fetchLogs]);
 
   // Real-time subscription for new audit logs
   useEffect(() => {
@@ -100,10 +100,10 @@ const AdminAuditLogs = () => {
     }
   };
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
-      let query = supabase
+      const query = supabase
         .from('admin_audit_log')
         .select('*')
         .order('created_at', { ascending: false })
@@ -113,17 +113,18 @@ const AdminAuditLogs = () => {
 
       if (error) throw error;
       setLogs(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch audit logs';
       console.error('Error fetching logs:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to fetch audit logs',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const getUserName = (userId: string) => {
     const user = users.find(u => u.id === userId);
@@ -175,7 +176,7 @@ const AdminAuditLogs = () => {
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(log => 
+      filtered = filtered.filter(log =>
         log.table_name.toLowerCase().includes(query) ||
         log.action.toLowerCase().includes(query) ||
         getUserName(log.user_id).toLowerCase().includes(query) ||
@@ -205,11 +206,11 @@ const AdminAuditLogs = () => {
     setCurrentPage(1);
   };
 
-  const renderNewValuesWithHighlight = (oldValues: any, newValues: any) => {
+  const renderNewValuesWithHighlight = (oldValues: Record<string, unknown> | null, newValues: Record<string, unknown> | null) => {
     if (!newValues) return null;
-    
+
     const changedKeys = new Set<string>();
-    
+
     if (oldValues && newValues) {
       Object.keys(newValues).forEach(key => {
         if (JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key])) {
@@ -218,10 +219,10 @@ const AdminAuditLogs = () => {
       });
     }
 
-    const renderValue = (key: string, value: any, indent: number = 0): JSX.Element => {
+    const renderValue = (key: string, value: unknown, indent: number = 0): JSX.Element => {
       const isChanged = changedKeys.has(key);
       const indentStr = '  '.repeat(indent);
-      
+
       if (value === null) {
         return (
           <span key={key} className={isChanged ? 'text-destructive font-semibold' : ''}>
@@ -229,7 +230,7 @@ const AdminAuditLogs = () => {
           </span>
         );
       }
-      
+
       if (typeof value === 'object' && !Array.isArray(value)) {
         return (
           <span key={key}>
@@ -242,7 +243,7 @@ const AdminAuditLogs = () => {
           </span>
         );
       }
-      
+
       const valueStr = typeof value === 'string' ? `"${value}"` : JSON.stringify(value);
       return (
         <span key={key} className={isChanged ? 'text-destructive font-semibold' : ''}>

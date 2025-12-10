@@ -14,7 +14,7 @@ interface StockOperationPayload {
 
 interface StockResponse {
   success: boolean;
-  data?: any;
+  data?: Record<string, unknown>;
   message?: string;
   error?: string;
 }
@@ -25,10 +25,10 @@ export const useStockManagement = () => {
 
   const executeStockOperation = useCallback(async (payload: StockOperationPayload): Promise<StockResponse> => {
     setIsLoading(true);
-    
+
     try {
       console.log('Executing stock operation:', payload);
-      
+
       const { data, error } = await supabase.functions.invoke('stock-management', {
         body: payload
       });
@@ -52,7 +52,7 @@ export const useStockManagement = () => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('Stock operation failed:', errorMessage);
-      
+
       if (payload.operation !== 'get_stock_status') {
         toast({
           title: "Stock Operation Failed",
@@ -60,7 +60,7 @@ export const useStockManagement = () => {
           variant: "destructive",
         });
       }
-      
+
       return { success: false, error: errorMessage };
     } finally {
       setIsLoading(false);

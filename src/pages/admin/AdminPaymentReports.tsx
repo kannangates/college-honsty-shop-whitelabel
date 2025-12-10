@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +12,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { PaymentRecordModal } from '@/components/admin/PaymentRecordModal';
+import { PaymentStatusModal } from '@/components/admin/PaymentStatusModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -21,12 +22,49 @@ const AdminPaymentReports = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [isPaymentRecordOpen, setIsPaymentRecordOpen] = useState(false);
-  const [paymentRecords, setPaymentRecords] = useState<any[]>([]);
+  const [isPaymentStatusOpen, setIsPaymentStatusOpen] = useState(false);
+
+  interface PaymentRecord {
+    id: string;
+    studentId: string;
+    studentName: string;
+    amount: number;
+    date: string;
+    method: string;
+    status: 'Paid' | 'Unpaid' | 'Cancelled';
+    transactionId?: string;
+    orderId?: string;
+    items?: string[];
+    createdAt?: string;
+  }
+
+  interface EditingPayment {
+    id: string;
+    orderId: string;
+    transactionId: string;
+    paymentMethod: string;
+    paidAt: string;
+  }
+
+  interface EditingPaymentStatus {
+    id: string;
+    orderId: string;
+    studentName: string;
+    studentId: string;
+    amount: number;
+    currentStatus: string;
+    transactionId?: string;
+    paymentMethod?: string;
+    paidAt?: string;
+  }
+
+  const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [editingPayment, setEditingPayment] = useState<EditingPayment | null>(null);
+  const [editingPaymentStatus, setEditingPaymentStatus] = useState<EditingPaymentStatus | null>(null);
   const { toast } = useToast();
 
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -36,28 +74,40 @@ const AdminPaymentReports = () => {
           friendly_id,
           total_amount,
           paid_at,
+          created_at,
           payment_mode,
           transaction_id,
           payment_status,
           users (name, student_id, email)
         `)
-        .eq('payment_status', 'paid')
-        .not('paid_at', 'is', null)
-        .order('paid_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedData = data.map(order => ({
-        id: order.id,
-        studentId: order.users?.student_id || 'Unknown',
-        studentName: order.users?.name || 'Unknown',
-        amount: order.total_amount,
-        date: format(new Date(order.paid_at), 'yyyy-MM-dd'),
-        method: order.payment_mode || 'Manual',
-        status: 'Paid' as const,
-        transactionId: order.transaction_id || 'N/A',
-        orderId: order.friendly_id || order.id.slice(0, 8)
-      }));
+      const formattedData = data.map(order => {
+        const getStatusLabel = (status: string) => {
+          switch (status) {
+            case 'paid': return 'Paid';
+            case 'unpaid': return 'Unpaid';
+            case 'cancelled': return 'Cancelled';
+            case 'failed': return 'Unpaid'; // Map failed to unpaid for simplicity
+            default: return 'Unpaid'; // Default to unpaid instead of pending
+          }
+        };
+
+        return {
+          id: order.id,
+          studentId: order.users?.student_id || 'Unknown',
+          studentName: order.users?.name || 'Unknown',
+          amount: order.total_amount,
+          date: order.paid_at ? format(new Date(order.paid_at), 'yyyy-MM-dd') : format(new Date(order.created_at), 'yyyy-MM-dd'),
+          method: order.payment_mode || 'N/A',
+          status: getStatusLabel(order.payment_status) as PaymentRecord['status'],
+          transactionId: order.transaction_id || 'N/A',
+          orderId: order.friendly_id || order.id.slice(0, 8),
+          createdAt: order.created_at
+        };
+      });
 
       setPaymentRecords(formattedData);
     } catch (error) {
@@ -70,21 +120,36 @@ const AdminPaymentReports = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [fetchPayments]);
 
-  const handleEditPayment = (payment: any) => {
+  const handleEditPayment = (payment: PaymentRecord) => {
     setEditingPayment({
       id: payment.id,
-      orderId: payment.orderId,
-      transactionId: payment.transactionId,
+      orderId: payment.orderId || payment.id,
+      transactionId: payment.transactionId || '',
       paymentMethod: payment.method,
       paidAt: payment.date
     });
     setIsPaymentRecordOpen(true);
+  };
+
+  const handleEditPaymentStatus = (payment: PaymentRecord) => {
+    setEditingPaymentStatus({
+      id: payment.id,
+      orderId: payment.orderId || payment.id,
+      studentName: payment.studentName,
+      studentId: payment.studentId,
+      amount: payment.amount,
+      currentStatus: payment.status.toLowerCase(),
+      transactionId: payment.transactionId !== 'N/A' ? payment.transactionId : '',
+      paymentMethod: payment.method !== 'N/A' ? payment.method : '',
+      paidAt: payment.date
+    });
+    setIsPaymentStatusOpen(true);
   };
 
   const handleDeletePayment = async (orderId: string) => {
@@ -118,7 +183,7 @@ const AdminPaymentReports = () => {
     }
   };
 
-  const staticRecords = [
+  const staticRecords = useMemo(() => [
     {
       id: '1',
       studentId: 'STU001',
@@ -136,7 +201,7 @@ const AdminPaymentReports = () => {
       amount: 75.50,
       date: '2024-01-20',
       method: 'Credit Card',
-      status: 'Pending' as const,
+      status: 'Unpaid' as const,
       items: ['Textbook']
     },
     {
@@ -156,7 +221,7 @@ const AdminPaymentReports = () => {
       amount: 50.00,
       date: '2024-01-25',
       method: 'UPI',
-      status: 'Failed' as const,
+      status: 'Unpaid' as const,
       items: ['Graph Paper']
     },
     {
@@ -176,7 +241,7 @@ const AdminPaymentReports = () => {
       amount: 90.20,
       date: '2024-02-01',
       method: 'Net Banking',
-      status: 'Pending' as const,
+      status: 'Unpaid' as const,
       items: ['Highlighters', 'Sticky Notes']
     },
     {
@@ -196,7 +261,7 @@ const AdminPaymentReports = () => {
       amount: 60.50,
       date: '2024-02-10',
       method: 'Credit Card',
-      status: 'Failed' as const,
+      status: 'Unpaid' as const,
       items: ['Colored Pens']
     },
     {
@@ -216,18 +281,16 @@ const AdminPaymentReports = () => {
       amount: 80.00,
       date: '2024-02-15',
       method: 'UPI',
-      status: 'Pending' as const,
+      status: 'Unpaid' as const,
       items: ['Whiteboard Markers']
     }
-  ];
-
-  const allRecords = [...paymentRecords, ...staticRecords];
+  ], []);
 
   const statusOptions = useMemo(() => [
     { value: 'all', label: 'All' },
     { value: 'paid', label: 'Paid' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'failed', label: 'Failed' }
+    { value: 'unpaid', label: 'Unpaid' },
+    { value: 'cancelled', label: 'Cancelled' }
   ], []);
 
   const formatDate = (date: Date | undefined): string => {
@@ -235,6 +298,7 @@ const AdminPaymentReports = () => {
   };
 
   const filteredRecords = useMemo(() => {
+    const allRecords = [...paymentRecords, ...staticRecords];
     return allRecords.filter(record => {
       const matchesSearch = record.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         record.studentId.toLowerCase().includes(searchTerm.toLowerCase());
@@ -246,10 +310,10 @@ const AdminPaymentReports = () => {
         (!dateRange.from && dateRange.to && recordDate <= dateRange.to);
       return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [allRecords, searchTerm, statusFilter, dateRange]);
+  }, [paymentRecords, staticRecords, searchTerm, statusFilter, dateRange]);
 
   // Define columns for shadcn DataTable
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<PaymentRecord>[] = [
     { accessorKey: 'studentId', header: 'Student ID' },
     { accessorKey: 'studentName', header: 'Student Name' },
     { accessorKey: 'amount', header: 'Amount', cell: ({ row }) => `₹${row.original.amount.toFixed(2)}` },
@@ -257,7 +321,27 @@ const AdminPaymentReports = () => {
     { accessorKey: 'method', header: 'Method' },
     { accessorKey: 'transactionId', header: 'Transaction ID' },
     { accessorKey: 'orderId', header: 'Order ID' },
-    { accessorKey: 'status', header: 'Status' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.original.status;
+        const getStatusColor = (status: string) => {
+          switch (status.toLowerCase()) {
+            case 'paid': return 'bg-green-100 text-green-800 border-green-200';
+            case 'unpaid': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+          }
+        };
+
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
+            {status}
+          </span>
+        );
+      }
+    },
     {
       id: 'actions',
       header: 'Actions',
@@ -270,19 +354,23 @@ const AdminPaymentReports = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleEditPayment(payment)}
-              className="text-blue-600 hover:text-blue-700"
+              onClick={() => handleEditPaymentStatus(payment)}
+              className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
+              title="Edit Payment Status"
             >
               <Edit className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDeletePayment(payment.id)}
-              className="text-red-600 hover:text-red-700"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {payment.status.toLowerCase() === 'paid' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDeletePayment(payment.id)}
+                className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                title="Mark as Unpaid"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         );
       }
@@ -431,6 +519,22 @@ const AdminPaymentReports = () => {
           setEditingPayment(null);
         }}
         editingPayment={editingPayment}
+      />
+
+      {/* Payment Status Modal */}
+      <PaymentStatusModal
+        open={isPaymentStatusOpen}
+        onOpenChange={(open) => {
+          setIsPaymentStatusOpen(open);
+          if (!open) {
+            setEditingPaymentStatus(null);
+          }
+        }}
+        onStatusUpdated={() => {
+          fetchPayments();
+          setEditingPaymentStatus(null);
+        }}
+        orderData={editingPaymentStatus}
       />
     </div>
   );

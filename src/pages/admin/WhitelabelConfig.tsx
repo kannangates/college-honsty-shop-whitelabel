@@ -41,7 +41,7 @@ const WhitelabelConfig = () => {
     }
   }, [parsedResult.isValid, currentUpiValue]);
 
-  type MutableConfig = Record<string, any>;
+  type MutableConfig = Record<string, unknown>;
 
   const updateEditableConfig = (updater: (config: MutableConfig) => void) => {
     setEditableConfig(prev => {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { dailyInventorySaveSchema, inventoryOperationSchema } from '../_shared/schemas.ts'

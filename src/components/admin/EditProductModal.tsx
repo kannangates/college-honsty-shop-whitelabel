@@ -11,7 +11,7 @@ import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 interface Product {
   id: string;
   name: string;
-  price?: number;
+  unit_price: number;
   image_url?: string;
   category: string;
   status: string;
@@ -44,7 +44,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
     if (product) {
       setFormData({
         name: product.name,
-        price: product.price || 0,
+        price: product.unit_price || 0,
         image_url: product.image_url || '',
         category: product.category,
         status: product.status,
