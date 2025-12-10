@@ -107,7 +107,7 @@ const AdminStudentManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast, supabase]);
+  }, [toast]);
 
   useEffect(() => {
     fetchStudents();
@@ -558,7 +558,7 @@ const AdminStudentManagement = () => {
                 </TableRow>
               ) : (
                 filteredStudents.map((student) => (
-                    <TableRow key={student.id}>
+                  <TableRow key={student.id}>
                     <TableCell className="font-medium text-sm font-mono">{student.masked_student_id}</TableCell>
                     <TableCell className="text-sm">{student.name}</TableCell>
                     <TableCell className="text-sm">{student.department || 'N/A'}</TableCell>
