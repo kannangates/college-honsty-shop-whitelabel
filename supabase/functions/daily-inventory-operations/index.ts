@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-import { dailyInventorySaveSchema, inventoryOperationSchema } from '../_shared/schemas.ts'
+import { dailyInventorySaveSchema as _dailyInventorySaveSchema, inventoryOperationSchema as _inventoryOperationSchema } from '../_shared/schemas.ts'
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 interface InventoryRow {
@@ -83,38 +83,41 @@ Deno.serve(async (req) => {
     const validatedFormat = formatSchema.safeParse(format);
 
     if (!validatedOperation.success) {
+      const validationError = validatedOperation as { error: { issues: Array<{ message: string }> } };
       return new Response(
         JSON.stringify({
           error: 'Invalid operation',
-          details: validatedOperation.error.issues.map(e => ({ field: 'operation', message: e.message }))
+          details: validationError.error.issues.map(e => ({ field: 'operation', message: e.message }))
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     if (!validatedDate.success) {
+      const validationError = validatedDate as { error: { issues: Array<{ message: string }> } };
       return new Response(
         JSON.stringify({
           error: 'Invalid date',
-          details: validatedDate.error.issues.map(e => ({ field: 'date', message: e.message }))
+          details: validationError.error.issues.map(e => ({ field: 'date', message: e.message }))
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     if (!validatedFormat.success) {
+      const validationError = validatedFormat as { error: { issues: Array<{ message: string }> } };
       return new Response(
         JSON.stringify({
           error: 'Invalid format',
-          details: validatedFormat.error.issues.map(e => ({ field: 'format', message: e.message }))
+          details: validationError.error.issues.map(e => ({ field: 'format', message: e.message }))
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const validOp = validatedOperation.data;
-    const validDate = validatedDate.data;
-    const validFormat = validatedFormat.data;
+    const _validOp = validatedOperation.data;
+    const _validDate = validatedDate.data;
+    const _validFormat = validatedFormat.data;
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);

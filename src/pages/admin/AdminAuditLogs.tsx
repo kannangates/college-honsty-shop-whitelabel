@@ -53,6 +53,38 @@ const AdminAuditLogs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const logsPerPage = 50;
 
+  const fetchLogs = useCallback(async () => {
+    try {
+      setLoading(true);
+      const query = supabase
+        .from('admin_audit_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      // Type cast the data to match our AuditLog interface
+      const typedData = (data || []).map(log => ({
+        ...log,
+        old_values: log.old_values as Record<string, unknown> | null,
+        new_values: log.new_values as Record<string, unknown> | null,
+      }));
+      setLogs(typedData);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch audit logs';
+      console.error('Error fetching logs:', error);
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
     fetchUsers();
     fetchLogs();
@@ -100,31 +132,7 @@ const AdminAuditLogs = () => {
     }
   };
 
-  const fetchLogs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const query = supabase
-        .from('admin_audit_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500);
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setLogs(data || []);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch audit logs';
-      console.error('Error fetching logs:', error);
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
 
   const getUserName = (userId: string) => {
     const user = users.find(u => u.id === userId);

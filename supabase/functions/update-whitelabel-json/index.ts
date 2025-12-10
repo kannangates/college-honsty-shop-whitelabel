@@ -44,7 +44,7 @@ Deno.serve(async (req: Request) => {
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-    } catch (error) {
+    } catch (_error) {
       return new Response(
         JSON.stringify({ error: 'Authentication failed' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -64,10 +64,11 @@ Deno.serve(async (req: Request) => {
       // Validate config with Zod schema
       const configValidation = configSchema.safeParse(config);
       if (!configValidation.success) {
+        const validationError = configValidation as { error: { issues: Array<{ path: Array<string | number>; message: string }> } };
         return new Response(
           JSON.stringify({
             error: 'Config validation failed',
-            details: configValidation.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+            details: validationError.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
