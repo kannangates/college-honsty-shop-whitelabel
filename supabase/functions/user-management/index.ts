@@ -36,19 +36,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if requesting user is admin
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
+    // Check if requesting user is admin using secure user_roles table
+    const { data: userRoles, error: roleError } = await supabase
+      .from('user_roles')
       .select('role')
-      .eq('id', user.id)
-      .single();
+      .eq('user_id', user.id);
 
-    if (profileError || !userProfile || !['admin', 'developer'].includes(userProfile.role)) {
+    if (roleError) {
+      console.error('Error fetching user roles:', roleError);
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Unable to verify role' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const roles = userRoles?.map(r => r.role) || [];
+    const isAdmin = roles.includes('admin') || roles.includes('developer');
+
+    if (!isAdmin) {
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Get role for audit logging (first admin role found)
+    const userRole = roles.includes('admin') ? 'admin' : 'developer';
 
     const requestBody = await req.json();
 
@@ -75,26 +88,26 @@ Deno.serve(async (req) => {
 
     switch (operation) {
       case 'fetch_user_summary':
-        return await fetchUserSummary(supabase, user.id, userProfile.role, ipAddress, userAgent);
+        return await fetchUserSummary(supabase, user.id, userRole, ipAddress, userAgent);
       case 'fetch_user_details':
         return await fetchUserDetails(
           supabase,
           validationResult.data as SensitiveAccessRequest,
           user.id,
-          userProfile.role,
+          userRole,
           ipAddress,
           userAgent
         );
       case 'fetch_leaderboard':
-        return await fetchLeaderboard(supabase, user.id, userProfile.role, ipAddress, userAgent);
+        return await fetchLeaderboard(supabase, user.id, userRole, ipAddress, userAgent);
       case 'update_user':
         if ('id' in validationResult.data) {
           const updateData = validationResult.data as unknown as UserUpdate;
-          return await updateUser(supabase, updateData, user.id, userProfile.role, ipAddress, userAgent);
+          return await updateUser(supabase, updateData, user.id, userRole, ipAddress, userAgent);
         }
         throw new Error('Invalid update_user data');
       case 'get_stats':
-        return await getUserStats(supabase, user.id, userProfile.role, ipAddress, userAgent);
+        return await getUserStats(supabase, user.id, userRole, ipAddress, userAgent);
       case 'update_last_signin':
         if ('userId' in validationResult.data) {
           const data = validationResult.data as unknown as { userId: string };
