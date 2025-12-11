@@ -19,8 +19,7 @@ import {
   CreditCard,
   Clock,
   Package,
-  Trash2,
-  AlertTriangle
+  Trash2
 } from 'lucide-react';
 import { formatIndianCurrency } from '@/utils/orderUtils';
 
@@ -54,7 +53,6 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
   const [paymentMode, setPaymentMode] = useState<'immediate' | 'later' | null>(null);
   const [currentItems, setCurrentItems] = useState(orderItems);
   const [validatingProducts, setValidatingProducts] = useState(false);
-  const [unavailableItems, setUnavailableItems] = useState<Set<string>>(new Set());
 
   // Update current items when orderItems prop changes
   useEffect(() => {
@@ -72,19 +70,35 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
   const checkProductAvailability = async () => {
     setValidatingProducts(true);
     try {
-      const { invalidItems } = await validateProducts(orderItems);
-      setUnavailableItems(new Set(invalidItems.map(item => item.id)));
+      const { validItems, invalidItems } = await validateProducts(orderItems);
 
       if (invalidItems.length > 0) {
+        // Remove unavailable products from the current items list
+        setCurrentItems(validItems);
+
         const invalidNames = invalidItems.map(item => item.products?.name || item.name || 'Unknown').join(', ');
-        toast({
-          title: 'Some Products May Be Unavailable',
-          description: `The following items may no longer be available: ${invalidNames}`,
-          variant: 'destructive',
-        });
+
+        if (validItems.length === 0) {
+          toast({
+            title: 'All Products Unavailable',
+            description: 'All items from your previous order are no longer available. Please browse our current products.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: `${invalidItems.length} Product${invalidItems.length > 1 ? 's' : ''} Removed`,
+            description: `The following unavailable items have been removed from your reorder: ${invalidNames}`,
+            variant: 'destructive',
+          });
+        }
       }
     } catch (error) {
       console.error('Error checking product availability:', error);
+      toast({
+        title: 'Error Checking Products',
+        description: 'Unable to verify product availability. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setValidatingProducts(false);
     }
@@ -274,46 +288,33 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
                 </div>
               ) : (
                 <div className="space-y-3 max-h-60 overflow-y-auto">
-                  {currentItems.map((item) => {
-                    const isUnavailable = unavailableItems.has(item.id);
-                    return (
-                      <div
-                        key={item.id}
-                        className={`flex items-center justify-between p-3 rounded-lg ${isUnavailable ? 'bg-red-50 border border-red-200' : 'bg-gray-50'
-                          }`}
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          {currentItems.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveItem(item.id)}
-                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {isUnavailable && (
-                            <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                          )}
-                          <div className="flex-1">
-                            <h4 className={`font-medium ${isUnavailable ? 'text-red-700' : ''}`}>
-                              {item.products?.name || item.name}
-                              {isUnavailable && <span className="text-red-500 text-sm ml-2">(Unavailable)</span>}
-                            </h4>
-                            <p className={`text-sm ${isUnavailable ? 'text-red-600' : 'text-gray-600'}`}>
-                              {formatIndianCurrency(item.products?.unit_price || item.unit_price)} × {item.quantity}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className={`font-medium ${isUnavailable ? 'text-red-700 line-through' : ''}`}>
-                            {formatIndianCurrency((item.products?.unit_price || item.unit_price) * item.quantity)}
+                  {currentItems.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3 flex-1">
+                        {currentItems.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveItem(item.id)}
+                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <div className="flex-1">
+                          <h4 className="font-medium">{item.products?.name || item.name}</h4>
+                          <p className="text-sm text-gray-600">
+                            {formatIndianCurrency(item.products?.unit_price || item.unit_price)} × {item.quantity}
                           </p>
                         </div>
                       </div>
-                    );
-                  })}
+                      <div className="text-right">
+                        <p className="font-medium">
+                          {formatIndianCurrency((item.products?.unit_price || item.unit_price) * item.quantity)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
