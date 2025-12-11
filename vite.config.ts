@@ -156,9 +156,5 @@ export default defineConfig(({ mode }) => ({
     },
     force: false,
   },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: './src/test/setup.ts',
-  },
+
 }));

@@ -14,11 +14,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "install-safe": "npm install",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run --coverage",
+
     "audit:performance": "node scripts/performance.cjs",
     "analyze": "vite build --mode analyze && npx vite-bundle-visualizer"
   },
@@ -113,19 +109,16 @@
     "@babel/preset-typescript": "^7.27.1",
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.15",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
+
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/jest": "^30.0.0",
+
     "@types/node": "^24.1.0",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.10.2",
-    "@vitest/ui": "^3.2.4",
+
     "autoprefixer": "^10.4.20",
     "axe-core": "^4.10.3",
     "chrome-launcher": "^1.2.0",
@@ -134,9 +127,6 @@
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
     "identity-obj-proxy": "^3.0.0",
-    "jest": "^30.0.3",
-    "jest-axe": "^10.0.0",
-    "jest-environment-jsdom": "^30.0.2",
     "jsdom": "^26.1.0",
     "lighthouse": "^12.7.0",
     "lovable-tagger": "^1.1.8",
@@ -145,14 +135,14 @@
     "sharp": "^0.34.3",
     "svgo": "^4.0.0",
     "tailwindcss": "^3.4.11",
-    "ts-jest": "^29.4.0",
+
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.19",
     "vite-bundle-visualizer": "^1.2.1",
     "vite-plugin-image-optimizer": "^2.0.2",
     "vite-plugin-pwa": "^1.0.2",
-    "vitest": "^3.2.4",
+
     "workbox-window": "^7.3.0"
   }
 }
