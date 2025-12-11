@@ -67,24 +67,11 @@ export class AuthService {
 
   static async signup(data: SignupData): Promise<SignupResult> {
     try {
-      console.log('📦 Payload to Supabase Auth:', {
-        email: data.email,
-        passwordLength: data.password.length,
-        student_id: data.student_id,
-        name: data.name,
-        department: data.department,
-        role: data.role,
-        shift: data.shift,
-        points: data.points,
-        captcha: !!data.captchaToken
-      });
       // Validate input data
       const validation = this.validateSignupData(data);
       if (!validation.isValid) {
         return { success: false, error: validation.errors.join(', ') };
       }
-
-
 
       // Create user in Supabase Auth with email confirmation disabled
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -96,7 +83,6 @@ export class AuthService {
             name: data.name,
             student_id: data.student_id,
             department: data.department,
-
             role: data.role,
             shift: data.shift,
             points: data.points,
@@ -104,11 +90,6 @@ export class AuthService {
           },
           captchaToken: data.captchaToken
         }
-      });
-
-      console.log('📨 Supabase auth.signUp response:', {
-        authData,
-        authError
       });
 
       if (authError) {
@@ -128,16 +109,11 @@ export class AuthService {
           name: data.name,
           email: data.email,
           department: data.department,
-
           role: data.role,
           shift: data.shift,
           points: data.points,
           status: 'active'
         });
-
-      console.log('🗂️ Supabase user insert response:', {
-        profileError
-      });
 
       if (profileError) {
         // If profile creation fails, we should clean up the auth user
@@ -234,13 +210,10 @@ export class AuthService {
       // If password is expired, set a flag but allow login
       let finalSession = signInData.session;
       if (passwordChangedAt < expiryDate) {
-        console.log('⚠️ Password expired! Setting metadata flags...');
         // Set a flag in user metadata to force password change
         const { data: updateData } = await supabase.auth.updateUser({
           data: { must_change_password: true, password_expired: true }
         });
-
-        console.log('✅ Metadata updated:', updateData?.user?.user_metadata);
 
         // Use the updated session with new metadata
         if (updateData?.user) {
@@ -306,7 +279,7 @@ export class AuthService {
 
       return {};
     } catch (error) {
-      console.error('Session restore error:', error);
+      // Session restore error - fail silently
       return {};
     }
   }
@@ -332,18 +305,14 @@ export class AuthService {
         return { success: false, error: 'Invalid email format' };
       }
 
-      console.log('Sending password reset email to:', email);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) {
-        console.error('Supabase password reset error:', error);
         throw error;
       }
 
-      // Log success but don't reveal if the email exists in the system
-      console.log('Password reset email sent successfully');
       NotificationService.showSuccess(
         WHITELABEL_CONFIG.messages?.auth?.passwordResetSent ||
         'If an account with that email exists, you will receive a password reset link.'
@@ -351,8 +320,11 @@ export class AuthService {
 
       return { success: true };
     } catch (error) {
-      console.error('Error in sendPasswordResetEmail:', error);
       NotificationService.handleEmailError(error, 'password_reset');
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to send password reset email'
+      };
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to send password reset email'
