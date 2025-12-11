@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { InvoiceGenerator } from '@/components/invoice/InvoiceGenerator';
 import { OrderCard } from '@/components/orders/OrderCard';
+import { ReorderModal } from '@/components/checkout/ReorderModal';
+import { useReorder } from '@/hooks/useReorder';
 
 interface Order {
   id: string;
@@ -60,6 +62,13 @@ const MyOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const {
+    isReorderModalOpen,
+    selectedOrderItems,
+    selectedOrderNumber,
+    initiateReorder,
+    closeReorderModal
+  } = useReorder();
 
   const fetchOrders = useCallback(async () => {
     if (!user) return;
@@ -274,13 +283,7 @@ const MyOrders = () => {
                       <OrderCard
                         order={order}
                         onPayNow={order.payment_status === 'unpaid' ? () => navigate(buildPaymentUrl(order)) : undefined}
-                        onReorder={() => {
-                          // Add reorder logic here
-                          toast({
-                            title: 'Reorder',
-                            description: 'Reorder functionality coming soon!',
-                          });
-                        }}
+                        onReorder={() => initiateReorder(order)}
                         onRateProduct={() => {
                           // Add rating logic here
                           toast({
@@ -314,6 +317,14 @@ const MyOrders = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Reorder Modal */}
+      <ReorderModal
+        isOpen={isReorderModalOpen}
+        onClose={closeReorderModal}
+        orderItems={selectedOrderItems}
+        orderNumber={selectedOrderNumber}
+      />
     </div>
   );
 };
