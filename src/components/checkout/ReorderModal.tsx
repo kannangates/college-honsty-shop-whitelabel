@@ -13,12 +13,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   ShoppingCart,
   CreditCard,
   Clock,
   Package,
-  Trash2
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import { formatIndianCurrency } from '@/utils/orderUtils';
 
@@ -51,11 +53,42 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [paymentMode, setPaymentMode] = useState<'immediate' | 'later' | null>(null);
   const [currentItems, setCurrentItems] = useState(orderItems);
+  const [validatingProducts, setValidatingProducts] = useState(false);
+  const [unavailableItems, setUnavailableItems] = useState<Set<string>>(new Set());
 
   // Update current items when orderItems prop changes
   useEffect(() => {
     setCurrentItems(orderItems);
   }, [orderItems]);
+
+  // Check product availability when modal opens
+  useEffect(() => {
+    if (isOpen && orderItems.length > 0) {
+      checkProductAvailability();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, orderItems]);
+
+  const checkProductAvailability = async () => {
+    setValidatingProducts(true);
+    try {
+      const { invalidItems } = await validateProducts(orderItems);
+      setUnavailableItems(new Set(invalidItems.map(item => item.id)));
+
+      if (invalidItems.length > 0) {
+        const invalidNames = invalidItems.map(item => item.products?.name || item.name || 'Unknown').join(', ');
+        toast({
+          title: 'Some Products May Be Unavailable',
+          description: `The following items may no longer be available: ${invalidNames}`,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error checking product availability:', error);
+    } finally {
+      setValidatingProducts(false);
+    }
+  };
 
   // Calculate total from current items
   const totalAmount = currentItems.reduce((sum, item) => {
@@ -75,6 +108,31 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
     });
   };
 
+  // Validate that products still exist in the database
+  const validateProducts = async (items: typeof currentItems) => {
+    const productIds = items.map(item => item.id);
+
+    const { data: existingProducts, error } = await supabase
+      .from('products')
+      .select('id, name, unit_price, shelf_stock, is_archived')
+      .in('id', productIds)
+      .eq('is_archived', false);
+
+    if (error) {
+      throw new Error(`Failed to validate products: ${error.message}`);
+    }
+
+    const existingProductIds = new Set(existingProducts?.map(p => p.id) || []);
+    const validItems = items.filter(item => existingProductIds.has(item.id));
+    const invalidItems = items.filter(item => !existingProductIds.has(item.id));
+
+    return {
+      validItems,
+      invalidItems,
+      existingProducts: existingProducts || []
+    };
+  };
+
   const handleReorder = async (mode: 'immediate' | 'later') => {
     if (currentItems.length === 0) {
       toast({
@@ -89,20 +147,57 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
     setPaymentMode(mode);
 
     try {
+      // Validate products exist before proceeding
+      const { validItems, invalidItems, existingProducts } = await validateProducts(currentItems);
+
+      if (invalidItems.length > 0) {
+        // Remove invalid items from current selection
+        setCurrentItems(validItems);
+
+        const invalidNames = invalidItems.map(item => item.products?.name || item.name || 'Unknown').join(', ');
+
+        if (validItems.length === 0) {
+          toast({
+            title: 'Products No Longer Available',
+            description: 'All selected products are no longer available. Please select different items.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          setPaymentMode(null);
+          return;
+        } else {
+          toast({
+            title: 'Some Products Unavailable',
+            description: `The following items are no longer available and have been removed: ${invalidNames}`,
+            variant: 'destructive',
+          });
+        }
+      }
+
+      if (validItems.length === 0) {
+        setLoading(false);
+        setPaymentMode(null);
+        return;
+      }
+
       // Clear existing cart
       clearCart();
 
-      // Add all current items to cart
-      for (const item of currentItems) {
-        const product = {
-          id: item.id,
-          name: item.products?.name || item.name,
-          unit_price: item.products?.unit_price || item.unit_price,
-        };
+      // Add only valid items to cart using current product data
+      for (const item of validItems) {
+        const existingProduct = existingProducts.find(p => p.id === item.id);
 
-        // Add the item with the original quantity
-        for (let i = 0; i < item.quantity; i++) {
-          addItem(product);
+        if (existingProduct) {
+          const product = {
+            id: item.id,
+            name: existingProduct.name,
+            unit_price: existingProduct.unit_price,
+          };
+
+          // Add the item with the original quantity
+          for (let i = 0; i < item.quantity; i++) {
+            addItem(product);
+          }
         }
       }
 
@@ -165,7 +260,13 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {currentItems.length === 0 ? (
+              {validatingProducts ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Checking Product Availability</h3>
+                  <p className="text-gray-500">Verifying that items are still available...</p>
+                </div>
+              ) : currentItems.length === 0 ? (
                 <div className="text-center py-8">
                   <ShoppingCart className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No items to reorder</h3>
@@ -173,33 +274,46 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
                 </div>
               ) : (
                 <div className="space-y-3 max-h-60 overflow-y-auto">
-                  {currentItems.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3 flex-1">
-                        {currentItems.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <div className="flex-1">
-                          <h4 className="font-medium">{item.products?.name || item.name}</h4>
-                          <p className="text-sm text-gray-600">
-                            {formatIndianCurrency(item.products?.unit_price || item.unit_price)} × {item.quantity}
+                  {currentItems.map((item) => {
+                    const isUnavailable = unavailableItems.has(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        className={`flex items-center justify-between p-3 rounded-lg ${isUnavailable ? 'bg-red-50 border border-red-200' : 'bg-gray-50'
+                          }`}
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          {currentItems.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveItem(item.id)}
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {isUnavailable && (
+                            <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                          )}
+                          <div className="flex-1">
+                            <h4 className={`font-medium ${isUnavailable ? 'text-red-700' : ''}`}>
+                              {item.products?.name || item.name}
+                              {isUnavailable && <span className="text-red-500 text-sm ml-2">(Unavailable)</span>}
+                            </h4>
+                            <p className={`text-sm ${isUnavailable ? 'text-red-600' : 'text-gray-600'}`}>
+                              {formatIndianCurrency(item.products?.unit_price || item.unit_price)} × {item.quantity}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-medium ${isUnavailable ? 'text-red-700 line-through' : ''}`}>
+                            {formatIndianCurrency((item.products?.unit_price || item.unit_price) * item.quantity)}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">
-                          {formatIndianCurrency((item.products?.unit_price || item.unit_price) * item.quantity)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -222,7 +336,7 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
               <Button
                 onClick={() => handleReorder('immediate')}
                 className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                disabled={loading || currentItems.length === 0}
+                disabled={loading || currentItems.length === 0 || validatingProducts}
               >
                 {loading && paymentMode === 'immediate' ? (
                   <div className="flex items-center gap-2">
@@ -243,7 +357,7 @@ export const ReorderModal: React.FC<ReorderModalProps> = ({
               <Button
                 onClick={() => handleReorder('later')}
                 className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                disabled={loading || currentItems.length === 0}
+                disabled={loading || currentItems.length === 0 || validatingProducts}
               >
                 {loading && paymentMode === 'later' ? (
                   <div className="flex items-center gap-2">
