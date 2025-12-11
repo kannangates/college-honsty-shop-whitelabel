@@ -1,50 +1,58 @@
 /**
- * Generates a unique order ID in Indian format
- * Format: ORD-YYYYMMDD-HHMMSS-XXX
- * Where XXX is a random 3-digit number
+ * Generates a friendly order ID in format similar to HubJob ID
+ * Format: 7-digit number (e.g., 4340752)
  */
 export const generateOrderId = (): string => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  
-  return `ORD-${year}${month}${day}-${hours}${minutes}${seconds}-${random}`;
+  // Generate a 7-digit number between 1000000 and 9999999
+  const friendlyId = Math.floor(Math.random() * 9000000) + 1000000;
+  return friendlyId.toString();
 };
 
 /**
- * Generates a unique invoice number in Indian format
- * Format: INV/YYYY-YY/XXXXXX
- * Where YYYY-YY is financial year and XXXXXX is sequential number
+ * Loads college configuration from config file
  */
-export const generateInvoiceNumber = (): string => {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1; // JavaScript months are 0-based
-  
-  // Indian financial year runs from April to March
-  let financialYearStart: number;
-  let financialYearEnd: number;
-  
-  if (currentMonth >= 4) {
-    // If current month is April or later, we're in the current financial year
-    financialYearStart = currentYear;
-    financialYearEnd = currentYear + 1;
-  } else {
-    // If current month is January to March, we're in the previous financial year
-    financialYearStart = currentYear - 1;
-    financialYearEnd = currentYear;
+const getCollegeConfig = async () => {
+  try {
+    const response = await fetch('/config.json');
+    const config = await response.json();
+    return config.branding;
+  } catch (error) {
+    console.error('Failed to load college config:', error);
+    throw new Error('Unable to load college configuration');
   }
-  
-  // Generate sequential number (in production, this should come from database)
-  const sequentialNumber = Math.floor(Math.random() * 999999) + 1;
-  const paddedNumber = sequentialNumber.toString().padStart(6, '0');
-  
-  return `INV/${financialYearStart}-${String(financialYearEnd).slice(-2)}/${paddedNumber}`;
+};
+
+/**
+ * Generates college initials from college name
+ */
+const generateCollegeInitials = (collegeName: string): string => {
+  return collegeName
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase())
+    .join('');
+};
+
+/**
+ * Generates invoice number in format: [COLLEGE_INITIALS]-INV-[NUMBER]
+ * Format: SJC-INV-001 (e.g., for Shasun Jain College)
+ */
+export const generateInvoiceNumber = async (): Promise<string> => {
+  try {
+    const collegeConfig = await getCollegeConfig();
+    const initials = generateCollegeInitials(collegeConfig.college_name);
+
+    // Generate a 3-digit sequential number (in production, this should come from database)
+    const sequentialNumber = Math.floor(Math.random() * 999) + 1;
+    const paddedNumber = sequentialNumber.toString().padStart(3, '0');
+
+    return `${initials}-INV-${paddedNumber}`;
+  } catch (error) {
+    console.error('Failed to generate invoice number:', error);
+    // Fallback to simple format if config fails
+    const sequentialNumber = Math.floor(Math.random() * 999) + 1;
+    const paddedNumber = sequentialNumber.toString().padStart(3, '0');
+    return `INV-${paddedNumber}`;
+  }
 };
 
 /**
@@ -62,7 +70,7 @@ export const formatIndianCurrency = (amount: number): string => {
 /**
  * Generates invoice data structure for Indian GST invoice
  */
-export const generateInvoiceData = (orderData: {
+export const generateInvoiceData = async (orderData: {
   id: string;
   user_name: string;
   user_email: string;
@@ -78,62 +86,119 @@ export const generateInvoiceData = (orderData: {
   transaction_id?: string;
   paid_at?: string;
 }) => {
-  const invoiceNumber = generateInvoiceNumber();
+  const invoiceNumber = await generateInvoiceNumber();
   const invoiceDate = new Date();
-  
+  const collegeConfig = await getCollegeConfig();
+
   // Calculate totals
   const subtotal = orderData.items.reduce((sum, item) => sum + item.total_price, 0);
   const gstRate = 0; // No GST for educational institution items typically
   const gstAmount = subtotal * gstRate;
   const totalAmount = subtotal + gstAmount;
-  
+
   return {
     invoiceNumber,
     invoiceDate,
     orderId: orderData.id,
-    
-    // Seller details (College)
+
+    // Seller details (College) - from config
     seller: {
-      name: "Shasun Jairam College",
-      address: "College Address Line 1\nCollege Address Line 2\nCity, State - PIN",
-      gstin: "", // Add college GSTIN if applicable
-      phone: "College Phone Number",
-      email: "college@shasuncollege.edu.in"
+      name: collegeConfig.college_name,
+      address: `${collegeConfig.address_line_1}\n${collegeConfig.address_line_2}\n${collegeConfig.city_state_pin}`,
+      gstin: collegeConfig.gstin,
+      phone: collegeConfig.phone,
+      email: collegeConfig.email
     },
-    
+
     // Buyer details (Student)
     buyer: {
       name: orderData.user_name,
       email: orderData.user_email,
       address: orderData.user_address || "Student Address Not Provided"
     },
-    
+
     // Items
     items: orderData.items.map((item, index) => ({
       srNo: index + 1,
       description: item.name,
       quantity: item.quantity,
       unitPrice: item.unit_price,
-      totalPrice: item.total_price
+      totalPrice: item.total_price,
+      hsnCode: "39201099" // Default HSN code for stationery items
     })),
-    
+
     // Calculations
     subtotal,
     gstRate,
     gstAmount,
     totalAmount,
-    
+
     // Payment details
     paymentMode: orderData.payment_mode || 'Cash',
     transactionId: orderData.transaction_id || '',
     paidAt: orderData.paid_at ? new Date(orderData.paid_at) : null,
-    
+
     // Terms and conditions
     terms: [
       "Goods once sold cannot be returned or exchanged",
-      "Payment should be made as per agreed terms", 
+      "Payment should be made as per agreed terms",
       "Subject to college jurisdiction",
       "This is a computer generated invoice"
     ]
   };
+};
+
+/**
+ * Converts a number to words in Indian English format
+ */
+export const convertNumberToWords = (num: number): string => {
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+  if (num === 0) return 'Zero';
+
+  function convertHundreds(n: number): string {
+    let result = '';
+    if (n >= 100) {
+      result += ones[Math.floor(n / 100)] + ' Hundred ';
+      n %= 100;
+    }
+    if (n >= 20) {
+      result += tens[Math.floor(n / 10)] + ' ';
+      n %= 10;
+    } else if (n >= 10) {
+      result += teens[n - 10] + ' ';
+      return result;
+    }
+    if (n > 0) {
+      result += ones[n] + ' ';
+    }
+    return result;
+  }
+
+  let result = '';
+  const crores = Math.floor(num / 10000000);
+  if (crores > 0) {
+    result += convertHundreds(crores) + 'Crore ';
+    num %= 10000000;
+  }
+
+  const lakhs = Math.floor(num / 100000);
+  if (lakhs > 0) {
+    result += convertHundreds(lakhs) + 'Lakh ';
+    num %= 100000;
+  }
+
+  const thousands = Math.floor(num / 1000);
+  if (thousands > 0) {
+    result += convertHundreds(thousands) + 'Thousand ';
+    num %= 1000;
+  }
+
+  if (num > 0) {
+    result += convertHundreds(num);
+  }
+
+  return result.trim();
 };

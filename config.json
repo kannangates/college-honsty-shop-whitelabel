@@ -18,8 +18,14 @@
     }
   },
   "branding": {
-    "college_name": "Shasun College",
+    "college_name": "Shasun Jain College",
     "portal_name": "Shasun College Honesty Shop Portal",
+    "address_line_1": "College Address Line 1",
+    "address_line_2": "College Address Line 2",
+    "city_state_pin": "City, State - PIN",
+    "phone": "College Phone Number",
+    "email": "college@shasuncollege.edu.in",
+    "gstin": "",
     "colors": {
       "primary": "#3b82f6",
       "secondary": "#64748b",
