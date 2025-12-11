@@ -45,8 +45,9 @@ export const RestockModal: React.FC<RestockModalProps> = ({
       // Refresh stock status
       getStockStatus(product.id).then(response => {
         if (response.success && response.data) {
-          setCurrentWarehouseStock(response.data.warehouse_stock || 0);
-          setCurrentShelfStock(response.data.shelf_stock || 0);
+          const stockData = response.data as { warehouse_stock?: number; shelf_stock?: number };
+          setCurrentWarehouseStock(stockData.warehouse_stock ?? 0);
+          setCurrentShelfStock(stockData.shelf_stock ?? 0);
         }
       });
     }

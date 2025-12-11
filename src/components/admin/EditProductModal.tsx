@@ -44,7 +44,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
     if (product) {
       setFormData({
         name: product.name,
-        price: product.unit_price || 0,
+        unit_price: product.unit_price || 0,
         image_url: product.image_url || '',
         category: product.category,
         status: product.status,
@@ -55,7 +55,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name?.trim()) newErrors.name = 'Product name is required';
-    if (!formData.price || formData.price <= 0) newErrors.price = 'Valid price is required';
+    if (!formData.unit_price || formData.unit_price <= 0) newErrors.unit_price = 'Valid price is required';
     if (!formData.category?.trim()) newErrors.category = 'Category is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -136,19 +136,19 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                 </Label>
                 <Input
                   id="edit-price"
-                  name="price"
+                  name="unit_price"
                   type="number"
                   min="0"
                   step="0.01"
-                  value={formData.price}
+                  value={formData.unit_price}
                   onChange={handleChange}
-                  className={`h-10 ${errors.price ? 'border-red-500 focus:ring-red-500' : 'focus:ring-blue-500'}`}
+                  className={`h-10 ${errors.unit_price ? 'border-red-500 focus:ring-red-500' : 'focus:ring-blue-500'}`}
                   disabled={loading}
                 />
-                {errors.price && (
+                {errors.unit_price && (
                   <div className="flex items-center gap-1 text-sm text-red-600">
                     <AlertCircle className="h-4 w-4" />
-                    {errors.price}
+                    {errors.unit_price}
                   </div>
                 )}
               </div>
