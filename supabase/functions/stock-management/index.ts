@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from "std/http";
+import { createClient } from '@supabase/supabase-js';
 import { stockOperationSchema } from '../_shared/schemas.ts';
 
 const corsHeaders = {
@@ -63,19 +63,37 @@ serve(async (req: Request) => {
     const requestBody = await req.json();
 
     // Validate input with Zod schema
-    const validationResult = stockOperationSchema.safeParse(requestBody);
-    if (!validationResult.success) {
+    let validatedData;
+    try {
+      validatedData = stockOperationSchema.parse(requestBody);
+    } catch (error) {
+      if (error instanceof Error && 'issues' in error) {
+        const zodError = error as { issues: Array<{ path: string[]; message: string }> };
+        const errorDetails = zodError.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message
+        }));
+
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Validation failed',
+            details: errorDetails
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Validation failed',
-          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+          error: 'Invalid request data'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { operation, productId, quantity } = validationResult.data;
+    const { operation, productId, quantity } = validatedData;
 
     switch (operation) {
       case 'restock_warehouse': {
