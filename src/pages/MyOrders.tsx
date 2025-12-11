@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { ShoppingCart, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { InvoiceGenerator } from '@/components/invoice/InvoiceGenerator';
+import { OrderCard } from '@/components/orders/OrderCard';
 
 interface Order {
   id: string;
@@ -62,7 +63,7 @@ const MyOrders = () => {
 
   const fetchOrders = useCallback(async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -190,32 +191,14 @@ const MyOrders = () => {
                   </ScrollArea>
                 </div>
 
-                <div className="space-y-3 md:hidden">
+                <div className="grid grid-cols-1 gap-4 md:hidden">
                   {unpaidOrders.map(order => (
-                    <div key={order.id} className="rounded-lg border border-red-100 bg-red-50/50 p-4 shadow-sm">
-                      <div className="flex flex-wrap items-center justify-between text-sm font-medium text-gray-900 gap-2">
-                        <span className="text-xs uppercase tracking-wide text-red-500">Pending</span>
-                        <span className="font-mono">{formatOrderId(order)}</span>
-                      </div>
-                      <div className="mt-3 space-y-1 text-sm text-gray-700">
-                        <p className="flex justify-between">
-                          <span>Date:</span>
-                          <span>{new Date(order.created_at).toLocaleDateString()}</span>
-                        </p>
-                        <p className="flex justify-between font-semibold">
-                          <span>Amount:</span>
-                          <span>{formatCurrency(order.total_amount)}</span>
-                        </p>
-                      </div>
-                      <Button
-                        variant="destructive"
-                        onClick={() => navigate(buildPaymentUrl(order))}
-                        aria-label="Pay Now"
-                        className="mt-4 w-full"
-                      >
-                        Pay Now
-                      </Button>
-                    </div>
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      onPayNow={() => navigate(buildPaymentUrl(order))}
+                      showRating={false}
+                    />
                   ))}
                 </div>
               </>
@@ -270,11 +253,11 @@ const MyOrders = () => {
                                 </Badge>
                               </TableCell>
                               <TableCell>
-                                <InvoiceGenerator 
+                                <InvoiceGenerator
                                   order={{
                                     ...order,
                                     user: order.users || { name: 'Unknown', email: 'unknown@email.com' }
-                                  }} 
+                                  }}
                                 />
                               </TableCell>
                             </TableRow>
@@ -285,30 +268,42 @@ const MyOrders = () => {
                   </ScrollArea>
                 </div>
 
-                <div className="space-y-3 md:hidden">
+                <div className="grid grid-cols-1 gap-4 md:hidden">
                   {allOrders.map(order => (
-                    <div key={order.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                        <div>
-                          <p className="font-semibold text-gray-900">{formatOrderId(order)}</p>
-                          <p className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <Badge variant={order.payment_status === 'paid' ? 'default' : 'destructive'} className="capitalize">
-                          {order.payment_status}
-                        </Badge>
-                      </div>
-                      <div className="mt-3 text-sm text-gray-700">
-                        <p className="font-medium">Amount: <span className="font-semibold">{formatCurrency(order.total_amount)}</span></p>
-                        {order.transaction_id && (
-                          <p className="text-xs text-gray-500 mt-1">Txn ID: {order.transaction_id}</p>
-                        )}
-                      </div>
-                      <div className="mt-4">
-                        <InvoiceGenerator 
+                    <div key={order.id} className="relative">
+                      <OrderCard
+                        order={order}
+                        onPayNow={order.payment_status === 'unpaid' ? () => navigate(buildPaymentUrl(order)) : undefined}
+                        onReorder={() => {
+                          // Add reorder logic here
+                          toast({
+                            title: 'Reorder',
+                            description: 'Reorder functionality coming soon!',
+                          });
+                        }}
+                        onRateProduct={() => {
+                          // Add rating logic here
+                          toast({
+                            title: 'Rate Product',
+                            description: 'Rating functionality coming soon!',
+                          });
+                        }}
+                        onDownloadInvoice={() => {
+                          // Trigger invoice download
+                          const invoiceButton = document.querySelector(`[data-order-id="${order.id}"] button`);
+                          if (invoiceButton) {
+                            (invoiceButton as HTMLButtonElement).click();
+                          }
+                        }}
+                        showRating={order.payment_status === 'paid'}
+                      />
+                      {/* Hidden invoice generator for download functionality */}
+                      <div className="hidden" data-order-id={order.id}>
+                        <InvoiceGenerator
                           order={{
                             ...order,
                             user: order.users || { name: 'Unknown', email: 'unknown@email.com' }
-                          }} 
+                          }}
                         />
                       </div>
                     </div>
