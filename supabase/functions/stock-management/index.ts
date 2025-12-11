@@ -36,14 +36,24 @@ serve(async (req: Request) => {
       );
     }
 
-    // Check if requesting user is admin
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
+    // Check if requesting user is admin using secure user_roles table
+    const { data: userRoles, error: roleError } = await supabase
+      .from('user_roles')
       .select('role')
-      .eq('id', user.id)
-      .single();
+      .eq('user_id', user.id);
 
-    if (profileError || !userProfile || userProfile.role !== 'admin') {
+    if (roleError) {
+      console.error('Error fetching user roles:', roleError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Forbidden: Unable to verify role' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const roles = userRoles?.map(r => r.role) || [];
+    const isAdmin = roles.includes('admin') || roles.includes('developer');
+
+    if (!isAdmin) {
       return new Response(
         JSON.stringify({ success: false, error: 'Forbidden: Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
