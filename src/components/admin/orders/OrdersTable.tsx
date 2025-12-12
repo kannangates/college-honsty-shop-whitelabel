@@ -174,17 +174,7 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
                     </span>
                   </TableCell>
                   <TableCell>
-                    {order.payment_status !== 'cancelled' ? (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={cancellingOrders.has(order.id)}
-                        onClick={() => openCancelDialog(order.id)}
-                        aria-label="Cancel Order"
-                      >
-                        {cancellingOrders.has(order.id) ? 'Cancelling...' : 'Cancel'}
-                      </Button>
-                    ) : (
+                    {order.payment_status === 'cancelled' ? (
                       <Button
                         size="sm"
                         variant="outline"
@@ -193,6 +183,18 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
                         aria-label="Unmark Cancelled"
                       >
                         {cancellingOrders.has(order.id) ? 'Processing...' : 'Unmark Cancelled'}
+                      </Button>
+                    ) : order.payment_status === 'paid' ? (
+                      <span className="text-sm text-gray-500">No actions</span>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={cancellingOrders.has(order.id)}
+                        onClick={() => openCancelDialog(order.id)}
+                        aria-label="Cancel Order"
+                      >
+                        {cancellingOrders.has(order.id) ? 'Cancelling...' : 'Cancel'}
                       </Button>
                     )}
                   </TableCell>
