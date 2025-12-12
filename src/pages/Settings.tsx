@@ -233,22 +233,22 @@ const Settings = () => {
                 <CardDescription>Update your personal details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 bg-white/40 backdrop-blur-md rounded-2xl p-6 shadow-inner">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                      <User className="h-6 w-6 text-white" />
+                <div className="flex items-center justify-between gap-2 sm:gap-4 bg-white/40 backdrop-blur-md rounded-2xl p-4 sm:p-6 shadow-inner">
+                  <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                     </div>
-                    <div>
-                      <div className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm sm:text-base font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent truncate">
                         {profile?.name || 'User Profile'}
                       </div>
-                      <div className="text-sm text-gray-700 font-medium">
-                        <Badge variant="outline">{profile?.role || 'student'}</Badge>
+                      <div className="text-xs sm:text-sm text-gray-700 font-medium">
+                        <Badge variant="outline" className="text-xs">{profile?.role || 'student'}</Badge>
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-center px-4 py-2 bg-white/60 rounded-xl shadow backdrop-blur-sm">
-                    <div className="text-lg font-bold text-green-600">#{profile?.student_id}</div>
+                  <div className="flex flex-col items-center px-2 sm:px-3 py-2 bg-white/60 rounded-xl shadow backdrop-blur-sm flex-shrink-0">
+                    <div className="text-sm sm:text-base font-bold text-green-600">#{profile?.student_id}</div>
                     <div className="text-xs text-gray-600">Student ID</div>
                   </div>
                 </div>
