@@ -8,6 +8,7 @@ import { useStockManagement } from '@/hooks/useStockManagement';
 import { OrderStats } from '@/components/admin/orders/OrderStats';
 import { OrderFilters } from '@/components/admin/orders/OrderFilters';
 import { OrdersTable } from '@/components/admin/orders/OrdersTable';
+import { OrderCard } from '@/components/orders/OrderCard';
 
 interface Order {
   id: string;
@@ -44,7 +45,7 @@ const AdminOrderManagement = React.memo(() => {
   });
   const { toast } = useToast();
   const { adjustShelfStock } = useStockManagement();
-  
+
 
   // Memoized fetch functions
   const fetchOrders = useCallback(async () => {
@@ -133,16 +134,16 @@ const AdminOrderManagement = React.memo(() => {
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {
     try {
       console.log(`🔄 Updating order ${orderId} status to ${newStatus}`);
-      
+
       // Get current order before updating
       const currentOrder = orders.find(order => order.id === orderId);
-      
+
       // If cancelling an order, restore stock
       if (newStatus === 'cancelled' && currentOrder && currentOrder.order_items) {
         for (const item of currentOrder.order_items) {
           const stockResult = await adjustShelfStock(
-            item.product_id, 
-            item.quantity, 
+            item.product_id,
+            item.quantity,
             'Order Management'
           );
           if (!stockResult.success) {
@@ -150,9 +151,9 @@ const AdminOrderManagement = React.memo(() => {
           }
         }
       }
-      
+
       await supabase.functions.invoke('order-management', {
-        body: { 
+        body: {
           operation: 'update_order',
           id: orderId,
           payment_status: newStatus,
@@ -161,14 +162,14 @@ const AdminOrderManagement = React.memo(() => {
       });
 
       setOrders(prev => prev.map(order =>
-        order.id === orderId 
+        order.id === orderId
           ? { ...order, payment_status: newStatus }
           : order
       ));
 
       toast({
         title: 'Success',
-        description: newStatus === 'cancelled' 
+        description: newStatus === 'cancelled'
           ? "Order cancelled and stock restored successfully."
           : "Order status updated successfully.",
       });
@@ -229,14 +230,63 @@ const AdminOrderManagement = React.memo(() => {
       </div>
 
       <OrderStats stats={stats} />
-      
+
       <OrderFilters {...filterProps} />
 
-      <OrdersTable
-        orders={filteredOrders}
-        loading={loading}
-        onUpdateOrderStatus={updateOrderStatus}
-      />
+      {/* Mobile Card Layout - Hidden on desktop */}
+      <div className="block md:hidden">
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            All Orders ({filteredOrders.length})
+          </h2>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+              <p>Loading orders...</p>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No orders found
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {filteredOrders.map((order) => {
+                // Transform order data to match OrderCard interface
+                const transformedOrder = {
+                  ...order,
+                  order_items: order.order_items?.map(item => ({
+                    quantity: item.quantity,
+                    products: {
+                      id: item.product_id,
+                      name: item.products.name
+                    }
+                  }))
+                };
+
+                return (
+                  <OrderCard
+                    key={order.id}
+                    order={transformedOrder}
+                    onPayNow={() => updateOrderStatus(order.id, 'paid')}
+                    onReorder={() => {/* Reorder functionality if needed */ }}
+                    onDownloadInvoice={() => {/* Download functionality if needed */ }}
+                    showRating={false}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop Table Layout - Hidden on mobile */}
+      <div className="hidden md:block">
+        <OrdersTable
+          orders={filteredOrders}
+          loading={loading}
+          onUpdateOrderStatus={updateOrderStatus}
+        />
+      </div>
     </div>
   );
 });

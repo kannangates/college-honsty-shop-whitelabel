@@ -107,7 +107,7 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
     <Card className="border-0 shadow-lg">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle className="text-gray-800">Orders ({orders.length})</CardTitle>
+          <CardTitle className="text-gray-800">All Orders ({orders.length})</CardTitle>
           <Button
             variant="outline"
             onClick={handleExport}
