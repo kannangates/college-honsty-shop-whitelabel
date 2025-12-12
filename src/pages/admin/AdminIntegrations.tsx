@@ -22,7 +22,7 @@ export default function AdminIntegrations() {
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!email) return;
-      
+
       setIsSending(true);
       try {
         await EmailService.sendTestEmail(email, subject, message);
@@ -45,7 +45,7 @@ export default function AdminIntegrations() {
             disabled={isSending}
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="email-subject">Subject</Label>
           <Input
@@ -57,7 +57,7 @@ export default function AdminIntegrations() {
             disabled={isSending}
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="email-message">Message</Label>
           <Textarea
@@ -69,7 +69,7 @@ export default function AdminIntegrations() {
             disabled={isSending}
           />
         </div>
-        
+
         <div className="flex justify-end">
           <Button type="submit" disabled={isSending || !email}>
             {isSending ? (
@@ -88,7 +88,7 @@ export default function AdminIntegrations() {
             )}
           </Button>
         </div>
-        
+
         <div className="text-xs text-gray-500 mt-2">
           <p>Note: This will send a real email to the specified address. Use with caution.</p>
         </div>
@@ -110,7 +110,7 @@ export default function AdminIntegrations() {
       </div>
 
       {/* Quick Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
           <CardContent className="p-4 text-center">
             <CreditCard className="h-8 w-8 mx-auto mb-2 text-blue-600" />
@@ -180,7 +180,7 @@ export default function AdminIntegrations() {
             <div>
               <CardTitle>Payment Gateway Automation</CardTitle>
               <CardDescription>Configure and manage payment gateway settings</CardDescription>
-            </div> 
+            </div>
           </div>
         </CardHeader>
         <CardContent>

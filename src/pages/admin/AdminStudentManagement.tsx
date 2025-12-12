@@ -418,7 +418,7 @@ const AdminStudentManagement = () => {
 
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
           <CardContent className="p-4 text-center">
             <div className="text-xl font-bold text-blue-800">{stats.totalStudents}</div>
@@ -455,7 +455,7 @@ const AdminStudentManagement = () => {
       </div>
 
       {/* Custom Filter/Search Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div>
           <Input
             type="text"
