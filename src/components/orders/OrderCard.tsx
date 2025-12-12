@@ -17,7 +17,11 @@ interface OrderCardProps {
     total_amount: number;
     order_items?: {
       quantity: number;
+      rating?: number;
+      review_comment?: string;
+      rated_at?: string;
       products?: {
+        id: string;
         name: string;
       };
     }[];
@@ -97,8 +101,16 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   productImage,
   className
 }) => {
-  const productName = order.order_items?.[0]?.products?.name || 'GREEK SALAD BOWL';
-  const quantity = order.order_items?.[0]?.quantity || 1;
+  const firstItem = order.order_items?.[0];
+  const totalItems = order.order_items?.length || 0;
+  const userRating = firstItem?.rating || 0;
+  const hasRating = !!firstItem?.rated_at;
+
+  // Calculate total quantity across all items
+  const totalQuantity = order.order_items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+
+  // Use Order ID as the main title
+  const orderTitle = formatOrderId(order);
   const isPaid = order.payment_status.toLowerCase() === 'paid';
   const isUnpaid = order.payment_status.toLowerCase() === 'unpaid';
 
@@ -146,14 +158,14 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               {productImage ? (
                 <img
                   src={productImage}
-                  alt={productName}
+                  alt={orderTitle}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
                   <img
                     src="/placeholder.svg"
-                    alt={productName}
+                    alt={orderTitle}
                     className="w-16 h-16 object-contain opacity-60"
                   />
                 </div>
@@ -165,16 +177,20 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <div className="flex-1 flex flex-col h-full min-w-0">
             {/* Top Section - Product Info & Order Details */}
             <div className="flex-1 space-y-1 overflow-hidden">
-              {/* Product Name */}
+              {/* Order ID as Title */}
               <div className="w-full text-left">
                 <h1 className="text-lg font-black text-gray-900 tracking-wide leading-tight truncate text-left">
-                  {productName}
+                  {orderTitle}
                 </h1>
               </div>
 
-              {/* Rating - Always show */}
+              {/* Rating - Show user's rating if available, otherwise show placeholder */}
               <div className="flex justify-start">
-                <YellowRating defaultValue={3} readOnly size={12} />
+                {hasRating ? (
+                  <YellowRating value={userRating} readOnly size={12} showValue />
+                ) : (
+                  <YellowRating defaultValue={0} readOnly size={12} />
+                )}
               </div>
 
               {/* Order Information */}
@@ -183,8 +199,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 <div className="block min-[320px]:hidden text-left">
                   <div className="space-y-0.5 text-left">
                     <div className="text-left">
-                      <div className="text-left" style={{ fontSize: '10px' }}>ORDER ID:</div>
-                      <div className="text-left" style={{ fontSize: '10px' }}>{formatOrderId(order)}</div>
+                      <div className="text-left" style={{ fontSize: '10px' }}>ITEMS:</div>
+                      <div className="text-left" style={{ fontSize: '10px' }}>{totalItems} item{totalItems !== 1 ? 's' : ''}</div>
                     </div>
                     <div className="text-left">
                       <div className="text-left" style={{ fontSize: '10px' }}>PLACED ON:</div>
@@ -192,7 +208,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                     </div>
                     <div className="text-left">
                       <div className="text-left" style={{ fontSize: '10px' }}>QUANTITY:</div>
-                      <div className="text-left" style={{ fontSize: '10px' }}>{quantity}</div>
+                      <div className="text-left" style={{ fontSize: '10px' }}>{totalQuantity}</div>
                     </div>
                     <div className="text-left">
                       <div className="text-left" style={{ fontSize: '10px' }}>ITEM TOTAL:</div>
@@ -213,9 +229,9 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 {/* Normal Screens (320px and above) - Aligned Layout */}
                 <div className="hidden min-[320px]:block">
                   <div className="flex items-center">
-                    <span className="w-24 text-left flex-shrink-0" style={{ fontSize: '10px' }}>ORDER ID</span>
+                    <span className="w-24 text-left flex-shrink-0" style={{ fontSize: '10px' }}>ITEMS</span>
                     <span style={{ fontSize: '10px' }}>:</span>
-                    <span className="text-left ml-1" style={{ fontSize: '10px' }}>{formatOrderId(order)}</span>
+                    <span className="text-left ml-1" style={{ fontSize: '10px' }}>{totalItems} item{totalItems !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="flex items-center">
                     <span className="w-24 text-left flex-shrink-0" style={{ fontSize: '10px' }}>PLACED ON</span>
@@ -225,7 +241,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                   <div className="flex items-center">
                     <span className="w-24 text-left flex-shrink-0" style={{ fontSize: '10px' }}>QUANTITY</span>
                     <span style={{ fontSize: '10px' }}>:</span>
-                    <span className="text-left ml-1" style={{ fontSize: '10px' }}>{quantity}</span>
+                    <span className="text-left ml-1" style={{ fontSize: '10px' }}>{totalQuantity}</span>
                   </div>
                   <div className="flex items-center">
                     <span className="w-24 text-left flex-shrink-0" style={{ fontSize: '10px' }}>ITEM TOTAL</span>
@@ -256,7 +272,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                     onClick={onRateProduct}
                     className="flex-1 bg-white/90 border border-gray-300 text-gray-700 hover:bg-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
                   >
-                    Rate Product
+                    {hasRating ? 'View Rating' : 'Rate Product'}
                   </Button>
                   <Button
                     onClick={onReorder}

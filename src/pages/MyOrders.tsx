@@ -13,7 +13,9 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { InvoiceGenerator } from '@/components/invoice/InvoiceGenerator';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { ReorderModal } from '@/components/checkout/ReorderModal';
+import { RateProductModal } from '@/components/orders/RateProductModal';
 import { useReorder } from '@/hooks/useReorder';
+import { useRating } from '@/hooks/useRating';
 
 interface Order {
   id: string;
@@ -33,7 +35,11 @@ interface Order {
     quantity: number;
     unit_price: number;
     total_price: number;
+    rating?: number;
+    review_comment?: string;
+    rated_at?: string;
     products?: {
+      id: string;
       name: string;
       unit_price: number;
     };
@@ -70,6 +76,14 @@ const MyOrders = () => {
     closeReorderModal
   } = useReorder();
 
+  const {
+    isRatingModalOpen,
+    selectedOrderItems: selectedRatingItems,
+    selectedOrderNumber: selectedRatingOrderNumber,
+    initiateRating,
+    closeRatingModal,
+  } = useRating();
+
   const fetchOrders = useCallback(async () => {
     if (!user) return;
 
@@ -82,6 +96,9 @@ const MyOrders = () => {
           users (name, email),
           order_items (
             *,
+            rating,
+            review_comment,
+            rated_at,
             products (*)
           )
         `)
@@ -89,7 +106,7 @@ const MyOrders = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      setOrders((data || []) as unknown as Order[]);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
@@ -284,13 +301,7 @@ const MyOrders = () => {
                         order={order}
                         onPayNow={order.payment_status === 'unpaid' ? () => navigate(buildPaymentUrl(order)) : undefined}
                         onReorder={() => initiateReorder(order)}
-                        onRateProduct={() => {
-                          // Add rating logic here
-                          toast({
-                            title: 'Rate Product',
-                            description: 'Rating functionality coming soon!',
-                          });
-                        }}
+                        onRateProduct={() => initiateRating(order)}
                         onDownloadInvoice={() => {
                           // Trigger invoice download
                           const invoiceButton = document.querySelector(`[data-order-id="${order.id}"] button`);
@@ -324,6 +335,15 @@ const MyOrders = () => {
         onClose={closeReorderModal}
         orderItems={selectedOrderItems}
         orderNumber={selectedOrderNumber}
+      />
+
+      {/* Rate Product Modal */}
+      <RateProductModal
+        isOpen={isRatingModalOpen}
+        onClose={closeRatingModal}
+        orderItems={selectedRatingItems}
+        orderNumber={selectedRatingOrderNumber}
+        onRatingSubmitted={fetchOrders}
       />
     </div>
   );
