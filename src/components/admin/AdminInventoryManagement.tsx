@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Package, Pencil, Plus } from 'lucide-react';
+import { Package, Pencil, Plus, Grid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
@@ -14,6 +14,8 @@ import { InventoryFilters } from './InventoryFilters';
 import { AddProductModal } from './AddProductModal';
 import { EditProductModal } from './EditProductModal';
 import { RestockModal } from './RestockModal';
+import { StudentCardGrid } from '@/components/product/StudentCardGrid';
+import { useResponsiveView } from '@/hooks/useResponsiveView';
 
 interface Product {
   id: string;
@@ -58,8 +60,17 @@ export const AdminInventoryManagement = () => {
   const [restockModalOpen, setRestockModalOpen] = useState(false);
   const [selectedForRestock, setSelectedForRestock] = useState<Product | null>(null);
   const [addLoading, setAddLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const isMobile = useResponsiveView();
 
   const { toast } = useToast();
+
+  // Auto-switch to cards view on mobile
+  useEffect(() => {
+    if (isMobile && viewMode === 'table') {
+      setViewMode('cards');
+    }
+  }, [isMobile, viewMode]);
 
   const fetchProducts = useCallback(async () => {
     console.log('📦 Fetching products...');
@@ -270,13 +281,36 @@ export const AdminInventoryManagement = () => {
             Manage product stock levels and inventory operations
           </p>
         </div>
-        <Button
-          onClick={openAddModal}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Product
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* View Mode Toggle - Hidden on mobile */}
+          <div className="hidden sm:flex items-center border rounded-lg p-1">
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className="flex items-center gap-1"
+            >
+              <List className="h-4 w-4" />
+              Table
+            </Button>
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+              className="flex items-center gap-1"
+            >
+              <Grid className="h-4 w-4" />
+              Cards
+            </Button>
+          </div>
+          <Button
+            onClick={openAddModal}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {/* Low Stock Alert removed as requested */}
@@ -291,86 +325,105 @@ export const AdminInventoryManagement = () => {
         lowStockCount={lowStockProducts.length}
       />
 
-      {/* Products Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Products ({filteredProducts.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Opening Stock</TableHead>
-                  <TableHead>Warehouse Stock</TableHead>
-                  <TableHead>Shelf Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.category}</TableCell>
-                    <TableCell>₹{product.unit_price}</TableCell>
-                    <TableCell>{product.opening_stock}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStockBadgeVariant(product.warehouse_stock || 0, 'warehouse')}>
-                        {product.warehouse_stock || 0}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStockBadgeVariant(product.shelf_stock || 0, 'shelf')}>
-                        {product.shelf_stock || 0}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                        {product.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openRestockModal(product)}
-                          className="flex items-center gap-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Restock
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditModal(product)}
-                          className="flex items-center gap-2"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </Button>
-                      </div>
-                    </TableCell>
+      {/* Products Display */}
+      {viewMode === 'table' ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Products ({filteredProducts.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Opening Stock</TableHead>
+                    <TableHead>Warehouse Stock</TableHead>
+                    <TableHead>Shelf Stock</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No products found matching your filters.
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>{product.category}</TableCell>
+                      <TableCell>₹{product.unit_price}</TableCell>
+                      <TableCell>{product.opening_stock}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStockBadgeVariant(product.warehouse_stock || 0, 'warehouse')}>
+                          {product.warehouse_stock || 0}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStockBadgeVariant(product.shelf_stock || 0, 'shelf')}>
+                          {product.shelf_stock || 0}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
+                          {product.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openRestockModal(product)}
+                            className="flex items-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Restock
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditModal(product)}
+                            className="flex items-center gap-2"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Edit
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No products found matching your filters.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Products ({filteredProducts.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <StudentCardGrid
+              products={filteredProducts}
+              onEdit={openEditModal}
+              onRestock={openRestockModal}
+              loading={loading}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Product Modal */}
       <AddProductModal
