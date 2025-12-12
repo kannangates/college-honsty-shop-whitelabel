@@ -4,6 +4,7 @@ import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { Edit, KeyRound, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getGeneralStatusIcon } from '@/utils/statusSystem';
 
 interface StudentCardProps {
   student: {

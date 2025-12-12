@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -84,7 +83,9 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  html, body, #root {
+  html,
+  body,
+  #root {
     @apply w-full h-full m-0 p-0;
     overflow-x: hidden;
   }
@@ -136,5 +137,263 @@
   main {
     @apply w-full min-h-screen;
     overflow-x: hidden;
+  }
+
+  /* ========================================================================== */
+  /* PAYMENT STATUS SYSTEM */
+  /* ========================================================================== */
+
+  /* Payment Status Badge Classes */
+  .payment-status-paid {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+
+  .payment-status-unpaid {
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+  }
+
+  .payment-status-cancelled {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+
+  .payment-status-completed {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+
+  .payment-status-pending {
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+  }
+
+  .payment-status-processing {
+    @apply bg-blue-100 text-blue-800 border-blue-200;
+  }
+
+  .payment-status-shipped {
+    @apply bg-purple-100 text-purple-800 border-purple-200;
+  }
+
+  .payment-status-default {
+    @apply bg-gray-100 text-gray-800 border-gray-200;
+  }
+
+  /* Payment Status Icon Colors */
+  .payment-icon-paid {
+    @apply text-green-600;
+  }
+
+  .payment-icon-unpaid {
+    @apply text-yellow-600;
+  }
+
+  .payment-icon-cancelled {
+    @apply text-red-600;
+  }
+
+  .payment-icon-processing {
+    @apply text-blue-600;
+  }
+
+  .payment-icon-shipped {
+    @apply text-purple-600;
+  }
+
+  .payment-icon-default {
+    @apply text-gray-600;
+  }
+
+  /* Payment Status Backgrounds */
+  .payment-bg-paid {
+    @apply bg-green-50 border-green-200;
+  }
+
+  .payment-bg-unpaid {
+    @apply bg-yellow-50 border-yellow-200;
+  }
+
+  .payment-bg-cancelled {
+    @apply bg-red-50 border-red-200;
+  }
+
+  .payment-bg-processing {
+    @apply bg-blue-50 border-blue-200;
+  }
+
+  .payment-bg-shipped {
+    @apply bg-purple-50 border-purple-200;
+  }
+
+  .payment-bg-default {
+    @apply bg-gray-50 border-gray-200;
+  }
+
+  /* Payment Status Solid Badges (for OrderCard style) */
+  .payment-badge-paid {
+    @apply bg-green-500;
+  }
+
+  .payment-badge-unpaid {
+    @apply bg-red-500;
+  }
+
+  .payment-badge-cancelled {
+    @apply bg-gray-500;
+  }
+
+  .payment-badge-processing {
+    @apply bg-yellow-500;
+  }
+
+  .payment-badge-shipped {
+    @apply bg-blue-500;
+  }
+
+  .payment-badge-default {
+    @apply bg-gray-500;
+  }
+
+  /* ========================================================================== */
+  /* GENERAL STATUS SYSTEM */
+  /* ========================================================================== */
+
+  /* General Status Classes (for products, users, etc.) */
+  .status-active {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+
+  .status-inactive {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+
+  .status-pending {
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+  }
+
+  .status-suspended {
+    @apply bg-orange-100 text-orange-800 border-orange-200;
+  }
+
+  .status-archived {
+    @apply bg-gray-100 text-gray-800 border-gray-200;
+  }
+
+  .status-default {
+    @apply bg-gray-100 text-gray-800 border-gray-200;
+  }
+
+  /* ========================================================================== */
+  /* STOCK STATUS SYSTEM */
+  /* ========================================================================== */
+
+  /* Stock Status Classes */
+  .stock-in-stock {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+
+  .stock-low-stock {
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+  }
+
+  .stock-out-of-stock {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+
+  .stock-empty {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+
+  .stock-good {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+
+  .stock-default {
+    @apply bg-gray-100 text-gray-800 border-gray-200;
+  }
+
+  /* ========================================================================== */
+  /* COMPLIANCE & CERTIFICATION SYSTEM */
+  /* ========================================================================== */
+
+  .compliance-compliant {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+
+  .compliance-non-compliant {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+
+  .compliance-pending {
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+  }
+
+  /* ========================================================================== */
+  /* PERFORMANCE SCORE SYSTEM */
+  /* ========================================================================== */
+
+  .score-excellent {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+
+  .score-good {
+    @apply bg-blue-100 text-blue-800 border-blue-200;
+  }
+
+  .score-average {
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+  }
+
+  .score-poor {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+
+  /* ========================================================================== */
+  /* NOTIFICATION TYPE SYSTEM */
+  /* ========================================================================== */
+
+  .notification-achievement {
+    @apply bg-amber-100 text-amber-800 border-amber-200;
+  }
+
+  .notification-badge-earned {
+    @apply bg-emerald-100 text-emerald-800 border-emerald-200;
+  }
+
+  .notification-announcement {
+    @apply bg-blue-100 text-blue-800 border-blue-200;
+  }
+
+  .notification-payment {
+    @apply bg-rose-100 text-rose-800 border-rose-200;
+  }
+
+  .notification-default {
+    @apply bg-gray-100 text-gray-800 border-gray-200;
+  }
+
+  /* ========================================================================== */
+  /* COMMON BADGE VARIANTS */
+  /* ========================================================================== */
+
+  .badge-item {
+    @apply bg-gray-100 text-gray-700 border-gray-200;
+  }
+
+  .badge-tag {
+    @apply bg-blue-50 text-blue-700 border-blue-200;
+  }
+
+  .badge-info {
+    @apply bg-blue-100 text-blue-800 border-blue-200;
+  }
+
+  .badge-success {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+
+  .badge-warning {
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+  }
+
+  .badge-error {
+    @apply bg-red-100 text-red-800 border-red-200;
   }
 }

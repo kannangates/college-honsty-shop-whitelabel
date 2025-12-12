@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/features/gamification/components/badge';
+import { getComplianceClass } from '@/utils/statusSystem';
 import { SystemHeader } from '@/components/system/SystemHeader';
 import { SystemOverview } from '@/components/system/SystemOverview';
 
@@ -171,19 +172,19 @@ const AboutSystem = () => {
                   <div className="p-4 border rounded-lg bg-green-50 border-green-200">
                     <h3 className="font-semibold text-green-600 mb-1">ISO 9001</h3>
                     <p className="text-sm text-gray-600 mb-2">Quality Management</p>
-                    <Badge className="bg-green-100 text-green-800">Compliant</Badge>
+                    <Badge className={getComplianceClass('compliant')}>Compliant</Badge>
                   </div>
 
                   <div className="p-4 border rounded-lg bg-green-50 border-green-200">
                     <h3 className="font-semibold text-green-600 mb-1">ISO 27001</h3>
                     <p className="text-sm text-gray-600 mb-2">Information Security</p>
-                    <Badge className="bg-green-100 text-green-800">Compliant</Badge>
+                    <Badge className={getComplianceClass('compliant')}>Compliant</Badge>
                   </div>
 
                   <div className="p-4 border rounded-lg bg-green-50 border-green-200">
                     <h3 className="font-semibold text-green-600 mb-1">SOC 2</h3>
                     <p className="text-sm text-gray-600 mb-2">Security & Availability</p>
-                    <Badge className="bg-green-100 text-green-800">Compliant</Badge>
+                    <Badge className={getComplianceClass('compliant')}>Compliant</Badge>
                   </div>
                 </div>
               </div>

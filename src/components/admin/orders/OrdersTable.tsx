@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
 import { useDataExport } from '@/hooks/useDataExport';
+import { getPaymentStatusClass } from '@/utils/statusSystem';
 
 interface Order {
   id: string;
@@ -43,14 +44,7 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
   const [pendingAction, setPendingAction] = useState<{ orderId: string; action: 'cancel' | 'unmark' } | null>(null);
   const { exportData, isExporting } = useDataExport();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800 border-green-200';
-      case 'unpaid': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+
 
   const handleActionConfirm = async () => {
     if (!pendingAction) return;
@@ -175,7 +169,7 @@ export const OrdersTable = ({ orders, loading, onUpdateOrderStatus }: OrdersTabl
                   <TableCell className="font-medium">₹{order.total_amount}</TableCell>
                   <TableCell>{order.payment_mode || 'N/A'}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(order.payment_status)}`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getPaymentStatusClass(order.payment_status)}`}>
                       {order.payment_status}
                     </span>
                   </TableCell>

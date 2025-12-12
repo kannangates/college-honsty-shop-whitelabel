@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { Package, Pencil, Plus, ShoppingCart } from 'lucide-react';
+import { getGeneralStatusClass, getStockBadgeClass, getStockBadgeLabel } from '@/utils/statusSystem';
 
 interface Product {
   id: string;
@@ -33,39 +34,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
   onRestock,
   onAddToCart
 }) => {
-  const getStockBadgeVariant = (stock: number) => {
-    if (stock === 0) return 'destructive';
-    if (stock < 10) return 'secondary';
-    return 'default';
-  };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'default'; // This should be green
-      case 'inactive':
-      case 'disabled':
-        return 'destructive'; // This should be red
-      case 'pending':
-        return 'secondary'; // This should be yellow/gray
-      default:
-        return 'outline';
-    }
-  };
-
-  const getStatusBadgeClass = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
-      case 'inactive':
-      case 'disabled':
-        return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
-    }
-  };
 
   const totalStock = (product.warehouse_stock || 0) + (product.shelf_stock || 0);
   const isLowStock = totalStock < 10;
@@ -107,8 +76,8 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                   </div>
                 )}
                 <Badge
-                  variant={getStatusBadgeVariant(product.status)}
-                  className={`text-xs ${getStatusBadgeClass(product.status)}`}
+                  variant="outline"
+                  className={`text-xs ${getGeneralStatusClass(product.status)}`}
                 >
                   {product.status}
                 </Badge>
@@ -132,8 +101,8 @@ export const StudentCard: React.FC<StudentCardProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Total Stock</span>
             <Badge
-              variant={getStockBadgeVariant(totalStock)}
-              className="text-sm font-semibold"
+              variant="outline"
+              className={`text-sm font-semibold ${getStockBadgeClass(totalStock)}`}
             >
               {totalStock}
             </Badge>
@@ -144,8 +113,8 @@ export const StudentCard: React.FC<StudentCardProps> = ({
               <div className="text-xs text-gray-500 mb-1">Warehouse</div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-900">{product.warehouse_stock || 0}</span>
-                <Badge variant={getStockBadgeVariant(product.warehouse_stock || 0)} className="text-xs">
-                  {(product.warehouse_stock || 0) === 0 ? 'Empty' : (product.warehouse_stock || 0) < 10 ? 'Low' : 'Good'}
+                <Badge variant="outline" className={`text-xs ${getStockBadgeClass(product.warehouse_stock || 0)}`}>
+                  {getStockBadgeLabel(product.warehouse_stock || 0)}
                 </Badge>
               </div>
             </div>
@@ -153,8 +122,8 @@ export const StudentCard: React.FC<StudentCardProps> = ({
               <div className="text-xs text-gray-500 mb-1">Shelf</div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-900">{product.shelf_stock || 0}</span>
-                <Badge variant={getStockBadgeVariant(product.shelf_stock || 0)} className="text-xs">
-                  {(product.shelf_stock || 0) === 0 ? 'Empty' : (product.shelf_stock || 0) < 10 ? 'Low' : 'Good'}
+                <Badge variant="outline" className={`text-xs ${getStockBadgeClass(product.shelf_stock || 0)}`}>
+                  {getStockBadgeLabel(product.shelf_stock || 0)}
                 </Badge>
               </div>
             </div>

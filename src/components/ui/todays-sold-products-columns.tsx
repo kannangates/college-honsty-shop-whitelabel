@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, DollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from '@/features/gamification/components/badge';
+import { getPaymentStatusClass } from '@/utils/statusSystem';
 
 interface Product {
   product_name: string;
@@ -153,16 +154,16 @@ export const todaysSoldProductsColumns: ColumnDef<Product>[] = [
     cell: ({ row }) => {
       const product = row.original
       const paidPercentage = (product.paid_quantity / product.total_quantity) * 100
-      
+
       let statusBadge
       if (paidPercentage === 100) {
-        statusBadge = <Badge className="bg-green-100 text-green-800">All Paid</Badge>
+        statusBadge = <Badge className={getPaymentStatusClass('paid')}>All Paid</Badge>
       } else if (paidPercentage === 0) {
-        statusBadge = <Badge className="bg-red-100 text-red-800">Unpaid</Badge>
+        statusBadge = <Badge className={getPaymentStatusClass('unpaid')}>Unpaid</Badge>
       } else {
         statusBadge = <Badge className="bg-yellow-100 text-yellow-800">Partial</Badge>
       }
-      
+
       return <div className="text-center">{statusBadge}</div>
     },
   },

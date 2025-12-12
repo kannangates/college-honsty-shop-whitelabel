@@ -7,12 +7,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon, CreditCard, Search, RefreshCw, Plus, Edit, Trash2 } from 'lucide-react';
-import { DataTable } from '@/components/ui/data-table';
-import { ColumnDef } from '@tanstack/react-table';
+import { TransactionTable } from '@/components/admin/TransactionTable';
 import { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { PaymentRecordModal } from '@/components/admin/PaymentRecordModal';
 import { PaymentStatusModal } from '@/components/admin/PaymentStatusModal';
+import { TransactionCard } from '@/components/admin/TransactionCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -312,70 +312,7 @@ const AdminPaymentReports = () => {
     });
   }, [paymentRecords, staticRecords, searchTerm, statusFilter, dateRange]);
 
-  // Define columns for shadcn DataTable
-  const columns: ColumnDef<PaymentRecord>[] = [
-    { accessorKey: 'studentId', header: 'Student ID' },
-    { accessorKey: 'studentName', header: 'Student Name' },
-    { accessorKey: 'amount', header: 'Amount', cell: ({ row }) => `₹${row.original.amount.toFixed(2)}` },
-    { accessorKey: 'date', header: 'Date' },
-    { accessorKey: 'method', header: 'Method' },
-    { accessorKey: 'transactionId', header: 'Transaction ID' },
-    { accessorKey: 'orderId', header: 'Order ID' },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => {
-        const status = row.original.status;
-        const getStatusColor = (status: string) => {
-          switch (status.toLowerCase()) {
-            case 'paid': return 'bg-green-100 text-green-800 border-green-200';
-            case 'unpaid': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
-          }
-        };
 
-        return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
-            {status}
-          </span>
-        );
-      }
-    },
-    {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }) => {
-        const payment = row.original;
-        if (payment.items) return null; // Skip action buttons for static records
-
-        return (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleEditPaymentStatus(payment)}
-              className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
-              title="Edit Payment Status"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            {payment.status.toLowerCase() === 'paid' && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDeletePayment(payment.id)}
-                className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                title="Mark as Unpaid"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        );
-      }
-    },
-  ];
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -489,21 +426,48 @@ const AdminPaymentReports = () => {
         </div>
       </div>
 
-      {/* DataTable Section */}
-      <Card className="shadow-lg rounded-lg">
-        <CardHeader className="p-6">
-          <CardTitle className="text-2xl font-semibold">Transaction History</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          {loading ? (
-            <LoadingSpinner text="Loading payment records..." />
-          ) : (
-            <div className="overflow-x-auto">
-              <DataTable columns={columns} data={filteredRecords} />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Transaction History Section */}
+      <>
+        {/* Desktop Table View */}
+        <div className="hidden lg:block">
+          <TransactionTable
+            transactions={filteredRecords}
+            loading={loading}
+            onEditStatus={handleEditPaymentStatus}
+            onDelete={handleDeletePayment}
+          />
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="lg:hidden">
+          <Card className="shadow-lg rounded-lg">
+            <CardHeader className="p-6">
+              <CardTitle className="text-2xl font-semibold">Transaction History</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {loading ? (
+                <LoadingSpinner text="Loading payment records..." />
+              ) : filteredRecords.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CreditCard className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No transactions found</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-2 sm:place-items-center">
+                  {filteredRecords.map((transaction) => (
+                    <TransactionCard
+                      key={transaction.id}
+                      transaction={transaction}
+                      onEditStatus={transaction.items ? undefined : handleEditPaymentStatus}
+                      onDelete={transaction.items ? undefined : handleDeletePayment}
+                    />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </>
 
       {/* Payment Record Modal */}
       <PaymentRecordModal

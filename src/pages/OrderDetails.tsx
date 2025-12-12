@@ -3,6 +3,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
+import { getPaymentStatusClass } from '@/utils/statusSystem';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ShoppingCart, Calendar, DollarSign, User } from 'lucide-react';
 
@@ -30,22 +31,15 @@ const OrderDetails = () => {
     orderNotes: 'Student requested extra packaging'
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+
 
   return (
     <div className="space-y-4 text-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => navigate('/orders')}
           className="text-sm"
         >
@@ -71,7 +65,7 @@ const OrderDetails = () => {
                     <CardDescription className="text-sm">{order.timestamp}</CardDescription>
                   </div>
                 </div>
-                <Badge className={getStatusColor(order.status)}>
+                <Badge className={getPaymentStatusClass(order.status)}>
                   {order.status}
                 </Badge>
               </div>
@@ -125,7 +119,7 @@ const OrderDetails = () => {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600">Payment Status</label>
-                  <Badge className={getStatusColor(order.status)}>
+                  <Badge className={getPaymentStatusClass(order.status)}>
                     {order.status}
                   </Badge>
                 </div>

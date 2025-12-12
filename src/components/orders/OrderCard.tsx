@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { YellowRating } from '@/components/ui/rating';
 import { Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getPaymentBadgeClass } from '@/utils/statusSystem';
 
 interface OrderCardProps {
   order: {
@@ -57,22 +58,7 @@ const formatDate = (dateString: string) => {
   }).replace(',', '').toUpperCase();
 };
 
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'paid':
-    case 'delivered':
-      return 'bg-green-500';
-    case 'unpaid':
-    case 'pending':
-      return 'bg-red-500';
-    case 'processing':
-      return 'bg-yellow-500';
-    case 'shipped':
-      return 'bg-blue-500';
-    default:
-      return 'bg-gray-500';
-  }
-};
+
 
 const getStatusText = (status: string) => {
   switch (status.toLowerCase()) {
@@ -127,7 +113,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <Badge
             className={cn(
               "text-white border-0 px-1.5 py-0.5 font-bold rounded-full shadow-md",
-              getStatusColor(order.payment_status)
+              getPaymentBadgeClass(order.payment_status)
             )}
             style={{ fontSize: '9px' }}
           >

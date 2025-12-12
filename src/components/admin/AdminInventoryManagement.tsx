@@ -4,6 +4,7 @@ import { Package, Pencil, Plus, Grid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
+import { getGeneralStatusClass, getStockBadgeClass } from '@/utils/statusSystem';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -258,11 +259,7 @@ export const AdminInventoryManagement = () => {
     }
   };
 
-  const getStockBadgeVariant = (stock: number, type: 'warehouse' | 'shelf') => {
-    if (stock === 0) return 'destructive';
-    if (stock < 10) return 'secondary';
-    return 'default';
-  };
+
 
   if (loading) {
     return (
@@ -357,17 +354,17 @@ export const AdminInventoryManagement = () => {
                       <TableCell>₹{product.unit_price}</TableCell>
                       <TableCell>{product.opening_stock}</TableCell>
                       <TableCell>
-                        <Badge variant={getStockBadgeVariant(product.warehouse_stock || 0, 'warehouse')}>
+                        <Badge variant="outline" className={getStockBadgeClass(product.warehouse_stock || 0)}>
                           {product.warehouse_stock || 0}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStockBadgeVariant(product.shelf_stock || 0, 'shelf')}>
+                        <Badge variant="outline" className={getStockBadgeClass(product.shelf_stock || 0)}>
                           {product.shelf_stock || 0}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
+                        <Badge className={getGeneralStatusClass(product.status)}>
                           {product.status}
                         </Badge>
                       </TableCell>

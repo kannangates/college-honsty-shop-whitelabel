@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
+import { getPaymentStatusClass } from '@/utils/statusSystem';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -197,7 +198,7 @@ const MyOrders = () => {
                               <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                               <TableCell>{formatCurrency(order.total_amount)}</TableCell>
                               <TableCell>
-                                <Badge variant="destructive" className="capitalize">{order.payment_status}</Badge>
+                                <Badge className={`capitalize ${getPaymentStatusClass(order.payment_status)}`}>{order.payment_status}</Badge>
                               </TableCell>
                               <TableCell>
                                 <Button
@@ -274,7 +275,7 @@ const MyOrders = () => {
                               <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                               <TableCell>{formatCurrency(order.total_amount)}</TableCell>
                               <TableCell>
-                                <Badge variant={order.payment_status === 'paid' ? 'default' : 'destructive'} className="capitalize">
+                                <Badge className={`capitalize ${getPaymentStatusClass(order.payment_status)}`}>
                                   {order.payment_status}
                                 </Badge>
                               </TableCell>
