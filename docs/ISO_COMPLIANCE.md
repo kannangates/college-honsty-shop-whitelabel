@@ -99,7 +99,7 @@ View the full interactive documentation at: `/admin/iso-compliance`
 
 ### Authentication & Authorization
 - `src/contexts/AuthContext.tsx` - Main authentication context
-- `src/hooks/useMFA.ts` - Multi-factor authentication
+- `supabase/functions/mfa-*/` - Multi-factor authentication (Supabase Edge Functions)
 - `src/hooks/useAuth.ts` - Authentication hooks
 - `src/services/authService.ts` - Authentication service layer
 

@@ -1,7 +1,7 @@
-# Express Server for MFA API Routes
+# Express Server for API Routes
 
-This Express server handles MFA (Multi-Factor Authentication) API routes for the
-Vite React application.
+This Express server handles API routes for the Vite React application.
+Note: MFA functionality has been moved to Supabase Edge Functions.
 
 ## Setup
 
@@ -34,91 +34,18 @@ npm start
 All endpoints require authentication via Bearer token in the Authorization
 header.
 
-### POST /api/mfa/setup
+## MFA Functionality
 
-Generate MFA secret and QR code for a user.
+MFA (Multi-Factor Authentication) functionality has been moved to Supabase Edge Functions:
+- `supabase/functions/mfa-setup/` - Generate MFA secrets and QR codes
+- `supabase/functions/mfa-verify/` - Verify MFA tokens and enable MFA
+- `supabase/functions/mfa-status/` - Check MFA status
+- `supabase/functions/mfa-disable/` - Disable MFA
+- `supabase/functions/mfa-verify-session/` - Verify MFA for PII access
 
-**Response:**
-
-```json
-{
-  "secret": "BASE32_SECRET",
-  "qrCode": "data:image/png;base64,...",
-  "otpauthUrl": "otpauth://totp/..."
-}
-```
-
-### POST /api/mfa/verify
-
-Verify MFA token and enable MFA for the user.
-
-**Request:**
-
-```json
-{
-  "token": "123456"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "MFA enabled successfully"
-}
-```
-
-### POST /api/mfa/verify-session
-
-Verify MFA token during login.
-
-**Request:**
-
-```json
-{
-  "token": "123456"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "MFA verified successfully"
-}
-```
-
-### POST /api/mfa/disable
-
-Disable MFA for the authenticated user.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "MFA disabled successfully"
-}
-```
-
-### GET /api/mfa/status
-
-Check if MFA is enabled for the authenticated user.
-
-**Response:**
-
-```json
-{
-  "enabled": true
-}
-```
+These functions are deployed to Supabase and called directly from the frontend.
 
 ## Architecture
 
 - `server/index.js` - Main Express server with Vite middleware
-- `server/routes/mfa.js` - MFA API route handlers
 - `server/lib/supabase.js` - Supabase admin client and auth helpers
-- `server/lib/mfa-utils.js` - MFA utility functions (speakeasy, QR code
-  generation)

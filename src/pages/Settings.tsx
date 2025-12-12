@@ -338,9 +338,9 @@ const Settings = () => {
                     <Shield className="h-5 w-5" />
                     Security Settings
                   </CardTitle>
-                  <CardDescription>
+                  {/* <CardDescription>
                     Enhance your account security with two-factor authentication
-                  </CardDescription>
+                  </CardDescription> */}
                 </CardHeader>
                 <CardContent>
                   <MFASetup />

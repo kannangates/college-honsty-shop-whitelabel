@@ -4,7 +4,6 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { createServer as createViteServer } from 'vite';
-import mfaRoutes from './routes/mfa.js';
 import whitelabelRoutes from './routes/whitelabel.js';
 
 const app = express();
@@ -14,7 +13,7 @@ const PORT = process.env.PORT || 8080;
 console.log('\n🚀 Starting server...');
 console.log('Environment variables:');
 console.log('- VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL ? '✓ Set' : '✗ Using hardcoded fallback');
-console.log('- SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '✓ Set' : '✗ Missing (MFA will not work)');
+console.log('- SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '✓ Set' : '✗ Missing');
 console.log('');
 
 // Log environment check
@@ -28,7 +27,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 // API Routes
-app.use('/api/mfa', mfaRoutes);
 app.use('/api/whitelabel', whitelabelRoutes);
 
 // In development, use Vite's dev server

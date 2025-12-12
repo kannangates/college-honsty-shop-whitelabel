@@ -24,7 +24,7 @@ export default function VerifyMFA() {
 
     setIsLoading(true);
     try {
-      const response = await apiCall('/api/mfa/verify-session', {
+      const response = await apiCall('/functions/v1/mfa-verify-session', {
         method: 'POST',
         body: JSON.stringify({ token: code }),
       });

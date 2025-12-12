@@ -57,7 +57,7 @@ const ISOCompliance = () => {
                 </h3>
                 <div className="pl-6 space-y-2 text-sm">
                   <p><strong>Implementation:</strong> Supabase Auth with Multi-Factor Authentication (MFA)</p>
-                  <p><strong>Location:</strong> <code className="bg-muted px-2 py-0.5 rounded">src/hooks/useMFA.ts</code>, <code className="bg-muted px-2 py-0.5 rounded">src/contexts/AuthContext.tsx</code></p>
+                  <p><strong>Location:</strong> <code className="bg-muted px-2 py-0.5 rounded">src/contexts/AuthProvider.tsx</code>, <code className="bg-muted px-2 py-0.5 rounded">supabase/functions/mfa-*/</code></p>
                   <p><strong>MFA Storage:</strong> Database table: <code className="bg-muted px-2 py-0.5 rounded">user_mfa</code></p>
                   <p><strong>Session Management:</strong> JWT tokens with automatic refresh and secure storage</p>
                   <p><strong>Password Policy:</strong> Enforced complexity requirements with validation triggers</p>

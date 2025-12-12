@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/useAuth';
-import { Shield, QrCode, Smartphone, Key, CheckCircle } from 'lucide-react';
+import { Shield, Smartphone, CheckCircle } from 'lucide-react';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const MFASetup = () => {
   const [qrCode, setQrCode] = useState('');
@@ -19,17 +20,30 @@ export const MFASetup = () => {
 
   const checkMFAStatus = useCallback(async () => {
     if (!user) return;
-    
+
     try {
-      // For now, assume MFA is disabled since we don't have the backend implementation
-      setIsEnabled(false);
+      const { data: statusData, error } = await supabase.functions.invoke('mfa-status', {
+        body: {},
+      });
+
+      if (error || (statusData && statusData.error)) {
+        const errorMessage = error?.message || statusData?.error || 'Failed to check MFA status';
+        throw new Error(errorMessage);
+      }
+
+      setIsEnabled(statusData.enabled || false);
     } catch (error) {
       console.error('Error checking MFA status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to check MFA status',
-        variant: 'destructive',
-      });
+      setIsEnabled(false); // Default to disabled on error
+
+      // Only show toast for non-auth errors to avoid spam
+      if (error instanceof Error && !error.message.includes('Unauthorized')) {
+        toast({
+          title: 'Status Check Failed',
+          description: 'Could not verify MFA status. Please refresh the page.',
+          variant: 'destructive',
+        });
+      }
     }
   }, [user, toast]);
 
@@ -41,20 +55,41 @@ export const MFASetup = () => {
 
   const setupMFA = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
-      // MFA setup is not implemented yet
+      const { data: setupData, error } = await supabase.functions.invoke('mfa-setup', {
+        body: {},
+      });
+
+      if (error || (setupData && setupData.error)) {
+        const errorMessage = error?.message || setupData?.error || 'Failed to set up MFA';
+        throw new Error(errorMessage);
+      }
+
+      setQrCode(setupData.qrCode);
+      setIsVerifying(true);
+
       toast({
-        title: 'Coming Soon',
-        description: 'MFA setup will be available in a future update',
+        title: 'MFA Setup Started',
+        description: 'Scan the QR code with your authenticator app',
         variant: 'default',
       });
     } catch (error) {
       console.error('Error setting up MFA:', error);
+
+      let errorMessage = 'Failed to set up MFA';
+      if (error instanceof Error) {
+        if (error.message.includes('Unauthorized')) {
+          errorMessage = 'Session expired. Please log in again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to set up MFA',
+        title: 'Setup Failed',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -74,17 +109,46 @@ export const MFASetup = () => {
 
     setIsLoading(true);
     try {
-      // MFA verification is not implemented yet
+      const { data: verifyData, error } = await supabase.functions.invoke('mfa-verify', {
+        body: { token: verificationCode },
+      });
+
+      // Check if there's an error in the response data (from the function)
+      if (error || (verifyData && verifyData.error)) {
+        const errorMessage = error?.message || verifyData?.error || 'Invalid verification code';
+        throw new Error(errorMessage);
+      }
+
+      setIsEnabled(true);
+      setIsVerifying(false);
+      setVerificationCode('');
+      setQrCode('');
+
       toast({
-        title: 'Coming Soon',
-        description: 'MFA verification will be available in a future update',
+        title: 'MFA Enabled',
+        description: 'Two-factor authentication has been successfully enabled for your account',
         variant: 'default',
       });
     } catch (error) {
       console.error('Error verifying MFA:', error);
+
+      // Extract user-friendly error message
+      let errorMessage = 'Invalid verification code';
+      if (error instanceof Error) {
+        if (error.message.includes('Invalid token')) {
+          errorMessage = 'Invalid verification code. Please check your authenticator app and try again.';
+        } else if (error.message.includes('MFA not set up')) {
+          errorMessage = 'MFA setup not found. Please restart the setup process.';
+        } else if (error.message.includes('Unauthorized')) {
+          errorMessage = 'Session expired. Please log in again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Invalid verification code',
+        title: 'Verification Failed',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -94,20 +158,42 @@ export const MFASetup = () => {
 
   const disableMFA = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
-      // MFA disable is not implemented yet
+      const { data: disableData, error } = await supabase.functions.invoke('mfa-disable', {
+        body: {},
+      });
+
+      if (error || (disableData && disableData.error)) {
+        const errorMessage = error?.message || disableData?.error || 'Failed to disable MFA';
+        throw new Error(errorMessage);
+      }
+
+      setIsEnabled(false);
+      setVerificationCode('');
+      setQrCode('');
+
       toast({
-        title: 'Coming Soon',
-        description: 'MFA disable will be available in a future update',
+        title: 'MFA Disabled',
+        description: 'Two-factor authentication has been disabled for your account',
         variant: 'default',
       });
     } catch (error) {
       console.error('Error disabling MFA:', error);
+
+      let errorMessage = 'Failed to disable MFA';
+      if (error instanceof Error) {
+        if (error.message.includes('Unauthorized')) {
+          errorMessage = 'Session expired. Please log in again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to disable MFA',
+        title: 'Disable Failed',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -151,28 +237,28 @@ export const MFASetup = () => {
           </div>
         ) : isVerifying ? (
           <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-center">
-                  {qrCode ? (
-                    <div className="rounded-lg border p-4">
-                      <img
-                        src={qrCode}
-                        alt="MFA QR Code"
-                        width={200}
-                        height={200}
-                        className="rounded"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-48 w-48 items-center justify-center rounded-lg border">
-                      <LoadingSpinner size="sm" text="" />
-                    </div>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Scan this QR code with your authenticator app
-                </p>
+            <div className="space-y-2">
+              <div className="flex justify-center">
+                {qrCode ? (
+                  <div className="rounded-lg border p-4">
+                    <img
+                      src={qrCode}
+                      alt="MFA QR Code"
+                      width={200}
+                      height={200}
+                      className="rounded"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-48 w-48 items-center justify-center rounded-lg border">
+                    <LoadingSpinner size="sm" text="" />
+                  </div>
+                )}
               </div>
+              <p className="text-sm text-muted-foreground">
+                Scan this QR code with your authenticator app
+              </p>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="verification-code">Verification Code</Label>

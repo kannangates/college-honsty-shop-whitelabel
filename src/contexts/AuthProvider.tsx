@@ -15,22 +15,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isVerified: false,
   });
   const [isCheckingMFA, setIsCheckingMFA] = useState(false);
+  const [lastMFACheck, setLastMFACheck] = useState<string | null>(null);
 
   // MFA Status Management
   const checkMFAStatus = useCallback(async (): Promise<MFAStatus> => {
     try {
       setIsCheckingMFA(true);
-      // Skip MFA check for now since endpoints don't exist
-      const defaultStatus = {
-        isEnabled: false,
-        isVerified: true
+
+      // Only check MFA status if user is logged in
+      if (!authState.user?.id) {
+        const defaultStatus = {
+          isEnabled: false,
+          isVerified: true
+        };
+        setMfaStatus(defaultStatus);
+        return defaultStatus;
+      }
+
+      // Prevent rapid successive calls for the same user
+      const currentUserId = authState.user!.id; // Safe because we checked authState.user?.id above
+      if (lastMFACheck === currentUserId) {
+        return mfaStatus;
+      }
+
+      const response = await apiCall('/functions/v1/mfa-status');
+
+      if (!response.ok) {
+        throw new Error('Failed to check MFA status');
+      }
+
+      const data = await response.json();
+      const status = {
+        isEnabled: data.enabled || false,
+        isVerified: data.enabled ? false : true // If MFA is enabled, require verification
       };
 
-      setMfaStatus(defaultStatus);
-      return defaultStatus;
+      setMfaStatus(status);
+      setLastMFACheck(currentUserId);
+      return status;
     } catch (error) {
       console.error('Error checking MFA status:', error);
-      // Return default values on error
+      // Return safe defaults on error
       const defaultStatus = {
         isEnabled: false,
         isVerified: true
@@ -40,19 +65,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setIsCheckingMFA(false);
     }
-  }, []);
+  }, [authState.user?.id, lastMFACheck, mfaStatus]);
 
-  // Skip MFA status check for now since endpoints don't exist
-  // useEffect(() => {
-  //   if (authState.user?.id && !isCheckingMFA) {
-  //     checkMFAStatus().catch(console.error);
-  //   }
-  // }, [authState.user?.id, checkMFAStatus, isCheckingMFA]);
+  // Check MFA status when user logs in (only once per user)
+  useEffect(() => {
+    if (authState.user?.id && !isCheckingMFA && !authState.loading && lastMFACheck !== authState.user.id) {
+      checkMFAStatus().catch(console.error);
+    }
+  }, [authState.user?.id, authState.loading, lastMFACheck, isCheckingMFA, checkMFAStatus]);
 
   // MFA Methods
   const verifyMFA = useCallback(async (token: string): Promise<boolean> => {
     try {
-      const response = await apiCall('/api/mfa/verify', {
+      const response = await apiCall('/functions/v1/mfa-verify', {
         method: 'POST',
         body: JSON.stringify({ token })
       });
@@ -60,7 +85,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to verify MFA token');
+        // Provide user-friendly error messages
+        let errorMessage = 'Failed to verify MFA token';
+        if (data.error) {
+          if (data.error.includes('Invalid token')) {
+            errorMessage = 'Invalid verification code. Please check your authenticator app and try again.';
+          } else if (data.error.includes('MFA not set up')) {
+            errorMessage = 'MFA is not set up for your account.';
+          } else {
+            errorMessage = data.error;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       setMfaStatus(prev => ({
@@ -77,7 +113,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const setupMFA = useCallback(async () => {
     try {
-      const response = await apiCall('/api/mfa/setup', {
+      const response = await apiCall('/functions/v1/mfa-setup', {
         method: 'POST'
       });
       const data = await response.json();
@@ -95,7 +131,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const enableMFA = useCallback(async (token: string): Promise<boolean> => {
     try {
-      const response = await apiCall('/api/mfa/verify', {
+      const response = await apiCall('/functions/v1/mfa-verify', {
         method: 'POST',
         body: JSON.stringify({ token })
       });
@@ -120,7 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const disableMFA = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await apiCall('/api/mfa/disable', {
+      const response = await apiCall('/functions/v1/mfa-disable', {
         method: 'POST'
       });
 
@@ -152,7 +188,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshProfile = useCallback(async () => {
     if (authState.user?.id) {
       try {
-        await authState.fetchProfile(authState.user.id);
+        await authState.fetchProfile(authState.user!.id); // Safe because we checked authState.user?.id above
       } catch (error) {
         console.error('Error refreshing profile:', error);
       }
@@ -177,7 +213,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: userRole } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', authState.user.id)
+          .eq('user_id', authState.user!.id) // Safe because we checked authState.user?.id above
           .single();
 
         const adminRoles = ['admin', 'developer'];
@@ -189,7 +225,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     checkAdminStatus();
-  }, [authState.user?.id]);
+  }, [authState.user, authState.user?.id]);
 
   // Context value
   const value: AuthContextType = {
@@ -211,8 +247,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     enableMFA,
     disableMFA,
     verifyMFASession: async () => {
-      // Return true for now since MFA is disabled
-      return true;
+      // Check if MFA is enabled for this user
+      const status = await checkMFAStatus();
+      if (!status.isEnabled) {
+        return true; // MFA not enabled, allow access
+      }
+      return status.isVerified; // Return actual verification status
     },
   };
 
