@@ -118,15 +118,15 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       <CardContent className="p-3 relative h-full overflow-hidden">
         {/* Status Badge - Top Right */}
         <div className="absolute top-2 right-2 z-10">
-          <Badge
+          <span
             className={cn(
-              "border px-1.5 py-0.5 font-bold rounded-full shadow-md",
+              "inline-flex items-center px-1.5 py-0.5 font-bold rounded-full shadow-md border text-xs",
               getPaymentStatusClass(order.payment_status)
             )}
             style={{ fontSize: '9px' }}
           >
             {getStatusText(order.payment_status)}
-          </Badge>
+          </span>
         </div>
 
         {/* Download Icon - Top Right Corner */}
