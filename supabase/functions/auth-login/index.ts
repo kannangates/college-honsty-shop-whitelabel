@@ -54,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
     // 3) Lookup in your 'users' table by student_id
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .select("id, email, student_id, name, role, department")
+      .select("id, email, student_id, name, department")
       .eq("student_id", studentId)
       .single();
 
@@ -86,23 +86,37 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("✅ Login successful for user:", userData.email);
 
-    // 5) Update last signed in time
+    // 5) Verify role from user_roles table for security-critical operations
+    const { data: roleData, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.id)
+      .single();
+
+    if (roleError) {
+      console.log("⚠️ Role verification failed:", roleError.message);
+      // Continue with default role but log the issue
+    }
+
+    const verifiedRole = roleData?.role || 'student'; // Default to student if role verification fails
+
+    // 6) Update last signed in time
     await supabase
       .from("users")
       .update({ last_signed_in_at: new Date().toISOString() })
       .eq("id", userData.id);
 
-    // 6) Return the session and user info
+    // 7) Return the session and user info with verified role
     return new Response(
       JSON.stringify({
         message: "Login successful",
         session: authData.session,
-        user: { 
-          id: userData.id, 
-          email: userData.email, 
+        user: {
+          id: userData.id,
+          email: userData.email,
           student_id: userData.student_id,
           name: userData.name,
-          role: userData.role,
+          role: verifiedRole, // Use verified role from user_roles table
           department: userData.department
         },
       }),

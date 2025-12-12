@@ -34,7 +34,7 @@ export class AuditLogger {
   async log(action: string, resourceType: string, details: Record<string, unknown>, severity: AuditLog['severity'] = 'low'): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       const auditLog: AuditLog = {
         user_id: user?.id || 'anonymous',
         action,
@@ -79,7 +79,7 @@ export class AuditLogger {
 
   private sanitizeDetails(details: Record<string, unknown>): Record<string, unknown> {
     const sanitized: Record<string, unknown> = {};
-    
+
     for (const [key, value] of Object.entries(details)) {
       if (typeof value === 'string') {
         // Remove potential sensitive data
@@ -90,7 +90,7 @@ export class AuditLogger {
         sanitized[key] = value;
       }
     }
-    
+
     return sanitized;
   }
 
@@ -105,7 +105,7 @@ export class AuditLogger {
       try {
         // Only log critical and high severity events to console to reduce noise
         const criticalLogs = logsToFlush.filter(log => log.severity === 'critical' || log.severity === 'high');
-        
+
         if (criticalLogs.length > 0) {
           console.group('📊 Critical Audit Logs');
           criticalLogs.forEach(log => {
@@ -120,7 +120,7 @@ export class AuditLogger {
           });
           console.groupEnd();
         }
-        
+
         // For low/medium severity logs, only log if in development mode
         if (process.env.NODE_ENV === 'development') {
           const devLogs = logsToFlush.filter(log => log.severity === 'low' || log.severity === 'medium');
@@ -138,12 +138,12 @@ export class AuditLogger {
             console.groupEnd();
           }
         }
-        
+
         return;
       } catch (error) {
         retries++;
         console.error(`Failed to flush audit logs (attempt ${retries}):`, error);
-        
+
         if (retries < this.maxRetries) {
           await new Promise(resolve => setTimeout(resolve, this.retryDelay * retries));
         }
@@ -166,15 +166,35 @@ export class AuditLogger {
 
   private async getClientIP(): Promise<string> {
     try {
+      // Try server-side IP detection first (if available)
+      const serverIP = await this.getServerSideIP();
+      if (serverIP && serverIP !== 'unknown') {
+        return serverIP;
+      }
+
+      // Fallback to external service with timeout for restricted networks
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
       const response = await fetch('https://api.ipify.org?format=json', {
         method: 'GET',
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json' },
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
       const data = await response.json();
       return data.ip || 'unknown';
     } catch {
+      // Gracefully handle network restrictions or timeouts
       return 'unknown';
     }
+  }
+
+  private async getServerSideIP(): Promise<string> {
+    // This would be implemented server-side to avoid external API dependency
+    // For now, return unknown to indicate server-side detection needed
+    return 'unknown';
   }
 
   private getSanitizedUserAgent(): string {

@@ -36,14 +36,10 @@ export function PasswordChangePrompt() {
       return;
     }
 
-    // Debug logging
-    console.log('🔐 PasswordChangePrompt - User metadata:', user?.user_metadata);
-    console.log('🔐 must_change_password:', user?.user_metadata?.must_change_password);
-    console.log('🔐 password_expired:', user?.user_metadata?.password_expired);
+    // Production: Debug logging removed for security
 
     // Only show the prompt if the user has the must_change_password flag
     if (user?.user_metadata?.must_change_password === true) {
-      console.log('🔐 Opening password change prompt');
       setOpen(true);
       setHasShown(true);
     } else {
@@ -151,8 +147,8 @@ export function PasswordChangePrompt() {
           <AlertDialogAction asChild>
             <button
               className={`px-4 py-2 rounded-md text-white ${isPasswordExpired
-                  ? 'bg-amber-600 hover:bg-amber-700'
-                  : 'bg-purple-600 hover:bg-purple-700'
+                ? 'bg-amber-600 hover:bg-amber-700'
+                : 'bg-purple-600 hover:bg-purple-700'
                 }`}
               onClick={goChangePassword}
             >
