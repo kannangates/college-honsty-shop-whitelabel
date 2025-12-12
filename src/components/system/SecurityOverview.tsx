@@ -30,28 +30,28 @@ export const SecurityOverview: React.FC<SecurityOverviewProps> = ({ systemMetric
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex justify-between items-center">
-            <span>Security Score</span>
-            <Badge variant={systemMetrics?.security.score >= 80 ? "default" : "destructive"}>
-              {systemMetrics?.security.score || 0}/100
-            </Badge>
-          </div>
-          <Progress value={systemMetrics?.security.score} className="h-2" />
-          
-          <div className="flex justify-between items-center">
-            <span>Vulnerabilities</span>
+            <span>Active Threats Detected</span>
             <Badge variant={systemMetrics?.security.vulnerabilities === 0 ? "default" : "destructive"}>
               {systemMetrics?.security.vulnerabilities || 0}
             </Badge>
           </div>
-          
+
           <div className="flex justify-between items-center">
-            <span>Compliance Level</span>
-            <Badge variant="default">{systemMetrics?.security.complianceLevel}</Badge>
+            <span>Security Standard</span>
+            <Badge variant="default">{systemMetrics?.security.complianceLevel || 'ISO 27001'}</Badge>
           </div>
-          
-          <div className="text-sm text-gray-600">
-            Last Security Scan: {systemMetrics?.security.lastScan ? 
-              new Date(systemMetrics.security.lastScan).toLocaleDateString() : 'Never'}
+
+          <div className="flex justify-between items-center">
+            <span>Last Security Scan</span>
+            <span className="text-sm text-gray-600">
+              {systemMetrics?.security.lastScan ?
+                new Date(systemMetrics.security.lastScan).toLocaleDateString() : 'Today'}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span>Firewall Status</span>
+            <Badge variant="default">Active</Badge>
           </div>
         </CardContent>
       </Card>

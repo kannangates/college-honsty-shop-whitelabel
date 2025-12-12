@@ -13,11 +13,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface HeaderProps {
-  onMenuToggle: () => void;
-}
+interface HeaderProps { }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
+export const Header: React.FC<HeaderProps> = () => {
   const { profile, signOut, isAdmin, loading, refreshProfile } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -44,16 +42,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
       {isSigningOut && <LoadingSpinner fullScreen text="Signing out..." />}
       <header className="bg-white border-b border-gray-200 px-4 py-3 fixed top-0 left-0 right-0 z-50">
         <div className="flex items-center justify-between">
-          {/* Left side - Menu and Logo */}
+          {/* Left side - Logo only (hamburger moved to floating position) */}
           <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={onMenuToggle}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
             <Link to="/dashboard" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-[#202072] to-[#e66166] rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">HS</span>
@@ -105,26 +95,26 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                 <div className="md:hidden px-2 py-1">
                   <BadgeDisplay />
                 </div>
-                
+
                 <DropdownMenuItem onClick={handleRefreshProfile} className="cursor-pointer">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   <span>Refresh Profile</span>
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuItem asChild>
                   <Link to="/settings" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuItem asChild>
                   <Link to="/my-badges" className="cursor-pointer">
                     <span className="mr-2">🏆</span>
                     <span>Badge Gallery</span>
                   </Link>
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign out</span>

@@ -1,11 +1,11 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Settings, 
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Settings,
   Users,
-  Shield, 
+  Shield,
   Info,
   X,
   Bell,
@@ -38,7 +38,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onClose}
         />
@@ -46,9 +46,9 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full bg-white border-r z-40 transition-transform duration-200 ease-in-out",
+        "fixed right-0 lg:left-0 top-0 h-full bg-white border-l lg:border-r lg:border-l-0 z-50 transition-transform duration-200 ease-in-out",
         "w-64",
-        isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
       )}>
         <div className="flex flex-col h-full">
           {/* Mobile user info and close button */}
@@ -91,10 +91,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           {/* Bottom section with buttons */}
           <div className="p-4 border-t border-slate-800 flex flex-col items-center gap-4">
             {isAdmin && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
-                className="w-full flex items-center justify-center text-white hover:bg-red-700 bg-red-800 border-red-700" 
+                className="w-full flex items-center justify-center text-white hover:bg-red-700 bg-red-800 border-red-700"
                 onClick={() => {
                   onClose();
                   navigate('/admin');
@@ -104,10 +104,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 Admin Panel
               </Button>
             )}
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
-              className="w-full flex items-center justify-center text-white hover:bg-blue-700 bg-blue-800 border-blue-700" 
+              className="w-full flex items-center justify-center text-white hover:bg-blue-700 bg-blue-800 border-blue-700"
               onClick={() => {
                 onClose();
                 navigate('/about');

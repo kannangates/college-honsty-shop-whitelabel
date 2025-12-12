@@ -298,7 +298,10 @@ export const YellowRating = ({
       </Rating>
       {showValue && (
         <span className="text-sm text-muted-foreground ml-1">
-          {value !== undefined ? value : defaultValue}
+          {value !== undefined
+            ? (Number(value) % 1 === 0 ? Number(value).toString() : Number(value).toFixed(2))
+            : (Number(defaultValue) % 1 === 0 ? Number(defaultValue).toString() : Number(defaultValue).toFixed(2))
+          }
         </span>
       )}
     </div>
