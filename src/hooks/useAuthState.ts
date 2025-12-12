@@ -24,27 +24,29 @@ export const useAuthState = () => {
   // Optimized profile fetching with shorter timeout
   const fetchProfile = async (userId: string): Promise<void> => {
     try {
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Profile fetch timeout')), 1500) // Increased from 800ms to 1500ms
       );
-      
+
       const fetchPromise = supabase
         .from("users")
         .select("*")
         .eq("id", userId)
         .single();
-      
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as {
+
+      const result = await Promise.race<{
         data: UserProfile | null;
         error: { message: string } | null;
-      };
-      
+      }>([fetchPromise, timeoutPromise]);
+
+      const { data, error } = result;
+
       if (error) {
         console.error("❌ Profile fetch error:", error);
         setProfile(null);
         return;
       }
-      
+
       setProfile(data);
     } catch (error) {
       console.error("❌ Profile fetch exception:", error);
@@ -62,11 +64,11 @@ export const useAuthState = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
         if (!isMounted) return;
-        
+
         // Always update session and user state immediately
         setSession(newSession);
         setUser(newSession?.user ?? null);
-        
+
         // Handle profile fetching - non-blocking and faster
         const newUserId = newSession?.user?.id || null;
         if (newUserId && newUserId !== currentUserId) {
@@ -87,11 +89,11 @@ export const useAuthState = () => {
     // Check for existing session on mount - optimized for speed
     const initializeAuth = async () => {
       if (!isMounted) return;
-      
+
       try {
         // Try to restore session from our custom storage first
         const { session: restoredSession, profile: restoredProfile } = await AuthService.restoreSession();
-        
+
         if (restoredSession && restoredProfile) {
           if (!isMounted) return;
           setSession(restoredSession);
@@ -102,20 +104,20 @@ export const useAuthState = () => {
         }
 
         // Fallback to regular session check with shorter timeout
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Session check timeout')), 1500) // Increased from 800ms to 1500ms
         );
-        
+
         const sessionPromise = supabase.auth.getSession();
-        
+
         const { data: { session: existingSession }, error } = await Promise.race([
-          sessionPromise, 
+          sessionPromise,
           timeoutPromise
         ]) as {
           data: { session: Session | null };
           error: { message: string } | null;
         };
-        
+
         if (error) {
           console.error('❌ Session retrieval error:', error);
           setUser(null);
@@ -129,7 +131,7 @@ export const useAuthState = () => {
 
         setSession(existingSession);
         setUser(existingSession?.user ?? null);
-        
+
         if (existingSession?.user) {
           currentUserId = existingSession.user.id;
           // Non-blocking profile fetch

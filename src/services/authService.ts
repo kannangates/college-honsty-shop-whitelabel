@@ -177,8 +177,8 @@ export class AuthService {
         return { success: false, error: passwordValidation.error };
       }
 
-      // Construct email directly from student ID
-      const email = `${studentId}@shasuncollege.edu.in`;
+      // Construct email using configured domain
+      const email = `${studentId}@${WHITELABEL_CONFIG.branding.email_domain}`;
 
       // Attempt authentication without captcha
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({

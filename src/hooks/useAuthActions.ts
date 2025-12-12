@@ -23,28 +23,28 @@ export const useAuthActions = ({
   setLoading,
   fetchProfile
 }: UseAuthActionsProps) => {
-  
+
   const { cleanupAuthState } = useAuthCleanup();
   const { handleSuccessfulLogin } = useAuthRedirect();
-  
+
 
   const signIn = async (studentId: string, password: string) => {
     console.log('🔑 SignIn attempt for studentId:', studentId);
-    
+
     cleanupAuthState();
     setLoading(true);
-    
+
     try {
       await supabase.auth.signOut();
     } catch (err) {
       console.warn('Sign out error:', err);
     }
 
-    
+
 
     try {
       const result = await AuthService.login(studentId, password);
-      
+
       if (result.success && result.session && result.profile) {
         setSession(result.session);
         setUser(result.session.user);
@@ -97,12 +97,12 @@ export const useAuthActions = ({
 
       // Auto-login after successful signup
       const loginResult = await AuthService.autoLogin(email, password);
-      
+
       if (loginResult.success && loginResult.session && loginResult.profile) {
         setSession(loginResult.session);
         setUser(loginResult.session.user);
         setProfile(loginResult.profile);
-        
+
         console.log('✅ Signup and auto-login successful');
         console.log('➡️ Redirecting to /dashboard');
         window.location.href = '/dashboard';
@@ -118,16 +118,15 @@ export const useAuthActions = ({
   const signOut = async () => {
     cleanupAuthState();
     localStorage.removeItem('redirectAfterLogin');
-    
+
     try {
       await AuthService.signOut();
     } catch (err) {
       console.warn('Sign out error:', err);
     }
-    
+
     setUser(null);
     setProfile(null);
-    setSession(null);
     setSession(null);
     window.location.href = '/auth';
   };

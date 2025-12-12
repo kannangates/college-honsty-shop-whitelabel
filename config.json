@@ -25,6 +25,7 @@
     "city_state_pin": "City, State - PIN",
     "phone": "College Phone Number",
     "email": "college@shasuncollege.edu.in",
+    "email_domain": "shasuncollege.edu.in",
     "gstin": "",
     "colors": {
       "primary": "#3b82f6",
