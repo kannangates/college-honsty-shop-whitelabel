@@ -516,6 +516,9 @@ export type Database = {
           order_id: string | null
           product_id: string | null
           quantity: number
+          rated_at: string | null
+          rating: number | null
+          review_comment: string | null
           total_price: number
           unit_price: number
         }
@@ -525,6 +528,9 @@ export type Database = {
           order_id?: string | null
           product_id?: string | null
           quantity: number
+          rated_at?: string | null
+          rating?: number | null
+          review_comment?: string | null
           total_price: number
           unit_price: number
         }
@@ -534,6 +540,9 @@ export type Database = {
           order_id?: string | null
           product_id?: string | null
           quantity?: number
+          rated_at?: string | null
+          rating?: number | null
+          review_comment?: string | null
           total_price?: number
           unit_price?: number
         }
@@ -681,6 +690,7 @@ export type Database = {
       }
       products: {
         Row: {
+          average_rating: number | null
           category: string
           created_at: string | null
           created_by: string | null
@@ -689,6 +699,7 @@ export type Database = {
           is_archived: boolean | null
           name: string
           opening_stock: number
+          rating_count: number | null
           shelf_stock: number | null
           status: string | null
           unit_price: number
@@ -697,6 +708,7 @@ export type Database = {
           warehouse_stock: number | null
         }
         Insert: {
+          average_rating?: number | null
           category?: string
           created_at?: string | null
           created_by?: string | null
@@ -705,6 +717,7 @@ export type Database = {
           is_archived?: boolean | null
           name: string
           opening_stock?: number
+          rating_count?: number | null
           shelf_stock?: number | null
           status?: string | null
           unit_price: number
@@ -713,6 +726,7 @@ export type Database = {
           warehouse_stock?: number | null
         }
         Update: {
+          average_rating?: number | null
           category?: string
           created_at?: string | null
           created_by?: string | null
@@ -721,6 +735,7 @@ export type Database = {
           is_archived?: boolean | null
           name?: string
           opening_stock?: number
+          rating_count?: number | null
           shelf_stock?: number | null
           status?: string | null
           unit_price?: number
@@ -1067,6 +1082,10 @@ export type Database = {
         Returns: boolean
       }
       refresh_rankings: { Args: never; Returns: undefined }
+      update_product_rating: {
+        Args: { product_id_param: string }
+        Returns: undefined
+      }
       update_top_departments_rankings: { Args: never; Returns: undefined }
       update_top_students_rankings: { Args: never; Returns: undefined }
     }
