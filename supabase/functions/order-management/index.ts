@@ -39,14 +39,14 @@ serve(async (req: Request) => {
       );
     }
 
-    // Check if requesting user is admin
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
+    // Check if requesting user is admin using secure user_roles table
+    const { data: userRole, error: roleError } = await supabase
+      .from('user_roles')
       .select('role')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
-    if (profileError || !userProfile || userProfile.role !== 'admin') {
+    if (roleError || !userRole || userRole.role !== 'admin') {
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -88,7 +88,7 @@ serve(async (req: Request) => {
         await logAdminAction({
           supabase,
           userId: user.id,
-          userRole: userProfile.role,
+          userRole: userRole.role,
           action: 'SELECT',
           tableName: 'orders',
           newValues: { operation: 'fetch_orders', note: 'Admin accessed all orders with customer PII' },
@@ -121,7 +121,7 @@ serve(async (req: Request) => {
         await logAdminAction({
           supabase,
           userId: user.id,
-          userRole: userProfile.role,
+          userRole: userRole.role,
           action: 'SELECT',
           tableName: 'orders',
           newValues: { operation: 'get_stats', note: 'Admin accessed revenue and financial metrics' },
@@ -205,7 +205,7 @@ serve(async (req: Request) => {
         await logAdminAction({
           supabase,
           userId: user.id,
-          userRole: userProfile.role,
+          userRole: userRole.role,
           action: 'UPDATE',
           tableName: 'orders',
           recordId: id,

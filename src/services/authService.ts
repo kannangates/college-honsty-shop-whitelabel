@@ -325,10 +325,6 @@ export class AuthService {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to send password reset email'
       };
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to send password reset email'
-      };
     }
   }
 }
