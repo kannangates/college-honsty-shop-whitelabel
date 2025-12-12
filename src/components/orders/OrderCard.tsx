@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { YellowRating } from '@/components/ui/rating';
 import { Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getPaymentBadgeClass } from '@/utils/statusSystem';
+import { getPaymentStatusClass } from '@/utils/statusSystem';
 
 interface OrderCardProps {
   order: {
@@ -120,8 +120,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         <div className="absolute top-2 right-2 z-10">
           <Badge
             className={cn(
-              "text-white border-0 px-1.5 py-0.5 font-bold rounded-full shadow-md",
-              getPaymentBadgeClass(order.payment_status)
+              "border px-1.5 py-0.5 font-bold rounded-full shadow-md",
+              getPaymentStatusClass(order.payment_status)
             )}
             style={{ fontSize: '9px' }}
           >
