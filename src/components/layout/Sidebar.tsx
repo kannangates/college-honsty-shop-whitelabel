@@ -39,14 +39,14 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:z-30 lg:hidden"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed right-0 lg:left-0 top-0 h-full bg-white border-l lg:border-r lg:border-l-0 z-50 transition-transform duration-200 ease-in-out",
+        "fixed right-0 lg:left-0 top-0 h-full bg-white border-l lg:border-r lg:border-l-0 z-50 lg:z-40 transition-transform duration-200 ease-in-out",
         "w-64",
         isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
       )}>
