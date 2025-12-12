@@ -267,10 +267,12 @@ const AdminOrderManagement = React.memo(() => {
                   <OrderCard
                     key={order.id}
                     order={transformedOrder}
-                    onPayNow={() => updateOrderStatus(order.id, 'paid')}
-                    onReorder={() => {/* Reorder functionality if needed */ }}
+                    onCancelOrder={() => updateOrderStatus(order.id, 'cancelled')}
+                    onUnmarkCancelled={() => updateOrderStatus(order.id, 'unpaid')}
                     onDownloadInvoice={() => {/* Download functionality if needed */ }}
                     showRating={false}
+                    isAdminMode={true}
+                    isProcessing={loading}
                   />
                 );
               })}

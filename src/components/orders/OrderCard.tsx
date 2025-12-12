@@ -31,9 +31,13 @@ interface OrderCardProps {
   onReorder?: () => void;
   onRateProduct?: () => void;
   onDownloadInvoice?: () => void;
+  onCancelOrder?: () => void;
+  onUnmarkCancelled?: () => void;
   showRating?: boolean;
   productImage?: string;
   className?: string;
+  isAdminMode?: boolean;
+  isProcessing?: boolean;
 }
 
 const formatOrderId = (order: OrderCardProps['order']) =>
@@ -83,9 +87,13 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   onReorder,
   onRateProduct,
   onDownloadInvoice,
+  onCancelOrder,
+  onUnmarkCancelled,
   showRating = false,
   productImage,
-  className
+  className,
+  isAdminMode = false,
+  isProcessing = false
 }) => {
   const firstItem = order.order_items?.[0];
   const totalItems = order.order_items?.length || 0;
@@ -250,44 +258,78 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
             {/* Bottom Section - Action Buttons */}
             <div className="mt-1">
-              {showRating && isPaid && (
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onRateProduct}
-                    className="flex-1 bg-white/90 border border-gray-300 text-gray-700 hover:bg-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
-                  >
-                    {hasRating ? 'View Rating' : 'Rate Product'}
-                  </Button>
-                  <Button
-                    onClick={onReorder}
-                    size="sm"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
-                  >
-                    Reorder
-                  </Button>
+              {isAdminMode ? (
+                // Admin Mode - Show Cancel/Unmark buttons
+                <div>
+                  {order.payment_status === 'cancelled' ? (
+                    <Button
+                      onClick={onUnmarkCancelled}
+                      size="sm"
+                      variant="outline"
+                      disabled={isProcessing}
+                      className="w-full bg-white/90 border border-gray-300 text-gray-700 hover:bg-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
+                    >
+                      {isProcessing ? 'Processing...' : 'Unmark Cancelled'}
+                    </Button>
+                  ) : order.payment_status === 'paid' ? (
+                    <div className="w-full text-center text-xs text-gray-500 py-1">
+                      No actions available
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={onCancelOrder}
+                      size="sm"
+                      variant="destructive"
+                      disabled={isProcessing}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
+                    >
+                      {isProcessing ? 'Cancelling...' : 'Cancel Order'}
+                    </Button>
+                  )}
                 </div>
-              )}
+              ) : (
+                // User Mode - Show Reorder/Pay Now buttons
+                <div>
+                  {showRating && isPaid && (
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onRateProduct}
+                        className="flex-1 bg-white/90 border border-gray-300 text-gray-700 hover:bg-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
+                      >
+                        {hasRating ? 'View Rating' : 'Rate Product'}
+                      </Button>
+                      <Button
+                        onClick={onReorder}
+                        size="sm"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
+                      >
+                        Reorder
+                      </Button>
+                    </div>
+                  )}
 
-              {isPaid && !showRating && (
-                <Button
-                  onClick={onReorder}
-                  size="sm"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
-                >
-                  Reorder
-                </Button>
-              )}
+                  {isPaid && !showRating && (
+                    <Button
+                      onClick={onReorder}
+                      size="sm"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
+                    >
+                      Reorder
+                    </Button>
+                  )}
 
-              {isUnpaid && onPayNow && (
-                <Button
-                  onClick={onPayNow}
-                  size="sm"
-                  className="w-full bg-red-600 hover:bg-red-700 text-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
-                >
-                  Pay Now
-                </Button>
+                  {isUnpaid && onPayNow && (
+                    <Button
+                      onClick={onPayNow}
+                      size="sm"
+                      className="w-full bg-red-600 hover:bg-red-700 text-white rounded-full font-bold px-2 py-0.5 shadow-md text-xs h-6"
+                    >
+                      Pay Now
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </div>
