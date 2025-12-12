@@ -138,21 +138,27 @@ const AdminStudentManagement = () => {
     if (!selectedStudent) return;
 
     try {
-      const mobileNumber = editForm.mobile_number?.trim() === ''
-        ? undefined
+      const mobileNumber = editForm.mobile_number?.trim() === '' || !editForm.mobile_number
+        ? null
         : editForm.mobile_number;
 
+      const requestBody: unknown = {
+        operation: 'update_user',
+        id: selectedStudent.id,
+        name: editForm.name,
+        department: editForm.department,
+        status: editForm.status,
+        role: editForm.role,
+        shift: editForm.shift
+      };
+
+      // Always include mobile_number (can be null)
+      requestBody.mobile_number = mobileNumber;
+
+      console.log('Sending update request:', requestBody);
+
       const { data, error } = await supabase.functions.invoke('user-management', {
-        body: {
-          operation: 'update_user',
-          id: selectedStudent.id,
-          name: editForm.name,
-          email: selectedStudent.email,
-          department: editForm.department,
-          mobile_number: mobileNumber,
-          status: editForm.status,
-          role: editForm.role
-        }
+        body: requestBody
       });
 
       if (error) throw error;
@@ -202,7 +208,7 @@ const AdminStudentManagement = () => {
       student.role,
       student.points,
       student.status,
-      student.shift === '1' ? 'Morning (1st Shift)' : student.shift === '2' ? 'Evening (2nd Shift)' : 'Full Day',
+      student.shift || 'Morning (1st Shift)',
       new Date(student.created_at).toLocaleDateString(),
       student.last_signed_in_at ? new Date(student.last_signed_in_at).toLocaleDateString() : 'Never'
     ]);
@@ -225,9 +231,9 @@ const AdminStudentManagement = () => {
       !departmentFilter || departmentFilter === 'All Department' || departmentFilter === 'all' || student.department === departmentFilter;
     const matchesShift =
       shiftFilter === 'all' ||
-      (shiftFilter === 'morning' && student.shift === '1') ||
-      (shiftFilter === 'evening' && student.shift === '2') ||
-      (shiftFilter === 'full' && student.shift === 'full');
+      (shiftFilter === 'morning' && student.shift === 'Morning (1st Shift)') ||
+      (shiftFilter === 'evening' && student.shift === 'Evening (2nd Shift)') ||
+      (shiftFilter === 'full' && student.shift === 'Full Shift');
     const matchesRole =
       roleFilter === 'all' || student.role === roleFilter;
 
@@ -271,16 +277,37 @@ const AdminStudentManagement = () => {
     setPiiDialog(prev => ({ ...prev, loading: true }));
 
     try {
-      const { data, error } = await supabase.functions.invoke('user-management', {
-        body: {
+      // Get the session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      // Make direct HTTP call to get proper error messages
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-management`;
+
+      const httpResponse = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
           operation: 'fetch_user_details',
           targetUserId: piiDialog.studentId,
           reason: piiDialog.reason.trim(),
           mfaToken: piiDialog.mfaToken.trim(),
-        }
+        }),
       });
 
-      if (error) throw error;
+      const data = await httpResponse.json();
+
+      if (!httpResponse.ok) {
+        // Extract the actual error message from the function response
+        const errorMessage = data.error || `HTTP ${httpResponse.status}: ${httpResponse.statusText}`;
+        throw new Error(errorMessage);
+      }
 
       const sensitiveUser = data?.user as SensitiveStudent | undefined;
 
@@ -305,9 +332,32 @@ const AdminStudentManagement = () => {
       });
     } catch (error) {
       console.error('Error fetching sensitive student data:', error);
+
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to unlock PII';
+      let errorTitle = 'Access denied';
+
+      if (error instanceof Error) {
+        if (error.message.includes('MFA is not configured')) {
+          errorTitle = 'MFA Required';
+          errorMessage = 'You must set up Multi-Factor Authentication before accessing sensitive student data. Go to Settings → Security to enable MFA.';
+        } else if (error.message.includes('Enable MFA before accessing')) {
+          errorTitle = 'MFA Required';
+          errorMessage = 'You must enable Multi-Factor Authentication before accessing sensitive student data. Go to Settings → Security to enable MFA.';
+        } else if (error.message.includes('Invalid MFA token')) {
+          errorTitle = 'Invalid Code';
+          errorMessage = 'The verification code is invalid or expired. Please enter a fresh code from your authenticator app.';
+        } else if (error.message.includes('MFA token is required')) {
+          errorTitle = 'Code Required';
+          errorMessage = 'Please enter the 6-digit code from your authenticator app.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       toast({
-        title: 'Access denied',
-        description: error instanceof Error ? error.message : 'Failed to unlock PII',
+        title: errorTitle,
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -656,6 +706,8 @@ const AdminStudentManagement = () => {
             </DialogTitle>
             <DialogDescription>
               Provide a business reason and confirm via MFA before viewing email, student ID, or mobile number.
+              <br />
+              <span className="text-amber-600 font-medium">Note: You must have MFA enabled in Settings → Security first.</span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -760,7 +812,7 @@ const AdminStudentManagement = () => {
                 <div>
                   <label className="text-xs font-medium text-gray-600">Shift</label>
                   <Select
-                    value={editForm.shift || '1'}
+                    value={editForm.shift || 'Morning (1st Shift)'}
                     onValueChange={(value) => setEditForm({ ...editForm, shift: value })}
                   >
                     <SelectTrigger className="text-sm h-8">

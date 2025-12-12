@@ -46,6 +46,7 @@ export const mfaTokenSchema = z.string()
 export const mobileNumberSchema = z.string()
   .max(20, 'Mobile number must be 20 characters or less')
   .regex(/^[0-9+\-() ]*$/, 'Invalid mobile number format')
+  .nullable()
   .optional();
 
 export const uuidSchema = z.string()
@@ -131,7 +132,8 @@ export const userManagementSchema = z.discriminatedUnion('operation', [
     department: departmentSchema.optional(),
     mobile_number: mobileNumberSchema,
     status: z.enum(['active', 'inactive', 'suspended']).optional(),
-    role: z.enum(['student', 'teacher', 'admin', 'developer']).optional()
+    role: z.enum(['student', 'teacher', 'admin', 'developer']).optional(),
+    shift: shiftSchema.optional()
   }),
   z.object({
     operation: z.literal('get_stats')

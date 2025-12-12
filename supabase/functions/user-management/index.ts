@@ -3,7 +3,7 @@ import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-
 import { corsHeaders } from '../_shared/cors.ts';
 import { logAdminAction } from '../_shared/auditLog.ts';
 import { userManagementSchema } from '../_shared/schemas.ts';
-import { verifyTOTP } from '../_shared/totp.ts';
+import { verifyTOTP, generateTOTP } from '../_shared/totp.ts';
 
 const PII_FIELDS = ['student_id', 'email', 'mobile_number'];
 
@@ -280,6 +280,7 @@ interface UserUpdate extends Record<string, unknown> {
   mobile_number?: string;
   status?: string;
   role?: 'admin' | 'student' | 'teacher' | 'developer';
+  shift?: string;
 }
 
 interface SensitiveAccessRequest {
@@ -313,6 +314,7 @@ async function updateUser(supabase: SupabaseClient, userData: UserUpdate, userId
       mobile_number: userData.mobile_number,
       status: userData.status,
       role: userData.role,
+      shift: userData.shift,
       updated_at: new Date().toISOString()
     })
     .eq('id', userData.id)
@@ -425,6 +427,7 @@ async function ensureMFAIsValid(supabase: SupabaseClient, adminUserId: string, m
 
   const sanitizedToken = mfaToken.replace(/\s+/g, '');
 
+  // Check if MFA is enabled for this user
   const { data, error } = await supabase
     .from('user_mfa')
     .select('secret, enabled')
@@ -439,7 +442,7 @@ async function ensureMFAIsValid(supabase: SupabaseClient, adminUserId: string, m
     throw new Error('Enable MFA before accessing PII.');
   }
 
-  // Use our pure JS TOTP implementation
+  // Use the shared TOTP implementation for consistency
   const verified = await verifyTOTP(sanitizedToken, data.secret, 1, 30);
 
   if (!verified) {
