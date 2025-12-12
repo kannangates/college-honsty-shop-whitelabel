@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { UserPlus, Trophy, RefreshCw, Download, Edit, Upload, KeyRound, Shield } from 'lucide-react';
 import { AddStudentModal } from '@/components/admin/AddStudentModal';
 import { BulkUploadModal } from '@/components/admin/BulkUploadModal';
+import { StudentCard } from '@/components/admin/students/StudentCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useDataExport } from '@/hooks/useDataExport';
 import { useToast } from '@/hooks/use-toast';
@@ -510,107 +511,129 @@ const AdminStudentManagement = () => {
                 variant="outline"
                 onClick={fetchStudents}
                 disabled={loading}
-                className="text-sm"
+                className="text-sm md:px-4 px-2"
               >
-                <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''} md:mr-1`} />
+                <span className="hidden md:inline">Refresh</span>
               </Button>
               <Button
                 variant="outline"
                 onClick={() => handleExport('csv')}
                 disabled={isExporting || filteredStudents.length === 0}
-                className="text-sm"
+                className="text-sm md:px-4 px-2"
               >
-                <Download className="h-4 w-4 mr-1" />
-                CSV
+                <Download className="h-4 w-4 md:mr-1" />
+                <span className="hidden md:inline">CSV</span>
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Student ID (masked)</TableHead>
-                <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Department</TableHead>
-                <TableHead className="text-xs">Shift</TableHead>
-                <TableHead className="text-xs">Role</TableHead>
-                <TableHead className="text-xs">Points</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
-                <TableHead className="text-xs">Last Signed In</TableHead>
-                <TableHead className="text-xs">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          {/* Mobile Card Layout - Hidden on desktop */}
+          <div className="block md:hidden">
+            {loading ? (
+              <div className="text-center py-8">
+                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                <p>Loading students...</p>
+              </div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No students found
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {filteredStudents.map((student) => (
+                  <StudentCard
+                    key={student.id}
+                    student={student}
+                    onEdit={() => handleEditProfile(student)}
+                    onResetPassword={() => handleOpenPasswordReset(student)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table Layout - Hidden on mobile */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8">
-                    <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    Loading students...
-                  </TableCell>
+                  <TableHead className="text-xs">Student ID (masked)</TableHead>
+                  <TableHead className="text-xs">Name</TableHead>
+                  <TableHead className="text-xs">Department</TableHead>
+                  <TableHead className="text-xs">Points</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Last Signed In</TableHead>
+                  <TableHead className="text-xs">Actions</TableHead>
                 </TableRow>
-              ) : filteredStudents.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                    No students found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredStudents.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium text-sm font-mono">{student.masked_student_id}</TableCell>
-                    <TableCell className="text-sm">{student.name}</TableCell>
-                    <TableCell className="text-sm">{student.department || 'N/A'}</TableCell>
-                    <TableCell className="text-sm">{getShiftDisplay(student.shift)}</TableCell>
-                    <TableCell className="text-sm">{student.role}</TableCell>
-                    <TableCell className="text-sm">
-                      <Badge className={`${student.points > 1000 ? 'bg-yellow-100 text-yellow-800' :
-                        student.points > 800 ? 'bg-green-100 text-green-800' :
-                          'bg-blue-100 text-blue-800'
-                        } text-xs`}>
-                        <Trophy className="h-3 w-3 mr-1" />
-                        {student.points}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      <Badge variant="outline" className={`${student.status === 'active' ? 'text-green-600 border-green-200' : 'text-red-600 border-red-200'
-                        } text-xs`}>
-                        {student.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {student.last_signed_in_at
-                        ? new Date(student.last_signed_in_at).toLocaleDateString()
-                        : 'Never'
-                      }
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          onClick={() => handleEditProfile(student)}
-                          className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-xs h-7"
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleOpenPasswordReset(student)}
-                          className="text-xs h-7 border-orange-300 text-orange-600 hover:bg-orange-50"
-                        >
-                          <KeyRound className="h-3 w-3 mr-1" />
-                          Reset
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                      Loading students...
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : filteredStudents.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                      No students found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredStudents.map((student) => (
+                    <TableRow key={student.id}>
+                      <TableCell className="font-medium text-sm font-mono">{student.masked_student_id}</TableCell>
+                      <TableCell className="text-sm">{student.name}</TableCell>
+                      <TableCell className="text-sm">{student.department || 'N/A'}</TableCell>
+                      <TableCell className="text-sm">
+                        <Badge className={`${student.points > 1000 ? 'bg-yellow-100 text-yellow-800' :
+                          student.points > 800 ? 'bg-green-100 text-green-800' :
+                            'bg-blue-100 text-blue-800'
+                          } text-xs`}>
+                          <Trophy className="h-3 w-3 mr-1" />
+                          {student.points}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        <Badge variant="outline" className={`${student.status === 'active' ? 'text-green-600 border-green-200' : 'text-red-600 border-red-200'
+                          } text-xs`}>
+                          {student.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {student.last_signed_in_at
+                          ? new Date(student.last_signed_in_at).toLocaleDateString()
+                          : 'Never'
+                        }
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            onClick={() => handleEditProfile(student)}
+                            className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-xs h-7 w-7 p-0"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenPasswordReset(student)}
+                            className="text-xs h-7 w-7 p-0 border-orange-300 text-orange-600 hover:bg-orange-50"
+                          >
+                            <KeyRound className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
