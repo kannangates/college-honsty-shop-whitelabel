@@ -5,7 +5,7 @@ import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 interface OrderRow { total_amount: number }
-interface ProductRow { name: string; current_stock: number; opening_stock: number }
+interface ProductRow { name: string; shelf_stock: number; warehouse_stock: number }
 interface TopStudentRow { student_id: string; name: string; department: string; points: number; rank: number }
 interface TopDeptRow { department: string; points: number; rank: number }
 
@@ -25,7 +25,7 @@ Deno.serve(async (req: Request) => {
     // Get current user from auth header
     const authHeader = req.headers.get('Authorization');
     let currentUserId = null;
-    
+
     if (authHeader) {
       try {
         const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
@@ -33,22 +33,22 @@ Deno.serve(async (req: Request) => {
       } catch (error) {
         console.log('Could not get user from auth header:', error);
       }
-          // Validate optional query parameters
-          const url = new URL(req.url);
-          const cacheParam = url.searchParams.get('cache');
-    
-          const cacheSchema = z.enum(['true', 'false']).optional();
-          const cacheValidation = cacheSchema.safeParse(cacheParam);
-    
-          if (!cacheValidation.success) {
-            return new Response(
-              JSON.stringify({
-                error: 'Invalid cache parameter',
-                details: cacheValidation.error.issues.map(e => ({ field: 'cache', message: e.message }))
-              }),
-              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
+      // Validate optional query parameters
+      const url = new URL(req.url);
+      const cacheParam = url.searchParams.get('cache');
+
+      const cacheSchema = z.enum(['true', 'false']).optional();
+      const cacheValidation = cacheSchema.safeParse(cacheParam);
+
+      if (!cacheValidation.success) {
+        return new Response(
+          JSON.stringify({
+            error: 'Invalid cache parameter',
+            details: cacheValidation.error.issues.map(e => ({ field: 'cache', message: e.message }))
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Refresh rankings only if needed (cache for 5 minutes)
@@ -60,7 +60,7 @@ Deno.serve(async (req: Request) => {
       .limit(1)
       .single();
 
-    const shouldRefresh = !lastRefresh.data || 
+    const shouldRefresh = !lastRefresh.data ||
       (new Date().getTime() - new Date(lastRefresh.data.updated_at).getTime()) > 5 * 60 * 1000;
 
     if (shouldRefresh) {
@@ -105,7 +105,7 @@ Deno.serve(async (req: Request) => {
       supabase
         .from('products')
         .select('id', { count: 'exact', head: true })
-        .lt('current_stock', 10)
+        .lt('shelf_stock', 10)
         .eq('is_archived', false),
 
       // Top students with specific columns
@@ -127,9 +127,9 @@ Deno.serve(async (req: Request) => {
       // Sample stock data with specific columns
       supabase
         .from('products')
-        .select('name, current_stock, opening_stock')
+        .select('name, shelf_stock, warehouse_stock')
         .eq('is_archived', false)
-        .order('current_stock', { ascending: true })
+        .order('shelf_stock', { ascending: true })
         .limit(5)
     ]);
 
@@ -139,9 +139,9 @@ Deno.serve(async (req: Request) => {
     // Format stock data efficiently
     const formattedStockData = (stockData.data as ProductRow[] | null)?.map((item: ProductRow) => ({
       product: item.name,
-      current: item.current_stock,
-      opening: item.opening_stock,
-      status: item.current_stock < 5 ? 'Critical' : item.current_stock < 10 ? 'Low' : 'Good'
+      current: item.shelf_stock,
+      warehouse: item.warehouse_stock,
+      status: item.shelf_stock < 5 ? 'Critical' : item.shelf_stock < 10 ? 'Low' : 'Good'
     })) || [];
 
     // Get current user rank efficiently if authenticated
@@ -189,12 +189,12 @@ Deno.serve(async (req: Request) => {
     });
 
     console.log('✅ Optimized dashboard data fetched successfully');
-    
+
     return new Response(
       JSON.stringify(dashboardData),
-      { 
-        headers: { 
-          ...corsHeaders, 
+      {
+        headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json',
           'Cache-Control': 'public, max-age=120' // 2 minutes cache
         }
@@ -205,8 +205,8 @@ Deno.serve(async (req: Request) => {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errMsg }),
-      { 
-        status: 500, 
+      {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

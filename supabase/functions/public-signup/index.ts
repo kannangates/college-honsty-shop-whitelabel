@@ -131,19 +131,23 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    log("🔍 Checking for existing email in auth...");
-    const { data: existingAuthUsers, error: authListError } = await supabase.auth.admin.listUsers();
-    if (authListError) {
-      log("❌ Auth listing error:", authListError);
-      log("🔍 About to return auth listing error");
+    log("🔍 Checking for existing email using efficient query...");
+    const { data: existingEmailUser, error: emailCheckError } = await supabase
+      .from("users")
+      .select("email")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (emailCheckError) {
+      log("❌ Email check error:", emailCheckError);
+      log("🔍 About to return email check error");
       return new Response(
-        JSON.stringify({ error: "Auth validation failed." }),
+        JSON.stringify({ error: "Database error checking email." }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const emailExists = existingAuthUsers.users.some((u: { email?: string }) => u.email === email);
-    if (emailExists) {
+    if (existingEmailUser) {
       log("❌ Email already in use:", email);
       log("🔍 About to return duplicate email error");
       return new Response(

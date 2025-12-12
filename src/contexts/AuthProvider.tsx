@@ -162,8 +162,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Initialize system features
   useSystemInitialization();
 
-  const isAdmin = authState.profile?.role?.toLowerCase() === 'admin' ||
-    authState.profile?.role?.toLowerCase() === 'developer';
+  // Check admin status using secure user_roles table
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!authState.user?.id) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: userRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', authState.user.id)
+          .single();
+
+        const adminRoles = ['admin', 'developer'];
+        setIsAdmin(adminRoles.includes(userRole?.role?.toLowerCase() || ''));
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [authState.user?.id]);
 
   // Context value
   const value: AuthContextType = {
