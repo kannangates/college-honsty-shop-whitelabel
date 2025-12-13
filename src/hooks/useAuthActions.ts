@@ -28,7 +28,7 @@ export const useAuthActions = ({
   const { handleSuccessfulLogin } = useAuthRedirect();
 
 
-  const signIn = async (studentId: string, password: string) => {
+  const signIn = async (studentId: string, password: string, skipRedirect: boolean = false) => {
     console.log('🔑 SignIn attempt for studentId:', studentId);
 
     cleanupAuthState();
@@ -40,8 +40,6 @@ export const useAuthActions = ({
       console.warn('Sign out error:', err);
     }
 
-
-
     try {
       const result = await AuthService.login(studentId, password);
 
@@ -49,7 +47,13 @@ export const useAuthActions = ({
         setSession(result.session);
         setUser(result.session.user);
         setProfile(result.profile);
-        handleSuccessfulLogin();
+
+        // Only redirect if not skipping (i.e., not waiting for 2FA)
+        if (!skipRedirect) {
+          handleSuccessfulLogin();
+        } else {
+          setLoading(false);
+        }
       } else {
         throw new Error(result.error || 'Login failed');
       }

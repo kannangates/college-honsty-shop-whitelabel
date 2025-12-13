@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Shield } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -18,6 +18,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG, CONFIG } from '@/config';
+import { TwoFactorPrompt } from './TwoFactorPrompt';
+import { supabase } from '@/integrations/supabase/client';
 
 
 export function LoginForm({
@@ -33,8 +35,10 @@ export function LoginForm({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [tempCredentials, setTempCredentials] = useState<{ studentId: string, password: string } | null>(null);
   const { toast } = useToast();
-  const { signIn } = useAuth();
+  const { signIn, checkMFAStatus } = useAuth();
   const navigate = useNavigate();
 
   const labels = WHITELABEL_CONFIG.forms.labels;
@@ -57,8 +61,25 @@ export function LoginForm({
     setLoading(true);
 
     try {
-      await signIn(studentId, password);
-      // Don't navigate immediately - let auth context handle it
+      // First, attempt to sign in with credentials (skip redirect for now)
+      await signIn(studentId, password, true);
+
+      // After successful login, check if user has 2FA enabled and required for login
+      const mfaStatus = await checkMFAStatus();
+
+      // Check user's preference for requiring 2FA at login from user metadata
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const requireMFAForLogin = authUser?.user_metadata?.mfa_require_for_login !== false; // Default to true
+
+      if (mfaStatus.isEnabled && !mfaStatus.isVerified && requireMFAForLogin) {
+        // User has 2FA enabled, not verified, and requires it for login - show 2FA prompt
+        setTempCredentials({ studentId, password });
+        setShowTwoFactor(true);
+        setLoading(false);
+      } else {
+        // No 2FA, already verified, or not required for login - proceed with redirect
+        window.location.href = '/dashboard';
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : messages['login_failed'] || 'Login failed';
       toast({
@@ -69,6 +90,30 @@ export function LoginForm({
       setLoading(false);
     }
   };
+
+  const handleTwoFactorSuccess = () => {
+    setShowTwoFactor(false);
+    setTempCredentials(null);
+    // Auth context will handle navigation after successful 2FA
+  };
+
+  const handleTwoFactorCancel = () => {
+    setShowTwoFactor(false);
+    setTempCredentials(null);
+    // Could optionally sign out the user here if needed
+  };
+
+  // Show 2FA prompt if needed
+  if (showTwoFactor) {
+    return (
+      <div className={`flex flex-col gap-6 ${className}`}>
+        <TwoFactorPrompt
+          onSuccess={handleTwoFactorSuccess}
+          onCancel={handleTwoFactorCancel}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`flex flex-col gap-6 ${className}`}>

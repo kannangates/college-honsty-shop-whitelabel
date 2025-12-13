@@ -49,7 +49,7 @@ serve(async (req) => {
     const email = user.email || user.user_metadata?.email || 'user@example.com'
 
     // Create OTP Auth URL
-    const issuer = 'Shasun College'
+    const issuer = 'Shasun College Honesty Shop'
     const accountName = `${issuer}:${email}`
     const otpauthUrl = `otpauth://totp/${encodeURIComponent(accountName)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`
 

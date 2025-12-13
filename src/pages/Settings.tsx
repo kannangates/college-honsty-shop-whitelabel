@@ -336,11 +336,11 @@ const Settings = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    Security Settings
+                    Two-Factor Authentication (2FA)
                   </CardTitle>
-                  {/* <CardDescription>
-                    Enhance your account security with two-factor authentication
-                  </CardDescription> */}
+                  <CardDescription>
+                    Secure your account with two-factor authentication to introduce an extra safeguard during sign-in.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <MFASetup />

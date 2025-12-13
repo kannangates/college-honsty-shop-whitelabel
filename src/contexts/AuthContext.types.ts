@@ -13,7 +13,7 @@ export interface AuthContextType {
   loading: boolean;
   mfaStatus: MFAStatus;
   isAdmin: boolean;
-  signIn: (studentId: string, password: string) => Promise<void>;
+  signIn: (studentId: string, password: string, skipRedirect?: boolean) => Promise<void>;
   signUp: (
     email: string,
     password: string,

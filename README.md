@@ -1,17 +1,24 @@
 # Shasun College Honesty Shop 🏫
 
-A modern honesty shop management system built specifically for **Shasun College**. This application promotes integrity and trust by allowing students to purchase items on an honor system, tracking their honesty points and badges.
+A modern honesty shop management system built specifically for **Shasun
+College**. This application promotes integrity and trust by allowing students to
+purchase items on an honor system, tracking their honesty points and badges.
 
 ## ✨ Features
 
 ### Core Features
-- **Self-service shopping**: Students browse and purchase products without a cashier
-- **Honesty-based payments**: Multiple payment options including Pay Now and Pay Later
+
+- **Self-service shopping**: Students browse and purchase products without a
+  cashier
+- **Honesty-based payments**: Multiple payment options including Pay Now and Pay
+  Later
 - **Points & Gamification**: Earn honesty points for timely payments
 - **Badge System**: Unlock achievement badges based on behavior
-- **Real-time Dashboard**: Live statistics on sales, top students, and departments
+- **Real-time Dashboard**: Live statistics on sales, top students, and
+  departments
 
 ### Admin Features
+
 - **Inventory Management**: Track shelf and warehouse stock levels
 - **Student Management**: Manage student accounts and points
 - **Order Management**: View and manage all orders
@@ -20,10 +27,13 @@ A modern honesty shop management system built specifically for **Shasun College*
 - **Audit Logs**: Complete audit trail for admin actions
 
 ### Security Features
+
 - **Role-based Access Control**: Admin, Developer, Student, and Teacher roles
 - **Row Level Security (RLS)**: Database-level security policies
-- **Multi-factor Authentication**: Optional MFA for enhanced security
+- **Two-Factor Authentication (2FA)**: Optional MFA with login requirement
+  toggle
 - **Session Management**: Secure session handling with automatic timeouts
+- **PII Protection**: MFA-protected access to sensitive student information
 
 ## 🛠️ Technology Stack
 
@@ -36,7 +46,7 @@ A modern honesty shop management system built specifically for **Shasun College*
 
 ## 📋 Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - Supabase account and project
 
@@ -65,7 +75,8 @@ VITE_SUPABASE_URL="https://your-project-id.supabase.co"
 
 1. **Create a Supabase project** at [supabase.com](https://supabase.com)
 
-2. **Run database migrations**: The migrations in `supabase/migrations/` will set up:
+2. **Run database migrations**: The migrations in `supabase/migrations/` will
+   set up:
    - User tables with role-based access
    - Product and inventory tables
    - Order management tables
@@ -77,12 +88,18 @@ VITE_SUPABASE_URL="https://your-project-id.supabase.co"
    - Disable "Confirm email" for faster testing (optional)
    - Set Site URL to your deployment URL
 
-4. **Set up Edge Functions secrets** in Supabase Dashboard → Settings → Functions:
+4. **Set up Edge Functions secrets** in Supabase Dashboard → Settings →
+   Functions:
    - `SUPABASE_SERVICE_ROLE_KEY` (Required)
    - `HCAPTCHA_SECRET_KEY` (Optional, for captcha)
    - `GMAIL_*` secrets (Optional, for email notifications)
 
-### 4. Create Initial Admin User
+5. **Configure 2FA (Optional)**:
+   - 2FA functions are automatically deployed with the edge functions
+   - No additional configuration required
+   - Users can enable 2FA individually in their Settings
+
+### 6. Create Initial Admin User
 
 1. Sign up through the application with your college email
 2. In Supabase Dashboard → SQL Editor, run:
@@ -99,7 +116,7 @@ SELECT id, 'admin' FROM public.users
 WHERE student_id = 'YOUR_STUDENT_ID';
 ```
 
-### 5. Run Development Server
+### 7. Run Development Server
 
 ```bash
 npm run dev
@@ -126,23 +143,60 @@ The application will be available at `http://localhost:5173`
 │   ├── types/           # TypeScript types
 │   └── utils/           # Utility functions
 ├── supabase/
-│   ├── functions/       # Edge functions
+│   ├── functions/       # Edge functions (includes MFA setup/verify/disable)
 │   └── migrations/      # Database migrations
 └── public/              # Static assets
 ```
 
-## 🔐 User Roles
+## 🔐 Security & Authentication
 
-| Role | Permissions |
-|------|-------------|
-| **Admin** | Full access to all features including user management, inventory, and system settings |
-| **Developer** | Same as Admin, plus access to developer tools and system diagnostics |
-| **Teacher** | Standard access with ability to view reports |
-| **Student** | Browse products, make purchases, view own orders and points |
+### Two-Factor Authentication (2FA)
+
+The application includes comprehensive 2FA support for enhanced security:
+
+#### **Setup Process**
+
+1. Navigate to **Settings → Security Settings**
+2. Click "Enable Two-Factor Authentication"
+3. Scan QR code with authenticator app (Google Authenticator, Authy, etc.)
+4. Enter verification code to activate
+
+#### **2FA Features**
+
+- **Service Name**: Shows as "Shasun College Honesty Shop" in authenticator apps
+- **Login Requirement Toggle**: Choose whether 2FA is required for every login
+- **Visual Status Indicators**: Color-coded interface (green=active,
+  red=inactive)
+- **Confirmation Dialog**: Prevents accidental disabling with security warnings
+- **Flexible Usage**: Can be enabled for security but made optional for login
+  convenience
+
+#### **Login Flow with 2FA**
+
+1. Enter Student ID and Password
+2. If 2FA is enabled and required → Enter 6-digit verification code
+3. If 2FA is enabled but not required → Direct login (optional security)
+4. Successful authentication → Redirect to dashboard
+
+#### **PII Protection**
+
+- Admin access to sensitive student information requires MFA verification
+- Separate verification prompt for accessing masked student data
+- All PII access logged in audit trail
+
+### User Roles
+
+| Role          | Permissions                                                                           |
+| ------------- | ------------------------------------------------------------------------------------- |
+| **Admin**     | Full access to all features including user management, inventory, and system settings |
+| **Developer** | Same as Admin, plus access to developer tools and system diagnostics                  |
+| **Teacher**   | Standard access with ability to view reports                                          |
+| **Student**   | Browse products, make purchases, view own orders and points                           |
 
 ## 🎮 Gamification System
 
 ### Points System
+
 - **Immediate Payment**: +10 points
 - **Payment within 30 hours**: +8 points
 - **Payment within 48 hours**: +5 points
@@ -150,7 +204,9 @@ The application will be available at `http://localhost:5173`
 - **Late Payment (after 72h)**: -5 points
 
 ### Badges
+
 Badges are awarded based on achievements such as:
+
 - First purchase
 - Consistent timely payments
 - Department rankings
@@ -181,7 +237,8 @@ The built files will be in the `dist/` folder.
 
 ### Edge Functions Deployment
 
-Edge functions in `supabase/functions/` are automatically deployed when you push to your Supabase project. Ensure you have:
+Edge functions in `supabase/functions/` are automatically deployed when you push
+to your Supabase project. Ensure you have:
 
 1. Linked your project: `supabase link --project-ref your-project-id`
 2. Set up secrets: `supabase secrets set SECRET_NAME=value`
@@ -189,19 +246,27 @@ Edge functions in `supabase/functions/` are automatically deployed when you push
 ## 🔧 Configuration
 
 ### Email Domain
-The application uses `@shasuncollege.edu.in` as the email domain for student authentication. This is configured in `src/services/authService.ts`.
+
+The application uses `@shasuncollege.edu.in` as the email domain for student
+authentication. This is configured in `src/services/authService.ts`.
 
 ### Points Configuration
-Point values are stored in the `points_config` table and can be modified through the admin panel.
+
+Point values are stored in the `points_config` table and can be modified through
+the admin panel.
 
 ### Session Timeout
-Default session timeout is configured in the application settings. Modify in `src/config.ts` if needed.
+
+Default session timeout is configured in the application settings. Modify in
+`src/config.ts` if needed.
 
 ## 📊 Database Schema
 
 Key tables:
+
 - `users` - User profiles and points
 - `user_roles` - Role-based access control
+- `user_mfa` - Two-factor authentication secrets and settings
 - `products` - Product catalog
 - `orders` / `order_items` - Order management
 - `badges` / `user_badges` - Gamification
@@ -212,9 +277,16 @@ Key tables:
 
 ### Common Issues
 
-1. **"Failed to load students"**: Ensure edge functions are deployed and secrets are configured
-2. **Authentication errors**: Check Supabase authentication settings and email domain
+1. **"Failed to load students"**: Ensure edge functions are deployed and secrets
+   are configured
+2. **Authentication errors**: Check Supabase authentication settings and email
+   domain
 3. **Permission denied**: Verify RLS policies and user roles
+4. **2FA QR code not loading**: Ensure MFA edge functions are deployed and
+   accessible
+5. **2FA verification fails**: Check that the authenticator app time is
+   synchronized
+6. **"MFA not set up" error**: User needs to complete 2FA setup process first
 
 ### Debug Mode
 
@@ -222,7 +294,8 @@ Check browser console and Supabase logs for detailed error messages.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
+for details.
 
 ## 👥 Support
 
@@ -232,4 +305,4 @@ For technical support or questions, contact the IT department at Shasun College.
 
 **Built with ❤️ for Shasun College**
 
-*No Cameras 📷 | No Cashiers 💳 | Just Character 🫡*
+_No Cameras 📷 | No Cashiers 💳 | Just Character 🫡_
