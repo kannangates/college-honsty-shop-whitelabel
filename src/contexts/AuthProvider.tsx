@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setIsCheckingMFA(false);
     }
-  }, [authState.user?.id, lastMFACheck, mfaStatus]);
+  }, [authState.user, lastMFACheck, mfaStatus]);
 
   // Check MFA status when user logs in (only once per user)
   useEffect(() => {

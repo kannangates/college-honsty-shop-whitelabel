@@ -13,9 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface HeaderProps { }
-
-export const Header: React.FC<HeaderProps> = () => {
+export const Header: React.FC = () => {
   const { profile, signOut, isAdmin, loading, refreshProfile } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
