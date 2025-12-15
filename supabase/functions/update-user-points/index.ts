@@ -38,14 +38,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if user has admin role
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
+    // Check if user has admin role using secure user_roles table
+    const { data: userRoles, error: roleError } = await supabase
+      .from('user_roles')
       .select('role')
-      .eq('id', user.id)
-      .single();
+      .eq('user_id', user.id);
 
-    if (profileError || !userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'developer')) {
+    if (roleError || !userRoles || userRoles.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Insufficient permissions' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const hasAdminRole = userRoles.some(roleRecord =>
+      roleRecord.role === 'admin' || roleRecord.role === 'developer'
+    );
+
+    if (!hasAdminRole) {
       return new Response(
         JSON.stringify({ error: 'Insufficient permissions' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -57,10 +67,11 @@ Deno.serve(async (req) => {
     // Validate input with Zod schema
     const validationResult = updatePointsSchema.safeParse(requestBody);
     if (!validationResult.success) {
+      const validationError = validationResult as { error: { issues: Array<{ path: Array<string | number>; message: string }> } };
       return new Response(
         JSON.stringify({
           error: 'Validation failed',
-          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+          details: validationError.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -97,7 +108,7 @@ Deno.serve(async (req) => {
     try {
       const { error: updateError } = await supabase
         .from('users')
-        .update({ 
+        .update({
           points: newPoints,
           updated_at: new Date().toISOString()
         })
@@ -122,7 +133,7 @@ Deno.serve(async (req) => {
     console.log('🔄 Refreshing rankings...');
     try {
       const { error: refreshError } = await supabase.rpc('refresh_rankings');
-      
+
       if (refreshError) {
         console.error('⚠️ Warning: Rankings refresh failed:', refreshError);
         // Don't fail the request if rankings refresh fails
@@ -168,8 +179,8 @@ Deno.serve(async (req) => {
           reason
         }
       }),
-      { 
-        status: 200, 
+      {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
@@ -177,11 +188,11 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('❌ Error in update-user-points function:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      JSON.stringify({
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       }),
-      { 
-        status: 500, 
+      {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

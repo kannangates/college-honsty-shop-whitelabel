@@ -59,14 +59,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if requesting user is an admin
-    const { data: adminProfile, error: profileError } = await supabaseAdmin
-      .from('users')
+    // Check if requesting user is an admin using secure user_roles table
+    const { data: userRoles, error: roleError } = await supabaseAdmin
+      .from('user_roles')
       .select('role')
-      .eq('id', requestingUser.id)
-      .single();
+      .eq('user_id', requestingUser.id);
 
-    if (profileError || !adminProfile || adminProfile.role !== 'admin') {
+    if (roleError || !userRoles || userRoles.length === 0) {
+      console.error('Error fetching user roles:', roleError);
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const hasAdminRole = userRoles.some(roleRecord =>
+      roleRecord.role === 'admin' || roleRecord.role === 'developer'
+    );
+
+    if (!hasAdminRole) {
       console.error('User is not an admin:', requestingUser.id);
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin access required' }),

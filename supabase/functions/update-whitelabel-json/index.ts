@@ -31,14 +31,24 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Check if user is admin or developer
-      const { data: userData } = await supabase
-        .from('users')
+      // Check if user is admin or developer using secure user_roles table
+      const { data: userRoles, error: roleError } = await supabase
+        .from('user_roles')
         .select('role')
-        .eq('id', user.id)
-        .single();
+        .eq('user_id', user.id);
 
-      if (userData?.role !== 'admin' && userData?.role !== 'developer') {
+      if (roleError || !userRoles || userRoles.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'Admin or Developer access required' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const hasAdminRole = userRoles.some(roleRecord =>
+        roleRecord.role === 'admin' || roleRecord.role === 'developer'
+      );
+
+      if (!hasAdminRole) {
         return new Response(
           JSON.stringify({ error: 'Admin or Developer access required' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

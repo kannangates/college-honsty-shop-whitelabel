@@ -12,26 +12,26 @@ const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 function base32Decode(input: string): Uint8Array {
   // Remove padding and convert to uppercase
   const cleanedInput = input.replace(/=+$/, '').toUpperCase();
-  
+
   const output: number[] = [];
   let bits = 0;
   let value = 0;
-  
+
   for (const char of cleanedInput) {
     const index = BASE32_ALPHABET.indexOf(char);
     if (index === -1) {
       throw new Error(`Invalid base32 character: ${char}`);
     }
-    
+
     value = (value << 5) | index;
     bits += 5;
-    
+
     if (bits >= 8) {
       output.push((value >>> (bits - 8)) & 0xff);
       bits -= 8;
     }
   }
-  
+
   return new Uint8Array(output);
 }
 
@@ -58,7 +58,7 @@ async function hmacSha1(key: Uint8Array, message: Uint8Array): Promise<Uint8Arra
     false,
     ['sign']
   );
-  
+
   const signature = await crypto.subtle.sign('HMAC', cryptoKey, message);
   return new Uint8Array(signature);
 }
@@ -66,22 +66,22 @@ async function hmacSha1(key: Uint8Array, message: Uint8Array): Promise<Uint8Arra
 /**
  * Generate a TOTP token for the given secret and time
  */
-async function generateTOTP(secret: string, timeStep: number = 30, digits: number = 6, time?: number): Promise<string> {
+export async function generateTOTP(secret: string, timeStep: number = 30, digits: number = 6, time?: number): Promise<string> {
   const key = base32Decode(secret);
   const currentTime = time ?? Math.floor(Date.now() / 1000);
   const counter = Math.floor(currentTime / timeStep);
   const counterBytes = intToBytes(counter);
-  
+
   const hmac = await hmacSha1(key, counterBytes);
-  
+
   // Dynamic truncation
   const offset = hmac[hmac.length - 1] & 0x0f;
-  const binary = 
+  const binary =
     ((hmac[offset] & 0x7f) << 24) |
     ((hmac[offset + 1] & 0xff) << 16) |
     ((hmac[offset + 2] & 0xff) << 8) |
     (hmac[offset + 3] & 0xff);
-  
+
   const otp = binary % Math.pow(10, digits);
   return otp.toString().padStart(digits, '0');
 }
@@ -101,17 +101,17 @@ export async function verifyTOTP(
   timeStep: number = 30
 ): Promise<boolean> {
   const currentTime = Math.floor(Date.now() / 1000);
-  
+
   // Check current time step and window around it
   for (let i = -window; i <= window; i++) {
     const checkTime = currentTime + (i * timeStep);
     const expectedToken = await generateTOTP(secret, timeStep, 6, checkTime);
-    
+
     if (token === expectedToken) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -121,11 +121,11 @@ export async function verifyTOTP(
 export function generateSecret(length: number = 20): string {
   const randomBytes = new Uint8Array(length);
   crypto.getRandomValues(randomBytes);
-  
+
   let secret = '';
   for (const byte of randomBytes) {
     secret += BASE32_ALPHABET[byte % 32];
   }
-  
+
   return secret;
 }

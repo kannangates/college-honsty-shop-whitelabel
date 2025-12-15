@@ -3,7 +3,7 @@ import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-
 import { corsHeaders } from '../_shared/cors.ts';
 import { logAdminAction } from '../_shared/auditLog.ts';
 import { userManagementSchema } from '../_shared/schemas.ts';
-import { verifyTOTP, generateTOTP } from '../_shared/totp.ts';
+import { verifyTOTP } from '../_shared/totp.ts';
 
 const PII_FIELDS = ['student_id', 'email', 'mobile_number'];
 

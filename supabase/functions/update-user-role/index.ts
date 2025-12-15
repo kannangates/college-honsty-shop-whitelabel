@@ -30,14 +30,24 @@ serve(async (req) => {
       );
     }
 
-    // Check if requesting user is admin
-    const { data: adminProfile, error: profileError } = await supabase
-      .from("users")
+    // Check if requesting user is admin using secure user_roles table
+    const { data: userRoles, error: roleError } = await supabase
+      .from("user_roles")
       .select("role")
-      .eq("id", user.id)
-      .single();
+      .eq("user_id", user.id);
 
-    if (profileError || !adminProfile || adminProfile.role !== "admin") {
+    if (roleError || !userRoles || userRoles.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Admin access required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const hasAdminRole = userRoles.some(roleRecord =>
+      roleRecord.role === 'admin' || roleRecord.role === 'developer'
+    );
+
+    if (!hasAdminRole) {
       return new Response(
         JSON.stringify({ error: "Admin access required" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -48,10 +58,11 @@ serve(async (req) => {
     const requestBody = await req.json();
     const validationResult = updateRoleSchema.safeParse(requestBody);
     if (!validationResult.success) {
+      const validationError = validationResult as { error: { issues: Array<{ path: Array<string | number>; message: string }> } };
       return new Response(
         JSON.stringify({
           error: 'Validation failed',
-          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+          details: validationError.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
