@@ -29,7 +29,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/my-orders', icon: ShoppingCart, label: 'My Orders' },
     { to: '/notifications', icon: Bell, label: 'Notifications' },
-    { to: '/my-badges', icon: Trophy, label: 'My Badges' },
+    // { to: '/my-badges', icon: Trophy, label: 'My Badges' },
     { to: '/settings', icon: Settings, label: 'General Settings' },
   ];
 
