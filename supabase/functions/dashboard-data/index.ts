@@ -1,8 +1,9 @@
 
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+
 
 interface OrderRow { total_amount: number }
 interface ProductRow { name: string; shelf_stock: number; warehouse_stock: number }
@@ -40,11 +41,14 @@ Deno.serve(async (req: Request) => {
       const cacheSchema = z.enum(['true', 'false']).optional();
       const cacheValidation = cacheSchema.safeParse(cacheParam);
 
-      if (!cacheValidation.success) {
+      if (!cacheValidation.success && cacheParam !== null) {
+        const errorDetails = 'error' in cacheValidation
+          ? cacheValidation.error.issues.map(e => ({ field: 'cache', message: e.message }))
+          : [];
         return new Response(
           JSON.stringify({
             error: 'Invalid cache parameter',
-            details: cacheValidation.error.issues.map(e => ({ field: 'cache', message: e.message }))
+            details: errorDetails
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -72,41 +76,51 @@ Deno.serve(async (req: Request) => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
+    // Get current user ID for user-specific queries
+    let currentUserOrdersCount = 0;
+    if (currentUserId) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', currentUserId)
+        .single();
+
+      if (userData) {
+        const { count } = await supabase
+          .from('orders')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', currentUserId)
+          .eq('payment_status', 'unpaid');
+        currentUserOrdersCount = count || 0;
+      }
+    }
+
     // Parallel execution of independent queries for better performance
     const [
-      ordersToday,
-      revenueData,
-      pendingOrders,
-      lowStockItems,
+      totalOrders,
+      allUnpaidOrdersValue,
+      todayUnpaidOrders,
       topStudentsData,
       topDepartmentsData,
       stockData
     ] = await Promise.all([
-      // Orders today count
+      // Total orders count (all time) - all users
       supabase
         .from('orders')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', todayStart.toISOString()),
+        .select('id', { count: 'exact', head: true }),
 
-      // Revenue today with optimized query
+      // Total unpaid orders value (all time) - all users
       supabase
         .from('orders')
         .select('total_amount')
-        .eq('payment_status', 'paid')
-        .gte('created_at', todayStart.toISOString()),
+        .eq('payment_status', 'unpaid'),
 
-      // Pending orders count
+      // Today's unpaid orders count - all users
       supabase
         .from('orders')
         .select('id', { count: 'exact', head: true })
-        .eq('payment_status', 'unpaid'),
-
-      // Low stock items count
-      supabase
-        .from('products')
-        .select('id', { count: 'exact', head: true })
-        .lt('shelf_stock', 10)
-        .eq('is_archived', false),
+        .eq('payment_status', 'unpaid')
+        .gte('created_at', todayStart.toISOString()),
 
       // Top students with specific columns
       supabase
@@ -133,8 +147,8 @@ Deno.serve(async (req: Request) => {
         .limit(5)
     ]);
 
-    // Calculate revenue efficiently
-    const revenue = (revenueData.data as OrderRow[] | null)?.reduce((sum: number, order: OrderRow) => sum + Number(order.total_amount), 0) || 0;
+    // Calculate total unpaid orders value efficiently
+    const totalUnpaidValue = (allUnpaidOrdersValue.data as OrderRow[] | null)?.reduce((sum: number, order: OrderRow) => sum + Number(order.total_amount), 0) || 0;
 
     // Format stock data efficiently
     const formattedStockData = (stockData.data as ProductRow[] | null)?.map((item: ProductRow) => ({
@@ -163,10 +177,10 @@ Deno.serve(async (req: Request) => {
 
     const dashboardData = {
       stats: {
-        todayOrders: ordersToday.count || 0,
-        revenue: revenue,
-        pendingOrders: pendingOrders.count || 0,
-        lowStockItems: lowStockItems.count || 0,
+        totalOrders: totalOrders.count || 0,
+        userPendingOrders: currentUserOrdersCount,
+        todayUnpaidOrders: todayUnpaidOrders.count || 0,
+        totalUnpaidOrdersValue: totalUnpaidValue,
         topDepartments: topDepartmentsData.data || []
       },
       topStudents: topStudentsData.data?.map((student: TopStudentRow) => ({

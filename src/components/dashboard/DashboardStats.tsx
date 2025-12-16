@@ -1,6 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShoppingCart, DollarSign, Clock, Package } from 'lucide-react';
+import { ShoppingCart, DollarSign, Clock, User } from 'lucide-react';
 
 interface TodaysStats {
   todays_orders?: number;
@@ -9,8 +8,10 @@ interface TodaysStats {
 
 interface DashboardStatsData {
   stats?: {
-    pendingOrders?: number;
-    lowStockItems?: number;
+    totalOrders?: number;
+    userPendingOrders?: number;
+    todayUnpaidOrders?: number;
+    totalUnpaidOrdersValue?: number;
   };
 }
 
@@ -19,49 +20,72 @@ interface DashboardStatsProps {
   dashboardData: DashboardStatsData;
 }
 
-const DashboardStats = React.memo(({ todaysStats, dashboardData }: DashboardStatsProps) => {
+const DashboardStats = React.memo(({ dashboardData }: DashboardStatsProps) => {
   const stats = React.useMemo(() => [
     {
       title: "Today's Orders",
-      value: todaysStats?.todays_orders || 0,
+      value: dashboardData?.stats?.totalOrders || 0,
       icon: ShoppingCart,
-      description: "Orders placed today"
+      description: "Total orders of all users",
+      gradient: "from-blue-500 to-blue-600"
     },
     {
-      title: "Today's Revenue",
-      value: `₹${todaysStats?.total_revenue || 0}`,
-      icon: DollarSign,
-      description: "Revenue generated today"
+      title: "Your Pending Orders",
+      value: dashboardData?.stats?.userPendingOrders || 0,
+      icon: User,
+      description: "Your unpaid orders",
+      gradient: "from-emerald-500 to-emerald-600"
     },
     {
-      title: "Pending Orders",
-      value: dashboardData?.stats?.pendingOrders || 0,
+      title: "Today's Pending Orders",
+      value: dashboardData?.stats?.todayUnpaidOrders || 0,
       icon: Clock,
-      description: "Orders awaiting payment"
+      description: "Today's unpaid orders",
+      gradient: "from-purple-500 to-purple-600"
     },
     {
-      title: "Low Stock Items",
-      value: dashboardData?.stats?.lowStockItems || 0,
-      icon: Package,
-      description: "Items running low"
+      title: "Payment Pending Revenue",
+      value: `₹${dashboardData?.stats?.totalUnpaidOrdersValue || 0}`,
+      icon: DollarSign,
+      description: "Total unpaid revenue",
+      gradient: "from-amber-500 to-orange-500"
     }
-  ], [todaysStats, dashboardData]);
+  ], [dashboardData]);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium leading-tight">{stat.title}</CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-            </CardContent>
-          </Card>
+          <div
+            key={index}
+            className={`relative overflow-hidden rounded-lg bg-gradient-to-br ${stat.gradient} shadow-md hover:shadow-lg transition-all duration-200`}
+          >
+            {/* Content */}
+            <div className="p-4">
+              {/* Header with Icon and Value */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 rounded-md bg-white/20 backdrop-blur-sm">
+                  <Icon className="h-4 w-4 text-white" />
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-bold text-white leading-none">
+                    {stat.value}
+                  </div>
+                </div>
+              </div>
+
+              {/* Title */}
+              <div>
+                <h3 className="text-xs font-medium text-white/90 leading-tight">
+                  {stat.title}
+                </h3>
+                <p className="text-xs text-white/70 mt-1">
+                  {stat.description}
+                </p>
+              </div>
+            </div>
+          </div>
         );
       })}
     </div>

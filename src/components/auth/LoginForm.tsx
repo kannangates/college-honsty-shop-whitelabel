@@ -81,10 +81,35 @@ export function LoginForm({
         window.location.href = '/dashboard';
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : messages['login_failed'] || 'Login failed';
+      let title = messages['login_failed'] || 'Login Failed';
+      let description = 'Please try again';
+
+      if (err instanceof Error) {
+        const errorMessage = err.message.toLowerCase();
+
+        if (errorMessage.includes('failed to fetch') || errorMessage.includes('network') || errorMessage.includes('err_name_not_resolved')) {
+          title = '🌐 Network Problem';
+          description = 'Unable to connect to the server. Please check your internet connection and try again.';
+        } else if (errorMessage.includes('invalid login credentials') || errorMessage.includes('invalid_credentials')) {
+          title = '🔐 Invalid Credentials';
+          description = 'Student ID or password is incorrect. Please check your credentials and try again.';
+        } else if (errorMessage.includes('email not confirmed')) {
+          title = '📧 Email Not Verified';
+          description = 'Please verify your email address before signing in.';
+        } else if (errorMessage.includes('too many requests')) {
+          title = '⏰ Too Many Attempts';
+          description = 'Too many login attempts. Please wait a few minutes before trying again.';
+        } else if (errorMessage.includes('user not found')) {
+          title = '👤 User Not Found';
+          description = 'No account found with this Student ID. Please check your ID or contact support.';
+        } else {
+          description = err.message;
+        }
+      }
+
       toast({
-        title: messages['login_failed'] || 'Login Failed',
-        description: errorMessage,
+        title,
+        description,
         variant: 'destructive',
       });
       setLoading(false);

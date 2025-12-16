@@ -18,10 +18,10 @@ export interface Product {
 
 interface DashboardData {
   stats: {
-    todayOrders: number;
-    revenue: number;
-    pendingOrders: number;
-    lowStockItems: number;
+    totalOrders: number;
+    userPendingOrders: number;
+    todayUnpaidOrders: number;
+    totalUnpaidOrdersValue: number;
     topDepartments: Array<{
       department: string;
       points: number;
@@ -83,25 +83,25 @@ export const useDashboardData = () => {
     queryFn: async (): Promise<PositionContextStudent[] | null> => {
       if (!profile?.student_id) return null;
       console.log('📍 Fetching user position context');
-      
+
       const { data: allStudents, error } = await supabase
         .from('users')
         .select('student_id, name, department, points')
         .eq('role', 'student')
         .eq('status', 'active')
         .order('points', { ascending: false });
-        
+
       if (error) {
         console.error('Position context error:', error);
         throw error;
       }
-      
+
       const userIndex = allStudents?.findIndex(s => s.student_id === profile.student_id);
       if (userIndex === -1 || userIndex === undefined) return null;
-      
+
       const start = Math.max(0, userIndex - 5);
       const end = Math.min(allStudents.length, userIndex + 5);
-      
+
       return allStudents.slice(start, end).map((student, idx) => ({
         ...student,
         rank: start + idx + 1,
@@ -116,15 +116,15 @@ export const useDashboardData = () => {
   // Memoized today's products parsing with error handling
   const todaysProducts: Product[] = React.useMemo(() => {
     if (!todaysStats?.todays_sold_products) return [];
-    
+
     try {
       const raw = todaysStats.todays_sold_products;
       let parsed: unknown = raw;
-      
+
       if (typeof raw === "string") {
         parsed = JSON.parse(raw);
       }
-      
+
       if (Array.isArray(parsed)) {
         return parsed.filter((item): item is Product => (
           typeof item === "object" && item !== null &&
@@ -136,7 +136,7 @@ export const useDashboardData = () => {
           typeof item.unpaid_amount === "number"
         ));
       }
-      
+
       if (
         typeof parsed === "object" && parsed !== null &&
         typeof (parsed as Record<string, unknown>).product_name === "string"
@@ -152,7 +152,7 @@ export const useDashboardData = () => {
           return [prod];
         }
       }
-      
+
       return [];
     } catch (error) {
       console.error('Error parsing today\'s products:', error);
