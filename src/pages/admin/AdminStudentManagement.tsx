@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { UserPlus, Trophy, RefreshCw, Download, Edit, Upload, KeyRound, Shield } from 'lucide-react';
+import { UserPlus, Trophy, RefreshCw, Download, Edit, Upload, KeyRound, Shield, Users } from 'lucide-react';
 import { AddStudentModal } from '@/components/admin/AddStudentModal';
 import { BulkUploadModal } from '@/components/admin/BulkUploadModal';
 import { StudentCard } from '@/components/admin/students/StudentCard';
@@ -441,29 +441,31 @@ const AdminStudentManagement = () => {
   return (
     <div className="space-y-4 text-sm">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Students Management</h1>
-            <p className="text-purple-100">Manage student accounts and view their progress</p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setIsAddDialogOpen(true)}
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30 text-sm"
-            >
-              <UserPlus className="h-4 w-4 mr-1" />
-              Add Student
-            </Button>
-            <Button
-              onClick={() => setIsBulkUploadOpen(true)}
-              variant="outline"
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30 text-sm"
-            >
-              <Upload className="h-4 w-4 mr-1" />
-              Bulk Upload
-            </Button>
-          </div>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Users className="h-8 w-8" />
+            Students Management
+          </h1>
+          <p className="text-purple-100">Manage student accounts and view their progress</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            variant="outline"
+            className="flex items-center gap-2 rounded-xl border-white/50 text-white hover:border-white transition-all duration-200 backdrop-blur-md bg-white/20 hover:bg-white/30"
+          >
+            <UserPlus className="h-4 w-4" />
+            Add Student
+          </Button>
+          <Button
+            onClick={() => setIsBulkUploadOpen(true)}
+            variant="outline"
+            className="flex items-center gap-2 rounded-xl border-white/50 text-white hover:border-white transition-all duration-200 backdrop-blur-md bg-white/20 hover:bg-white/30"
+          >
+            <Upload className="h-4 w-4" />
+            Bulk Upload
+          </Button>
         </div>
       </div>
 

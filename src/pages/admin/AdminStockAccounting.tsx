@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG } from '@/config';
-import { Loader2, Save, Users, Clock, AlertTriangle, Grid, List } from 'lucide-react';
+import { Loader2, Save, Users, Clock, AlertTriangle, Grid, List, Package } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 import { useAuth } from '@/contexts/useAuth';
@@ -639,48 +639,49 @@ const AdminStockAccounting = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Daily Stock Accounting</h1>
-            <p className="text-purple-100">Manage the stock operations for today</p>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Package className="h-8 w-8" />
+            Daily Stock Accounting
+          </h1>
+          <p className="text-purple-100">Manage the stock operations for today</p>
+        </div>
+        <div className="flex items-center gap-4">
+          {/* View Mode Toggle - Hidden on mobile */}
+          <div className="hidden sm:flex items-center border border-white/20 rounded-lg p-1">
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className="flex items-center gap-1 text-white hover:text-gray-900"
+            >
+              <List className="h-4 w-4" />
+              Table
+            </Button>
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+              className="flex items-center gap-1 text-white hover:text-gray-900"
+            >
+              <Grid className="h-4 w-4" />
+              Cards
+            </Button>
           </div>
-          <div className="flex items-center gap-4">
-            {/* View Mode Toggle - Hidden on mobile */}
-            <div className="hidden sm:flex items-center border border-white/20 rounded-lg p-1">
-              <Button
-                variant={viewMode === 'table' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('table')}
-                className="flex items-center gap-1 text-white hover:text-gray-900"
-              >
-                <List className="h-4 w-4" />
-                Table
-              </Button>
-              <Button
-                variant={viewMode === 'cards' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('cards')}
-                className="flex items-center gap-1 text-white hover:text-gray-900"
-              >
-                <Grid className="h-4 w-4" />
-                Cards
-              </Button>
-            </div>
 
-            {/* Active Users Indicator */}
-            {activeUsers.length > 1 && (
-              <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
-                <Users className="h-4 w-4" />
-                <span className="text-sm">{activeUsers.length - 1} other user{activeUsers.length > 2 ? 's' : ''} active</span>
-              </div>
-            )}
-
-            {/* Real-time Status */}
-            <div className="flex items-center gap-2 bg-green-500/20 px-3 py-2 rounded-lg">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm">Live</span>
+          {/* Active Users Indicator */}
+          {activeUsers.length > 1 && (
+            <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+              <Users className="h-4 w-4" />
+              <span className="text-sm">{activeUsers.length - 1} other user{activeUsers.length > 2 ? 's' : ''} active</span>
             </div>
+          )}
+
+          {/* Real-time Status */}
+          <div className="flex items-center gap-2 bg-green-500/20 px-3 py-2 rounded-lg">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-sm">Live</span>
           </div>
         </div>
       </div>

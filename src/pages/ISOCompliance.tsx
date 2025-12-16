@@ -6,13 +6,13 @@ import { Shield, Lock, FileCheck, Users, Database, Eye } from 'lucide-react';
 const ISOCompliance = () => {
   return (
     <div className="max-w-screen-2xl mx-auto space-y-6">
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center gap-3">
-          <Shield className="h-8 w-8" />
-          <div>
-            <h1 className="text-3xl font-bold">ISO Compliance Documentation</h1>
-            <p className="text-purple-100 mt-1">Implementation of international security standards</p>
-          </div>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Shield className="h-8 w-8" />
+            ISO Compliance Documentation
+          </h1>
+          <p className="text-purple-100">Implementation of international security standards</p>
         </div>
       </div>
 

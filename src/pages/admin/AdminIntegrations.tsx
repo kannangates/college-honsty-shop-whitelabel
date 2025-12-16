@@ -99,13 +99,13 @@ export default function AdminIntegrations() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center gap-3">
-          <Settings className="h-8 w-8" />
-          <div>
-            <h1 className="text-3xl font-bold">Integration Settings</h1>
-            <p className="text-purple-100">Configure payment gateways, email services, and n8n automation</p>
-          </div>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Settings className="h-8 w-8" />
+            Integration Settings
+          </h1>
+          <p className="text-purple-100">Configure payment gateways, email services, and n8n automation</p>
         </div>
       </div>
 

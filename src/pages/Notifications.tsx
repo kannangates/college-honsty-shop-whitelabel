@@ -29,26 +29,24 @@ const Notifications = () => {
   return (
     <div className="max-w-screen-2xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-              <Bell className="h-8 w-8" />
-              Notifications
-              {unreadCount > 0 && (
-                <Badge className="bg-white/20 text-white border-white/30 text-lg px-3 py-1">
-                  {unreadCount} unread
-                </Badge>
-              )}
-            </h1>
-            <p className="text-purple-100">Stay updated with your latest activities and announcements</p>
-          </div>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Bell className="h-8 w-8" />
+            Notifications
+            {unreadCount > 0 && (
+              <Badge className="bg-white/20 text-white border-white/30 text-lg px-3 py-1">
+                {unreadCount} unread
+              </Badge>
+            )}
+          </h1>
+          <p className="text-purple-100">Stay updated with your latest activities and announcements</p>
         </div>
       </div>
 
       {/* Action Buttons */}
       <div className="flex gap-4">
-        <Button 
+        <Button
           onClick={markAllAsRead}
           className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white"
           disabled={unreadCount === 0}
@@ -56,7 +54,7 @@ const Notifications = () => {
           <CheckCheck className="h-4 w-4 mr-2" />
           Mark All as Read
         </Button>
-        <Button 
+        <Button
           variant="outline"
           onClick={clearAllNotifications}
           disabled={notifications.length === 0}
@@ -82,11 +80,11 @@ const Notifications = () => {
           sortedNotifications.map((notification) => (
             // 👇 THIS WRAPPER DIV IS THE IMPORTANT CHANGE FOR CENTERING 👇
             <div key={notification.id} className="max-w-xl mx-auto">
-                <NotificationCard
-                  notification={notification}
-                  onMarkAsRead={markAsRead}
-                  onReactionUpdate={updateReactionCount}
-                />
+              <NotificationCard
+                notification={notification}
+                onMarkAsRead={markAsRead}
+                onReactionUpdate={updateReactionCount}
+              />
             </div>
           ))
         )}

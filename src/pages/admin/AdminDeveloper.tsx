@@ -8,23 +8,23 @@ import { Database, Code, Shield, RefreshCw } from 'lucide-react';
 
 const AdminDeveloper = () => {
   interface TableInfo {
-  table_name: string;
-  row_count: number;
-  table_size: string;
-}
+    table_name: string;
+    row_count: number;
+    table_size: string;
+  }
   const [tableInfo, setTableInfo] = useState<TableInfo[]>([]);
   interface FunctionInfo {
-  function_name: string;
-  function_language: string;
-  function_definition: string;
-}
+    function_name: string;
+    function_language: string;
+    function_definition: string;
+  }
   const [functionInfo, setFunctionInfo] = useState<FunctionInfo[]>([]);
   interface PolicyInfo {
-  policy_name?: string;
-  table_name?: string;
-  policy_definition?: string;
-  policy_command?: string;
-}
+    policy_name?: string;
+    table_name?: string;
+    policy_definition?: string;
+    policy_command?: string;
+  }
   const [policyInfo, setPolicyInfo] = useState<PolicyInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,7 +36,7 @@ const AdminDeveloper = () => {
       // Fetch table information
       const { data: tableData, error: tableError } = await supabase
         .rpc('get_table_info');
-      
+
       if (tableError) throw tableError;
       setTableInfo((tableData || []).map(item => ({
         table_name: item.table_name,
@@ -47,7 +47,7 @@ const AdminDeveloper = () => {
       // Fetch function information  
       const { data: functionData, error: functionError } = await supabase
         .rpc('get_function_info');
-        
+
       if (functionError) throw functionError;
       setFunctionInfo((functionData || []).map(item => ({
         function_name: item.function_name,
@@ -58,7 +58,7 @@ const AdminDeveloper = () => {
       // Fetch policy information
       const { data: policyData, error: policyError } = await supabase
         .rpc('get_policy_info');
-        
+
       if (policyError) throw policyError;
       setPolicyInfo(policyData || []);
 
@@ -102,14 +102,14 @@ const AdminDeveloper = () => {
     setRefreshing(true);
     try {
       const { error } = await supabase.functions.invoke('update-table-stats');
-      
+
       if (error) throw error;
-      
+
       toast({
         title: 'Success',
         description: 'Table statistics updated successfully',
       });
-      
+
       // Reload the data after a short delay to allow the update to complete
       setTimeout(() => {
         loadDatabaseInfo();
@@ -128,25 +128,26 @@ const AdminDeveloper = () => {
 
   return (
     <div className="max-w-screen-2xl mx-auto space-y-6">
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold">Developer Dashboard</h1>
-            <p className="text-purple-100 mt-1">Real-time database monitoring and information</p>
-            <p className="text-purple-200 text-sm mt-2">
-              Table stats (Rows & Size) are updated daily at midnight automatically
-            </p>
-          </div>
-          <Button
-            onClick={handleManualRefresh}
-            disabled={refreshing}
-            variant="secondary"
-            className="gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Updating...' : 'Update Stats'}
-          </Button>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Code className="h-8 w-8" />
+            Developer Dashboard
+          </h1>
+          <p className="text-purple-100">Real-time database monitoring and information</p>
+          <p className="text-purple-200 text-sm mt-1">
+            Table stats (Rows & Size) are updated daily at midnight automatically
+          </p>
         </div>
+        <Button
+          onClick={handleManualRefresh}
+          disabled={refreshing}
+          variant="outline"
+          className="flex items-center gap-2 rounded-xl border-white/50 text-white hover:border-white transition-all duration-200 backdrop-blur-md bg-white/20 hover:bg-white/30"
+        >
+          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Updating...' : 'Update Stats'}
+        </Button>
       </div>
 
       {loading ? (

@@ -211,21 +211,44 @@ const WhitelabelConfig = () => {
 
   return (
     <div className="container mx-auto py-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Lock className="h-8 w-8" />
+            Whitelabel Configuration
+          </h1>
+          <p className="text-purple-100">
+            Configure application branding and payment settings
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={loadConfig}
+            variant="outline"
+            size="sm"
+            disabled={loading}
+            className="flex items-center gap-2 rounded-xl border-white/50 text-white hover:border-white transition-all duration-200 backdrop-blur-md bg-white/20 hover:bg-white/30"
+          >
+            <RefreshCw className="h-4 w-4" />
+            {loading ? 'Loading...' : 'Reload'}
+          </Button>
+          <Button
+            onClick={saveConfig}
+            disabled={saving || loading}
+            size="sm"
+            variant="outline"
+            className="flex items-center gap-2 rounded-xl border-white/50 text-white hover:border-white transition-all duration-200 backdrop-blur-md bg-white/20 hover:bg-white/30"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Whitelabel Configuration (JSON Editor)</CardTitle>
-            <div className="flex gap-2">
-              <Button onClick={loadConfig} variant="outline" size="sm" disabled={loading}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {loading ? 'Loading...' : 'Reload'}
-              </Button>
-              <Button onClick={saveConfig} disabled={saving || loading} size="sm">
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          </div>
+          <CardTitle>JSON Editor</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">

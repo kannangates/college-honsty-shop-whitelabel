@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Award } from 'lucide-react';
 
 import { CONFIG } from '@/config';
 
@@ -254,9 +255,22 @@ export default function GamificationRulesAdmin() {
 
   return (
     <div className="max-w-5xl mx-auto py-8">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Award className="h-8 w-8" />
+            Gamification Rules
+          </h1>
+          <p className="text-purple-100">
+            Configure point allocation rules and gamification logic
+          </p>
+        </div>
+      </div>
+
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Gamification Rules</CardTitle>
+          <CardTitle>Rules Management</CardTitle>
         </CardHeader>
         <CardContent>
           <Button onClick={() => { setOpen(true); setEditRule(null); reset(); }} className="mb-4">Add Rule</Button>

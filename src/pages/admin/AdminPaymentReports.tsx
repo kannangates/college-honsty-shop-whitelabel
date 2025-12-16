@@ -262,12 +262,14 @@ const AdminPaymentReports = () => {
   return (
     <div className="max-w-screen-2xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-          <CreditCard className="h-8 w-8" />
-          Payment Reports
-        </h1>
-        <p className="text-purple-100 text-base ml-14">View payment analytics, transaction history and financial reports</p>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <CreditCard className="h-8 w-8" />
+            Payment Reports
+          </h1>
+          <p className="text-purple-100">View payment analytics, transaction history and financial reports</p>
+        </div>
       </div>
 
       {/* Custom Filter Section */}

@@ -1,25 +1,37 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useProductContext } from '@/contexts/useProductContext';
 import { useCart } from '@/hooks/useCart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Package, Grid, List } from 'lucide-react';
 import { CartSummary } from '@/components/product/CartSummary';
 import { ProductFilters } from '@/components/product/ProductFilters';
+import { ProductCardGrid } from '@/components/product/ProductCardGrid';
 import { WHITELABEL_CONFIG } from '@/config';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Product } from '@/types/database';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { useResponsiveView } from '@/hooks/useResponsiveView';
 
 const ProductTable = () => {
   const { products, loading } = useProductContext();
   const { items, updateQuantity, totalPrice, addItem, removeItem, getItemQuantity, checkout } = useCart();
   const productMessages = WHITELABEL_CONFIG.messages.products;
+  const isMobile = useResponsiveView();
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [stockFilter, setStockFilter] = useState('all');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+
+  // Auto-switch to cards view on mobile
+  useEffect(() => {
+    if (isMobile && viewMode === 'table') {
+      setViewMode('cards');
+    }
+  }, [isMobile, viewMode]);
 
   // Filter and process products
   const filteredProducts = useMemo(() => {
@@ -110,11 +122,32 @@ const ProductTable = () => {
                   <Package className="h-5 w-5" />
                   Available Products ({filteredProducts.length})
                 </CardTitle>
+                {/* View Mode Toggle - Hidden on mobile */}
+                <div className="hidden sm:flex items-center border rounded-lg p-1">
+                  <Button
+                    variant={viewMode === 'table' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('table')}
+                    className="flex items-center gap-1"
+                  >
+                    <List className="h-4 w-4" />
+                    Table
+                  </Button>
+                  <Button
+                    variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('cards')}
+                    className="flex items-center gap-1"
+                  >
+                    <Grid className="h-4 w-4" />
+                    Cards
+                  </Button>
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="w-full">
+            <CardContent className={viewMode === 'cards' ? 'p-0' : 'w-full'}>
               {filteredProducts.length === 0 ? (
-                <div className="text-center py-8">
+                <div className="text-center py-8 px-4">
                   <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     {searchTerm || selectedCategory !== 'all' || stockFilter !== 'all'
@@ -129,6 +162,14 @@ const ProductTable = () => {
                     }
                   </p>
                 </div>
+              ) : viewMode === 'cards' ? (
+                <ProductCardGrid
+                  products={filteredProducts}
+                  getItemQuantity={getItemQuantity}
+                  onAddToCart={handleAddToCart}
+                  onRemoveFromCart={handleRemoveFromCart}
+                  loading={loading}
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <Table>

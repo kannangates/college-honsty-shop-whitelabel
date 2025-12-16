@@ -240,22 +240,31 @@ const AdminDailyStockOperations: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Daily Stock Operations</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <RefreshCw className="h-8 w-8" />
+            Daily Stock Operations
+          </h1>
+          <p className="text-purple-100">
             Manage daily stock movements and update inventory
           </p>
         </div>
-        <Button onClick={handleSaveAll} disabled={saving}>
+        <Button
+          onClick={handleSaveAll}
+          disabled={saving}
+          variant="outline"
+          className="flex items-center gap-2 rounded-xl border-white/50 text-white hover:border-white transition-all duration-200 backdrop-blur-md bg-white/20 hover:bg-white/30"
+        >
           {saving ? (
             <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              <RefreshCw className="h-4 w-4 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="h-4 w-4" />
               Save All
             </>
           )}
@@ -388,11 +397,10 @@ const AdminDailyStockOperations: React.FC = () => {
                       />
                     </TableCell>
                     <TableCell
-                      className={`text-right font-medium ${
-                        op.estimated_closing_stock !== op.actual_closing_stock
+                      className={`text-right font-medium ${op.estimated_closing_stock !== op.actual_closing_stock
                           ? 'text-red-500'
                           : ''
-                      }`}
+                        }`}
                     >
                       {op.estimated_closing_stock - op.actual_closing_stock}
                     </TableCell>

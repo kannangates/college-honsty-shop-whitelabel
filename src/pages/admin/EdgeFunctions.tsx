@@ -53,7 +53,7 @@ const EdgeFunctionsPage = () => {
       'auth-signup',
       'daily-inventory-operations'
     ];
-    
+
     setIsLoading(true);
     try {
       const updatedFunctions = await Promise.all(
@@ -104,20 +104,20 @@ const EdgeFunctionsPage = () => {
 
 
   return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg w-full">
-            <div className="flex items-center gap-3">
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full">
+          <div>
+            <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
               <Server className="h-8 w-8" />
-              <div>
-                <h1 className="text-3xl font-bold">Edge Functions</h1>
-                <p className="text-purple-100">Manage and monitor serverless functions</p>
-              </div>
-            </div>
+              Edge Functions
+            </h1>
+            <p className="text-purple-100">Manage and monitor serverless functions</p>
           </div>
         </div>
-      
-      
+      </div>
+
+
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
@@ -127,9 +127,9 @@ const EdgeFunctionsPage = () => {
                 List of all edge functions used in the application
               </CardDescription>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={refreshStatuses}
               disabled={isLoading}
               className="gap-2"
@@ -148,8 +148,8 @@ const EdgeFunctionsPage = () => {
             </div>
           ) : (
             edgeFunctions.map((func, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-start justify-between">

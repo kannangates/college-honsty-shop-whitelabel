@@ -316,367 +316,372 @@ const AdminPointsBadges = () => {
   return (
     <TooltipProvider>
       <div className="space-y-4 text-sm">
-        <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-4 rounded-xl shadow-lg">
-          <h1 className="text-2xl font-bold mb-1">Points & Badges</h1>
-          <p className="text-purple-100 text-sm">Configure point allocation and badge management</p>
+        <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+              <Award className="h-8 w-8" />
+              Points & Badges
+            </h1>
+            <p className="text-purple-100">Configure point allocation and badge management</p>
+          </div>
         </div>
 
-      <Tabs defaultValue="points" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="points">Points Configuration</TabsTrigger>
-          <TabsTrigger value="badges">Badge Management</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="points" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="points">Points Configuration</TabsTrigger>
+            <TabsTrigger value="badges">Badge Management</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="points" className="space-y-4">
-          {/* Manual Points Allocation */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Plus className="h-5 w-5" />
-                Manual Points Allocation
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="studentSelect" className="text-xs">Select Student</Label>
-                  <Popover open={studentPopoverOpen} onOpenChange={setStudentPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "w-full h-8 border border-input bg-background rounded-md px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                          !manualAllocation.studentId && "text-muted-foreground"
-                        )}
-                        disabled={loading}
-                      >
-                        {loading ? "Loading students..." : 
-                         manualAllocation.studentId ? 
-                         students.find(s => s.student_id === manualAllocation.studentId)?.name || "Select student" :
-                         "Select student"}
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search student..." />
-                        <CommandList>
-                          <CommandEmpty>No student found.</CommandEmpty>
-                          {students.map((student) => (
-                            <CommandItem
-                              key={student.student_id}
-                              value={`${student.name} ${student.student_id} ${student.department || ''}`}
-                              onSelect={() => {
-                                handleManualAllocationChange('studentId', student.student_id);
-                                setStudentPopoverOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  manualAllocation.studentId === student.student_id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              <div className="flex flex-col">
-                                <span className="font-medium">{student.name}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {student.student_id} • {student.department || 'No Department'} • {student.points || 0} pts
-                                </span>
-                              </div>
-                            </CommandItem>
+          <TabsContent value="points" className="space-y-4">
+            {/* Manual Points Allocation */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Plus className="h-5 w-5" />
+                  Manual Points Allocation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="studentSelect" className="text-xs">Select Student</Label>
+                    <Popover open={studentPopoverOpen} onOpenChange={setStudentPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className={cn(
+                            "w-full h-8 border border-input bg-background rounded-md px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                            !manualAllocation.studentId && "text-muted-foreground"
+                          )}
+                          disabled={loading}
+                        >
+                          {loading ? "Loading students..." :
+                            manualAllocation.studentId ?
+                              students.find(s => s.student_id === manualAllocation.studentId)?.name || "Select student" :
+                              "Select student"}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search student..." />
+                          <CommandList>
+                            <CommandEmpty>No student found.</CommandEmpty>
+                            {students.map((student) => (
+                              <CommandItem
+                                key={student.student_id}
+                                value={`${student.name} ${student.student_id} ${student.department || ''}`}
+                                onSelect={() => {
+                                  handleManualAllocationChange('studentId', student.student_id);
+                                  setStudentPopoverOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    manualAllocation.studentId === student.student_id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{student.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {student.student_id} • {student.department || 'No Department'} • {student.points || 0} pts
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label htmlFor="manualPoints" className="text-xs">Enter Points</Label>
+                    <Input
+                      id="manualPoints"
+                      type="number"
+                      value={manualAllocation.points}
+                      onChange={(e) => handleManualAllocationChange('points', e.target.value)}
+                      placeholder="Enter points (+ or -)"
+                      className="text-sm h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="reason" className="text-xs">Choose Reason</Label>
+                    <Popover open={reasonPopoverOpen} onOpenChange={setReasonPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className={cn(
+                            "w-full h-8 border border-input bg-background rounded-md px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                            !manualAllocation.reason && "text-muted-foreground"
+                          )}
+                        >
+                          {manualAllocation.reason || "Select reason"}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search reason..." />
+                          <CommandList>
+                            <CommandEmpty>No reason found.</CommandEmpty>
+                            {reasons.map((reason) => (
+                              <CommandItem
+                                key={reason}
+                                value={reason}
+                                onSelect={() => {
+                                  handleManualAllocationChange('reason', reason);
+                                  setReasonPopoverOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    manualAllocation.reason === reason ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {reason}
+                              </CommandItem>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                <Button onClick={handleUpdatePoints} className="bg-blue-600 hover:bg-blue-700 text-white text-sm">
+                  Update Points
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Gamification Rules Table & Add Rule Button */}
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Trophy className="h-5 w-5" />
+                  Gamification Rules
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={handleOpenAddRule} className="mb-4">Add Rule</Button>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border text-sm">
+                    <thead>
+                      {ruleTable.getHeaderGroups().map(headerGroup => (
+                        <tr key={headerGroup.id}>
+                          {headerGroup.headers.map(header => (
+                            <th key={header.id} className="border px-2 py-1 bg-gray-50 text-left">
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
                           ))}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div>
-                  <Label htmlFor="manualPoints" className="text-xs">Enter Points</Label>
-                  <Input
-                    id="manualPoints"
-                    type="number"
-                    value={manualAllocation.points}
-                    onChange={(e) => handleManualAllocationChange('points', e.target.value)}
-                    placeholder="Enter points (+ or -)"
-                    className="text-sm h-8"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="reason" className="text-xs">Choose Reason</Label>
-                  <Popover open={reasonPopoverOpen} onOpenChange={setReasonPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "w-full h-8 border border-input bg-background rounded-md px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                          !manualAllocation.reason && "text-muted-foreground"
-                        )}
-                      >
-                        {manualAllocation.reason || "Select reason"}
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search reason..." />
-                        <CommandList>
-                          <CommandEmpty>No reason found.</CommandEmpty>
-                          {reasons.map((reason) => (
-                            <CommandItem
-                              key={reason}
-                              value={reason}
-                              onSelect={() => {
-                                handleManualAllocationChange('reason', reason);
-                                setReasonPopoverOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  manualAllocation.reason === reason ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {reason}
-                            </CommandItem>
+                        </tr>
+                      ))}
+                    </thead>
+                    <tbody>
+                      {ruleTable.getRowModel().rows.map(row => (
+                        <tr key={row.id} className="hover:bg-gray-50">
+                          {row.getVisibleCells().map(cell => (
+                            <td key={cell.id} className="border px-2 py-1">
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
                           ))}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {rulesLoading && <div className="text-center py-4">Loading...</div>}
+                  {!rulesLoading && rules.length === 0 && <div className="text-center py-4">No rules found.</div>}
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <Button onClick={handleUpdatePoints} className="bg-blue-600 hover:bg-blue-700 text-white text-sm">
-                Update Points
-              </Button>
-            </CardContent>
-          </Card>
+            {/* Add/Edit Rule Modal */}
+            <Dialog open={ruleModalOpen} onOpenChange={setRuleModalOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editRule ? 'Edit Rule' : 'Add Rule'}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleRuleSubmit(onSubmitRule)} className="space-y-4">
+                  <div>
+                    <label className="block text-xs mb-1">Event Type</label>
+                    <select {...ruleRegister('event_type', { required: true })} className="w-full border rounded px-2 py-1">
+                      <option value="">Select event</option>
+                      {EVENT_TYPES.map(e => <option key={e} value={e}>{e}</option>)}
+                    </select>
+                    {ruleErrors.event_type && <span className="text-xs text-red-500">Required</span>}
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Condition Type</label>
+                    <select {...ruleRegister('condition_type', { required: true })} className="w-full border rounded px-2 py-1">
+                      <option value="">Select condition</option>
+                      {CONDITION_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    {ruleErrors.condition_type && <span className="text-xs text-red-500">Required</span>}
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Operator</label>
+                    <select {...ruleRegister('operator', { required: true })} className="w-full border rounded px-2 py-1">
+                      <option value="">Select operator</option>
+                      {OPERATORS.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                    {ruleErrors.operator && <span className="text-xs text-red-500">Required</span>}
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Condition Value</label>
+                    <Input {...ruleRegister('condition_value', { required: true })} className="w-full" />
+                    {ruleErrors.condition_value && <span className="text-xs text-red-500">Required</span>}
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Label</label>
+                    <Input {...ruleRegister('label')} className="w-full" />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Points Awarded</label>
+                    <Input type="number" {...ruleRegister('points_awarded', { required: true, valueAsNumber: true })} className="w-full" />
+                    {ruleErrors.points_awarded && <span className="text-xs text-red-500">Required</span>}
+                  </div>
+                  <div>
+                    <Label htmlFor="cooldown_seconds" className="text-xs flex items-center gap-1">
+                      Cooldown (seconds)
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="ml-1 cursor-pointer">🛈</span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          The minimum time (in seconds) that must pass before this rule can be triggered again for the same user.
+                        </TooltipContent>
+                      </Tooltip>
+                    </Label>
+                    <Input
+                      id="cooldown_seconds"
+                      type="number"
+                      {...ruleRegister('cooldown_seconds')}
+                      className="text-sm h-8"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" {...ruleRegister('active')} checked={!!(editRule ? editRule.active : true)} onChange={e => setRuleValue('active', e.target.checked)} />
+                    <span>Active</span>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" disabled={rulesLoading}>{editRule ? 'Update' : 'Create'}</Button>
+                    <Button type="button" variant="outline" onClick={() => { setRuleModalOpen(false); setEditRule(null); resetRuleForm(); }}>Cancel</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
 
-          {/* Gamification Rules Table & Add Rule Button */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Trophy className="h-5 w-5" />
-                Gamification Rules
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleOpenAddRule} className="mb-4">Add Rule</Button>
-              <div className="overflow-x-auto">
-                <table className="min-w-full border text-sm">
-                  <thead>
-                    {ruleTable.getHeaderGroups().map(headerGroup => (
-                      <tr key={headerGroup.id}>
-                        {headerGroup.headers.map(header => (
-                          <th key={header.id} className="border px-2 py-1 bg-gray-50 text-left">
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                          </th>
-                        ))}
-                      </tr>
+          <TabsContent value="badges">
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Award className="h-5 w-5" />
+                  Badge Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="badgeImage" className="text-xs">Badge Image URL</Label>
+                    <Input
+                      id="badgeImage"
+                      value={badgeConfig.imageUrl}
+                      onChange={(e) => handleBadgeConfigChange('imageUrl', e.target.value)}
+                      placeholder="Enter badge image URL"
+                      className="text-sm h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="badgeName" className="text-xs">Badge Name</Label>
+                    <Input
+                      id="badgeName"
+                      value={badgeConfig.name}
+                      onChange={(e) => handleBadgeConfigChange('name', e.target.value)}
+                      placeholder="Enter badge name"
+                      className="text-sm h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="minPoints" className="text-xs">Minimum Points</Label>
+                    <Input
+                      id="minPoints"
+                      type="number"
+                      value={badgeConfig.minPoints}
+                      onChange={(e) => handleBadgeConfigChange('minPoints', e.target.value)}
+                      placeholder="Minimum points required"
+                      className="text-sm h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="maxPoints" className="text-xs">Maximum Points</Label>
+                    <Input
+                      id="maxPoints"
+                      type="number"
+                      value={badgeConfig.maxPoints}
+                      onChange={(e) => handleBadgeConfigChange('maxPoints', e.target.value)}
+                      placeholder="Maximum points (optional)"
+                      className="text-sm h-8"
+                    />
+                  </div>
+                </div>
+
+                <Button onClick={handleAddBadge} className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm">
+                  Add Badge
+                </Button>
+
+                {/* Existing Badges Display */}
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium mb-2">Existing Badges</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="border rounded-lg p-3 text-center">
+                      <div className="w-16 h-16 bg-yellow-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <Award className="h-8 w-8 text-yellow-600" />
+                      </div>
+                      <h4 className="text-sm font-medium">Bronze Badge</h4>
+                      <p className="text-xs text-gray-500">0-100 points</p>
+                    </div>
+                    <div className="border rounded-lg p-3 text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <Award className="h-8 w-8 text-gray-600" />
+                      </div>
+                      <h4 className="text-sm font-medium">Silver Badge</h4>
+                      <p className="text-xs text-gray-500">101-500 points</p>
+                    </div>
+                    <div className="border rounded-lg p-3 text-center">
+                      <div className="w-16 h-16 bg-yellow-100 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <Trophy className="h-8 w-8 text-yellow-600" />
+                      </div>
+                      <h4 className="text-sm font-medium">Gold Badge</h4>
+                      <p className="text-xs text-gray-500">501+ points</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="mt-8">
+              <CardHeader>
+                <CardTitle>Badge Creation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-6">
+                  <BadgeCreateCard />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Badge Presets</h3>
+                  <ul className="list-disc pl-6 space-y-1 text-sm">
+                    {BADGE_PRESETS.map((b, i) => (
+                      <li key={i}>
+                        <span className="font-medium">{b.name}</span>: {b.description} (Criteria: {b.criteria_type} {b.criteria_value})
+                      </li>
                     ))}
-                  </thead>
-                  <tbody>
-                    {ruleTable.getRowModel().rows.map(row => (
-                      <tr key={row.id} className="hover:bg-gray-50">
-                        {row.getVisibleCells().map(cell => (
-                          <td key={cell.id} className="border px-2 py-1">
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {rulesLoading && <div className="text-center py-4">Loading...</div>}
-                {!rulesLoading && rules.length === 0 && <div className="text-center py-4">No rules found.</div>}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Add/Edit Rule Modal */}
-          <Dialog open={ruleModalOpen} onOpenChange={setRuleModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editRule ? 'Edit Rule' : 'Add Rule'}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleRuleSubmit(onSubmitRule)} className="space-y-4">
-                <div>
-                  <label className="block text-xs mb-1">Event Type</label>
-                  <select {...ruleRegister('event_type', { required: true })} className="w-full border rounded px-2 py-1">
-                    <option value="">Select event</option>
-                    {EVENT_TYPES.map(e => <option key={e} value={e}>{e}</option>)}
-                  </select>
-                  {ruleErrors.event_type && <span className="text-xs text-red-500">Required</span>}
+                  </ul>
                 </div>
-                <div>
-                  <label className="block text-xs mb-1">Condition Type</label>
-                  <select {...ruleRegister('condition_type', { required: true })} className="w-full border rounded px-2 py-1">
-                    <option value="">Select condition</option>
-                    {CONDITION_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  {ruleErrors.condition_type && <span className="text-xs text-red-500">Required</span>}
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Operator</label>
-                  <select {...ruleRegister('operator', { required: true })} className="w-full border rounded px-2 py-1">
-                    <option value="">Select operator</option>
-                    {OPERATORS.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                  {ruleErrors.operator && <span className="text-xs text-red-500">Required</span>}
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Condition Value</label>
-                  <Input {...ruleRegister('condition_value', { required: true })} className="w-full" />
-                  {ruleErrors.condition_value && <span className="text-xs text-red-500">Required</span>}
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Label</label>
-                  <Input {...ruleRegister('label')} className="w-full" />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Points Awarded</label>
-                  <Input type="number" {...ruleRegister('points_awarded', { required: true, valueAsNumber: true })} className="w-full" />
-                  {ruleErrors.points_awarded && <span className="text-xs text-red-500">Required</span>}
-                </div>
-                <div>
-                  <Label htmlFor="cooldown_seconds" className="text-xs flex items-center gap-1">
-                    Cooldown (seconds)
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="ml-1 cursor-pointer">🛈</span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        The minimum time (in seconds) that must pass before this rule can be triggered again for the same user.
-                      </TooltipContent>
-                    </Tooltip>
-                  </Label>
-                  <Input
-                    id="cooldown_seconds"
-                    type="number"
-                    {...ruleRegister('cooldown_seconds')}
-                    className="text-sm h-8"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" {...ruleRegister('active')} checked={!!(editRule ? editRule.active : true)} onChange={e => setRuleValue('active', e.target.checked)} />
-                  <span>Active</span>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" disabled={rulesLoading}>{editRule ? 'Update' : 'Create'}</Button>
-                  <Button type="button" variant="outline" onClick={() => { setRuleModalOpen(false); setEditRule(null); resetRuleForm(); }}>Cancel</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-
-        <TabsContent value="badges">
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Award className="h-5 w-5" />
-                Badge Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="badgeImage" className="text-xs">Badge Image URL</Label>
-                  <Input
-                    id="badgeImage"
-                    value={badgeConfig.imageUrl}
-                    onChange={(e) => handleBadgeConfigChange('imageUrl', e.target.value)}
-                    placeholder="Enter badge image URL"
-                    className="text-sm h-8"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="badgeName" className="text-xs">Badge Name</Label>
-                  <Input
-                    id="badgeName"
-                    value={badgeConfig.name}
-                    onChange={(e) => handleBadgeConfigChange('name', e.target.value)}
-                    placeholder="Enter badge name"
-                    className="text-sm h-8"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="minPoints" className="text-xs">Minimum Points</Label>
-                  <Input
-                    id="minPoints"
-                    type="number"
-                    value={badgeConfig.minPoints}
-                    onChange={(e) => handleBadgeConfigChange('minPoints', e.target.value)}
-                    placeholder="Minimum points required"
-                    className="text-sm h-8"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="maxPoints" className="text-xs">Maximum Points</Label>
-                  <Input
-                    id="maxPoints"
-                    type="number"
-                    value={badgeConfig.maxPoints}
-                    onChange={(e) => handleBadgeConfigChange('maxPoints', e.target.value)}
-                    placeholder="Maximum points (optional)"
-                    className="text-sm h-8"
-                  />
-                </div>
-              </div>
-
-              <Button onClick={handleAddBadge} className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white text-sm">
-                Add Badge
-              </Button>
-
-              {/* Existing Badges Display */}
-              <div className="border-t pt-4">
-                <h3 className="text-sm font-medium mb-2">Existing Badges</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="border rounded-lg p-3 text-center">
-                    <div className="w-16 h-16 bg-yellow-100 rounded-full mx-auto mb-2 flex items-center justify-center">
-                      <Award className="h-8 w-8 text-yellow-600" />
-                    </div>
-                    <h4 className="text-sm font-medium">Bronze Badge</h4>
-                    <p className="text-xs text-gray-500">0-100 points</p>
-                  </div>
-                  <div className="border rounded-lg p-3 text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-2 flex items-center justify-center">
-                      <Award className="h-8 w-8 text-gray-600" />
-                    </div>
-                    <h4 className="text-sm font-medium">Silver Badge</h4>
-                    <p className="text-xs text-gray-500">101-500 points</p>
-                  </div>
-                  <div className="border rounded-lg p-3 text-center">
-                    <div className="w-16 h-16 bg-yellow-100 rounded-full mx-auto mb-2 flex items-center justify-center">
-                      <Trophy className="h-8 w-8 text-yellow-600" />
-                    </div>
-                    <h4 className="text-sm font-medium">Gold Badge</h4>
-                    <p className="text-xs text-gray-500">501+ points</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Badge Creation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-6">
-            <BadgeCreateCard />
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Badge Presets</h3>
-            <ul className="list-disc pl-6 space-y-1 text-sm">
-              {BADGE_PRESETS.map((b, i) => (
-                <li key={i}>
-                  <span className="font-medium">{b.name}</span>: {b.description} (Criteria: {b.criteria_type} {b.criteria_value})
-                </li>
-              ))}
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </TooltipProvider>
   );

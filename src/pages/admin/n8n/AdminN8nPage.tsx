@@ -55,11 +55,11 @@ export default function AdminN8nPage() {
     setSaving(s => ({ ...s, [type]: true }));
     const url = webhooks[type];
     await supabase.from('n8n_webhooks').upsert(
-      { 
-        type, 
-        url, 
-        updated_at: new Date().toISOString() 
-      }, 
+      {
+        type,
+        url,
+        updated_at: new Date().toISOString()
+      },
       { onConflict: 'type' }
     );
     setSaving(s => ({ ...s, [type]: false }));
@@ -69,16 +69,16 @@ export default function AdminN8nPage() {
     setTesting(t => ({ ...t, [type]: true }));
     setTestResult(r => ({ ...r, [type]: '' }));
     const url = webhooks[type];
-    
+
     try {
       const response = await fetch('/api/test-webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, type })
       });
-      
+
       const result = await response.json();
-      
+
       if (response.ok) {
         setTestResult(r => ({ ...r, [type]: 'Test successful!' }));
         await updateWebhookStatus(type, 'success');
@@ -101,30 +101,30 @@ export default function AdminN8nPage() {
       last_error: error || null,
       updated_at: new Date().toISOString()
     };
-    
+
     await supabase
       .from('n8n_webhooks')
       .update(updateData)
       .eq('type', type);
-      
-    setStatus(s => ({ 
-      ...s, 
+
+    setStatus(s => ({
+      ...s,
       [type]: {
         ...s[type],
         ...updateData
-      } 
+      }
     }));
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center gap-3">
-          <Webhook className="h-8 w-8" />
-          <div>
-            <h1 className="text-3xl font-bold">n8n Automation Settings</h1>
-            <p className="text-purple-100">Configure payment gateways, email services, and n8n automation</p>
-          </div>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Webhook className="h-8 w-8" />
+            n8n Automation Settings
+          </h1>
+          <p className="text-purple-100">Configure payment gateways, email services, and n8n automation</p>
         </div>
       </div>
       {/* n8n Automation Webhook Management */}
@@ -148,17 +148,17 @@ export default function AdminN8nPage() {
                   className="font-mono text-sm flex-1"
                   disabled={loading}
                 />
-                <Button 
-                  onClick={() => handleSave(type)} 
-                  disabled={saving[type] || loading} 
+                <Button
+                  onClick={() => handleSave(type)}
+                  disabled={saving[type] || loading}
                   size="sm"
                 >
                   {saving[type] ? 'Saving...' : 'Save'}
                 </Button>
-                <Button 
-                  onClick={() => handleTest(type)} 
-                  disabled={testing[type] || !webhooks[type]} 
-                  size="sm" 
+                <Button
+                  onClick={() => handleTest(type)}
+                  disabled={testing[type] || !webhooks[type]}
+                  size="sm"
                   variant="outline"
                 >
                   {testing[type] ? 'Testing...' : 'Test Webhook'}
@@ -216,7 +216,7 @@ export default function AdminN8nPage() {
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
             <h4 className="font-semibold text-yellow-800 mb-2">Important Note</h4>
             <p className="text-sm text-yellow-700">
-              Make sure your n8n instance is properly secured and accessible only through HTTPS. 
+              Make sure your n8n instance is properly secured and accessible only through HTTPS.
               All webhook URLs should be authenticated to prevent unauthorized access.
             </p>
           </div>

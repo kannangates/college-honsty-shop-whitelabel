@@ -281,21 +281,25 @@ export const AdminInventoryManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Inventory Management</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <Package className="h-8 w-8" />
+            Inventory Management
+          </h1>
+          <p className="text-purple-100">
             Manage product stock levels and inventory operations
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* View Mode Toggle - Hidden on mobile */}
-          <div className="hidden sm:flex items-center border rounded-lg p-1">
+          <div className="hidden sm:flex items-center border border-white/20 rounded-lg p-1">
             <Button
               variant={viewMode === 'table' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('table')}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-white hover:text-gray-900"
             >
               <List className="h-4 w-4" />
               Table
@@ -304,7 +308,7 @@ export const AdminInventoryManagement = () => {
               variant={viewMode === 'cards' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('cards')}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-white hover:text-gray-900"
             >
               <Grid className="h-4 w-4" />
               Cards
@@ -312,7 +316,8 @@ export const AdminInventoryManagement = () => {
           </div>
           <Button
             onClick={openAddModal}
-            className="flex items-center gap-2"
+            variant="outline"
+            className="flex items-center gap-2 rounded-xl border-white/50 text-white hover:border-white transition-all duration-200 backdrop-blur-md bg-white/20 hover:bg-white/30"
           >
             <Plus className="h-4 w-4" />
             Add Product

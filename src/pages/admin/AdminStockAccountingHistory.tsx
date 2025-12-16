@@ -394,13 +394,13 @@ const AdminStockAccountingHistory = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center gap-3">
-          <History className="h-8 w-8" />
-          <div>
-            <h1 className="text-3xl font-bold">Stock Accounting History</h1>
-            <p className="text-purple-100">View and analyze historical stock operations across date ranges</p>
-          </div>
+      <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 flex items-center gap-3">
+            <History className="h-8 w-8" />
+            Stock Accounting History
+          </h1>
+          <p className="text-purple-100">View and analyze historical stock operations across date ranges</p>
         </div>
       </div>
 
