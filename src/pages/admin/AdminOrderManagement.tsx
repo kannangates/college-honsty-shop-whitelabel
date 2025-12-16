@@ -194,6 +194,59 @@ const AdminOrderManagement = React.memo(() => {
     fetchOrders();
   }, [fetchOrders]);
 
+  // Real-time subscription for orders
+  useEffect(() => {
+    console.log('🔄 Setting up real-time subscription for orders');
+
+    const ordersSubscription = supabase
+      .channel('orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('📦 Real-time order change:', payload);
+          // Refetch orders when any change occurs
+          fetchOrders();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'order_items'
+        },
+        (payload) => {
+          console.log('📦 Real-time order items change:', payload);
+          // Refetch orders when order items change
+          fetchOrders();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users'
+        },
+        (payload) => {
+          console.log('👤 Real-time user change:', payload);
+          // Refetch orders when user info changes (name, student_id, etc.)
+          fetchOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔄 Cleaning up orders subscription');
+      supabase.removeChannel(ordersSubscription);
+    };
+  }, [fetchOrders]);
+
   // Calculate stats whenever orders change
   useEffect(() => {
     fetchStats();

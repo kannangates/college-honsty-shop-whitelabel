@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
+import { useAuth } from '@/hooks/useAuth';
+import { useProductContext } from '@/contexts/useProductContext';
 
 import { InventoryFilters } from './InventoryFilters';
 import { AddProductModal } from './AddProductModal';
@@ -43,6 +45,8 @@ interface InventoryFiltersState {
 }
 
 export const AdminInventoryManagement = () => {
+  const { user } = useAuth();
+  const { fetchProducts: refreshProductContext } = useProductContext();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -229,6 +233,9 @@ export const AdminInventoryManagement = () => {
   const handleAddProduct = async (productData: ProductData) => {
     setAddLoading(true);
     try {
+      // Get current user from Supabase auth
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
       const { error } = await supabase
         .from('products')
         .insert([{
@@ -240,6 +247,8 @@ export const AdminInventoryManagement = () => {
           shelf_stock: productData.shelf_stock,
           warehouse_stock: productData.warehouse_stock,
           opening_stock: (productData.shelf_stock || 0) + (productData.warehouse_stock || 0),
+          is_archived: false,
+          created_by: currentUser?.id || null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }]);
@@ -247,6 +256,7 @@ export const AdminInventoryManagement = () => {
       if (error) throw error;
 
       await fetchProducts();
+      await refreshProductContext(); // Refresh the ProductContext as well
       toast({ title: 'Success', description: 'Product added successfully' });
       closeAddModal();
     } catch (err: unknown) {

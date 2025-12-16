@@ -126,6 +126,46 @@ const AdminPaymentReports = () => {
     fetchPayments();
   }, [fetchPayments]);
 
+  // Real-time subscription for payment updates
+  useEffect(() => {
+    console.log('🔄 Setting up real-time subscription for payments');
+
+    const paymentsSubscription = supabase
+      .channel('payments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('💳 Real-time payment change:', payload);
+          // Refetch payments when any order change occurs
+          fetchPayments();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users'
+        },
+        (payload) => {
+          console.log('👤 Real-time user change:', payload);
+          // Refetch payments when user info changes
+          fetchPayments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔄 Cleaning up payments subscription');
+      supabase.removeChannel(paymentsSubscription);
+    };
+  }, [fetchPayments]);
+
   const handleEditPayment = (payment: PaymentRecord) => {
     setEditingPayment({
       id: payment.id,
@@ -183,108 +223,7 @@ const AdminPaymentReports = () => {
     }
   };
 
-  const staticRecords = useMemo(() => [
-    {
-      id: '1',
-      studentId: 'STU001',
-      studentName: 'John Doe',
-      amount: 150.00,
-      date: '2024-01-15',
-      method: 'UPI',
-      status: 'Paid' as const,
-      items: ['Notebook', 'Pen']
-    },
-    {
-      id: '2',
-      studentId: 'STU002',
-      studentName: 'Jane Smith',
-      amount: 75.50,
-      date: '2024-01-20',
-      method: 'Credit Card',
-      status: 'Unpaid' as const,
-      items: ['Textbook']
-    },
-    {
-      id: '3',
-      studentId: 'STU003',
-      studentName: 'Alice Johnson',
-      amount: 200.00,
-      date: '2024-01-22',
-      method: 'Net Banking',
-      status: 'Paid' as const,
-      items: ['Calculator', 'Ruler', 'Protractor']
-    },
-    {
-      id: '4',
-      studentId: 'STU004',
-      studentName: 'Bob Williams',
-      amount: 50.00,
-      date: '2024-01-25',
-      method: 'UPI',
-      status: 'Unpaid' as const,
-      items: ['Graph Paper']
-    },
-    {
-      id: '5',
-      studentId: 'STU005',
-      studentName: 'Charlie Brown',
-      amount: 120.75,
-      date: '2024-01-28',
-      method: 'Credit Card',
-      status: 'Paid' as const,
-      items: ['Geometry Set', 'Eraser']
-    },
-    {
-      id: '6',
-      studentId: 'STU006',
-      studentName: 'Diana Miller',
-      amount: 90.20,
-      date: '2024-02-01',
-      method: 'Net Banking',
-      status: 'Unpaid' as const,
-      items: ['Highlighters', 'Sticky Notes']
-    },
-    {
-      id: '7',
-      studentId: 'STU007',
-      studentName: 'Ethan Davis',
-      amount: 180.00,
-      date: '2024-02-05',
-      method: 'UPI',
-      status: 'Paid' as const,
-      items: ['Drawing Pencils', 'Sketchbook']
-    },
-    {
-      id: '8',
-      studentId: 'STU008',
-      studentName: 'Fiona Wilson',
-      amount: 60.50,
-      date: '2024-02-10',
-      method: 'Credit Card',
-      status: 'Unpaid' as const,
-      items: ['Colored Pens']
-    },
-    {
-      id: '9',
-      studentId: 'STU009',
-      studentName: 'George Thompson',
-      amount: 140.00,
-      date: '2024-02-12',
-      method: 'Net Banking',
-      status: 'Paid' as const,
-      items: ['Scientific Calculator']
-    },
-    {
-      id: '10',
-      studentId: 'STU010',
-      studentName: 'Hannah Garcia',
-      amount: 80.00,
-      date: '2024-02-15',
-      method: 'UPI',
-      status: 'Unpaid' as const,
-      items: ['Whiteboard Markers']
-    }
-  ], []);
+  // Removed static records - using only real data from Supabase
 
   const statusOptions = useMemo(() => [
     { value: 'all', label: 'All' },
@@ -298,8 +237,8 @@ const AdminPaymentReports = () => {
   };
 
   const filteredRecords = useMemo(() => {
-    const allRecords = [...paymentRecords, ...staticRecords];
-    return allRecords.filter(record => {
+    // Only use real payment records from Supabase
+    return paymentRecords.filter(record => {
       const matchesSearch = record.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         record.studentId.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || record.status.toLowerCase() === statusFilter;
@@ -310,7 +249,7 @@ const AdminPaymentReports = () => {
         (!dateRange.from && dateRange.to && recordDate <= dateRange.to);
       return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [paymentRecords, staticRecords, searchTerm, statusFilter, dateRange]);
+  }, [paymentRecords, searchTerm, statusFilter, dateRange]);
 
 
 
@@ -333,91 +272,94 @@ const AdminPaymentReports = () => {
 
       {/* Custom Filter Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex flex-col lg:flex-row gap-4 items-center">
-          {/* Search Box */}
-          <div className="relative flex-1 w-full lg:w-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search by student name or ID..."
-              className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+        <div className="space-y-4">
+          {/* First Row: Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search Box */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search by student name or ID..."
+                className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
-          {/* Status Filter */}
-          <div className="w-full lg:w-48">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Filter by payment status" />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            {/* Status Filter */}
+            <div className="w-full sm:w-48">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Filter by payment status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Date Range Picker */}
-          <div className="w-full lg:w-64">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500",
-                    !dateRange.from && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "MMM dd")} - {format(dateRange.to, "MMM dd, yyyy")}
-                      </>
+            {/* Date Range Picker */}
+            <div className="w-full sm:w-64">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500",
+                      !dateRange.from && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "MMM dd")} - {format(dateRange.to, "MMM dd, yyyy")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "MMM dd, yyyy")
+                      )
                     ) : (
-                      format(dateRange.from, "MMM dd, yyyy")
-                    )
-                  ) : (
-                    "Select date range"
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  numberOfMonths={2}
-                  captionLayout="dropdown"
-                />
-              </PopoverContent>
-            </Popover>
+                      "Select date range"
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="range"
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={2}
+                    captionLayout="dropdown"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 w-full lg:w-auto">
+          {/* Second Row: Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
             <Button
               variant="outline"
               onClick={clearFilters}
-              className="h-11 px-4 border-gray-200 hover:border-gray-300"
+              className="h-11 px-4 border-gray-200 hover:border-gray-300 w-full sm:w-auto"
             >
               Clear Filters
             </Button>
             <Button
               variant="outline"
               onClick={fetchPayments}
-              className="h-11 px-4 border-gray-200 hover:border-gray-300"
+              className="h-11 px-4 border-gray-200 hover:border-gray-300 w-full sm:w-auto"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
             <Button
               onClick={() => setIsPaymentRecordOpen(true)}
-              className="h-11 px-4 bg-green-600 hover:bg-green-700"
+              className="h-11 px-4 bg-green-600 hover:bg-green-700 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Record Payment
@@ -458,8 +400,8 @@ const AdminPaymentReports = () => {
                     <TransactionCard
                       key={transaction.id}
                       transaction={transaction}
-                      onEditStatus={transaction.items ? undefined : handleEditPaymentStatus}
-                      onDelete={transaction.items ? undefined : handleDeletePayment}
+                      onEditStatus={handleEditPaymentStatus}
+                      onDelete={handleDeletePayment}
                     />
                   ))}
                 </div>

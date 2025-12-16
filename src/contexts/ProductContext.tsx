@@ -50,9 +50,20 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
   const addProduct = useCallback(async (product: Omit<Product, 'id' | 'created_at'>) => {
     setLoading(true);
     try {
+      // Get current user from Supabase auth directly to avoid dependency issues
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      const productWithCreatedBy = {
+        ...product,
+        is_archived: false,
+        created_by: currentUser?.id || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
       const { data, error } = await supabase
         .from('products')
-        .insert([product])
+        .insert([productWithCreatedBy])
         .select();
 
       if (error) {
