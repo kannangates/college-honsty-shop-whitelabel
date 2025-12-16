@@ -1,15 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG } from '@/config';
-import { Loader2, Save } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Loader2, Save, Users, Clock, AlertTriangle } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
+import { useAuth } from '@/contexts/useAuth';
+import { AuditLogger } from '@/utils/auditLogger';
+import { Badge } from '@/features/gamification/components/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Product as stored in DB
 interface Product {
@@ -60,6 +63,25 @@ interface Filters {
   stockStatus: string;
 }
 
+interface RealtimeUpdate {
+  id: string;
+  user_id: string;
+  user_name: string;
+  product_id: string;
+  product_name: string;
+  field: string;
+  old_value: number;
+  new_value: number;
+  timestamp: string;
+}
+
+interface ActiveUser {
+  user_id: string;
+  user_name: string;
+  last_activity: string;
+  editing_product_id?: string;
+}
+
 const AdminStockAccounting = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [stockOperations, setStockOperations] = useState<StockOperation[]>([]);
@@ -70,10 +92,169 @@ const AdminStockAccounting = () => {
     status: 'all',
     stockStatus: 'all',
   });
+
+  // Real-time and audit trail states
+  const [realtimeUpdates, setRealtimeUpdates] = useState<RealtimeUpdate[]>([]);
+  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
+  const [conflictWarnings, setConflictWarnings] = useState<string[]>([]);
+  const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const auditLogger = useRef(AuditLogger.getInstance());
+  const lastActivityRef = useRef<number>(Date.now());
+  const stockOperationsRef = useRef<StockOperation[]>([]);
+
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const errorMessages = WHITELABEL_CONFIG.messages.errors;
-  const authMessages = WHITELABEL_CONFIG.messages.auth;
   const today = new Date().toISOString().split('T')[0];
+
+  const broadcastUserActivity = useCallback(async () => {
+    if (!user || !profile) return;
+
+    const activity: ActiveUser = {
+      user_id: user.id,
+      user_name: profile.name || 'Unknown User',
+      last_activity: new Date().toISOString(),
+    };
+
+    // This would ideally be stored in a temporary table or Redis
+    // For now, we'll use local state
+    setActiveUsers(prev => {
+      const filtered = prev.filter(u => u.user_id !== user.id);
+      return [...filtered, activity];
+    });
+  }, [user, profile]);
+
+  // Real-time setup and cleanup
+  const setupRealtimeSubscription = useCallback(() => {
+    if (!user) return;
+
+    // Subscribe to stock operations changes
+    const channel = supabase
+      .channel('stock_operations_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_stock_operations',
+          filter: `created_at=gte.${today}T00:00:00`
+        },
+        async (payload) => {
+          try {
+            if (payload.eventType === 'UPDATE' && payload.new && payload.old) {
+              const newData = payload.new as StockOperationRow;
+              const oldData = payload.old as StockOperationRow;
+
+              // Find which field changed
+              const changedFields = Object.keys(newData).filter(key =>
+                key !== 'updated_at' &&
+                key !== 'created_at' &&
+                newData[key as keyof StockOperationRow] !== oldData[key as keyof StockOperationRow]
+              );
+
+              if (changedFields.length > 0) {
+                // Find product name from existing local state instead of API call
+                const existingOperation = stockOperationsRef.current.find(op => op.product_id === newData.product_id);
+                const productName = existingOperation?.product?.name || 'Unknown Product';
+
+                // Skip if this is our own update (prevent self-notifications)
+                if (newData.updated_at && Date.now() - new Date(newData.updated_at).getTime() < 2000) {
+                  return; // Skip recent updates that might be from current user
+                }
+
+                const updateInfo: RealtimeUpdate = {
+                  id: `${newData.id}-${Date.now()}`,
+                  user_id: 'unknown', // Would need to track this
+                  user_name: 'Another User',
+                  product_id: newData.product_id,
+                  product_name: productName,
+                  field: changedFields[0],
+                  old_value: oldData[changedFields[0] as keyof StockOperationRow] as number,
+                  new_value: newData[changedFields[0] as keyof StockOperationRow] as number,
+                  timestamp: new Date().toISOString()
+                };
+
+                setRealtimeUpdates(prev => [updateInfo, ...prev.slice(0, 9)]); // Keep last 10
+
+                // Show conflict warning with proper cleanup
+                setConflictWarnings(prev => [...prev, `${productName} was updated by another user`]);
+                const timeoutId = setTimeout(() => {
+                  setConflictWarnings(prev => prev.slice(1));
+                }, 5000);
+                conflictTimeoutsRef.current.push(timeoutId);
+
+                // Update local state
+                setStockOperations(prev =>
+                  prev.map(op => op.id === newData.id ? { ...op, ...newData } : op)
+                );
+              }
+            }
+          } catch (error) {
+            console.error('Error handling real-time update:', error);
+          }
+        }
+      )
+      .subscribe();
+
+    realtimeChannelRef.current = channel;
+
+    // Track user activity - only broadcast if actually active
+    const activityInterval = setInterval(() => {
+      const timeSinceLastActivity = Date.now() - lastActivityRef.current;
+      if (timeSinceLastActivity < 30000) { // Active in last 30 seconds
+        broadcastUserActivity();
+      }
+    }, 15000); // Reduced frequency: Broadcast every 15 seconds instead of 10
+
+    return () => {
+      clearInterval(activityInterval);
+      if (realtimeChannelRef.current) {
+        supabase.removeChannel(realtimeChannelRef.current);
+      }
+    };
+  }, [user, today, broadcastUserActivity]);
+
+  const trackUserActivity = useCallback(() => {
+    lastActivityRef.current = Date.now();
+  }, []);
+
+  const auditTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const conflictTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+  const logAuditTrail = useCallback(async (
+    action: string,
+    productId: string,
+    productName: string,
+    field: string,
+    oldValue: number,
+    newValue: number
+  ) => {
+    if (!user || !auditLogger.current) return;
+
+    // Debounce audit logging to prevent excessive logs during rapid input
+    if (auditTimeoutRef.current) {
+      clearTimeout(auditTimeoutRef.current);
+    }
+
+    auditTimeoutRef.current = setTimeout(async () => {
+      await auditLogger.current.log(
+        `stock_${action}`,
+        'daily_stock_operations',
+        {
+          product_id: productId,
+          product_name: productName,
+          field,
+          old_value: oldValue,
+          new_value: newValue,
+          user_id: user.id,
+          user_name: profile?.name || 'Unknown User',
+          timestamp: new Date().toISOString(),
+          date: today
+        },
+        'medium'
+      );
+    }, 3000); // Wait 3 seconds after last change before logging
+  }, [user, profile, today]);
 
   const loadStockOperations = useCallback(async () => {
     setLoading(true);
@@ -113,33 +294,49 @@ const AdminStockAccounting = () => {
         shelf_stock: item.shelf_stock || 0,
         warehouse_stock: item.warehouse_stock || 0,
       }));
-      console.log('Products:', transformedProducts); // Debug: log all products
 
-      // Create or update operations for each product
-      // This ensures all products are shown, even if they have no stock operation today
-      const mergedOperations: StockOperation[] = transformedProducts.map(product => {
-        const existingOp = opsData.find(op => op.product_id === product.id);
-        return {
-          id: existingOp?.id,
-          product_id: product.id,
-          product,
-          opening_stock: existingOp?.opening_stock ?? product.shelf_stock,
-          additional_stock: existingOp?.additional_stock ?? 0,
-          actual_closing_stock: existingOp?.actual_closing_stock ?? product.shelf_stock,
-          estimated_closing_stock: existingOp?.estimated_closing_stock ?? product.shelf_stock,
-          stolen_stock: existingOp?.stolen_stock ?? 0,
-          wastage_stock: existingOp?.wastage_stock ?? 0,
-          warehouse_stock: existingOp?.warehouse_stock ?? product.warehouse_stock,
-          sales: existingOp?.sales ?? 0,
-          order_count: existingOp?.order_count ?? 0,
-          created_at: existingOp?.created_at ?? today,
-          updated_at: existingOp?.updated_at ?? null,
-        };
+
+      // Handle multiple operations per product per day
+      const mergedOperations: StockOperation[] = [];
+
+      // First, add all existing operations for today
+      opsData.forEach(op => {
+        const product = transformedProducts.find(p => p.id === op.product_id);
+        if (product) {
+          mergedOperations.push({
+            ...op,
+            product,
+          });
+        }
       });
-      console.log('Merged Operations:', mergedOperations); // Debug: log merged operations
+
+      // Then, add products that don't have any operations today
+      transformedProducts.forEach(product => {
+        const hasOperation = opsData.some(op => op.product_id === product.id);
+        if (!hasOperation) {
+          mergedOperations.push({
+            id: undefined,
+            product_id: product.id,
+            product,
+            opening_stock: product.shelf_stock,
+            additional_stock: 0,
+            actual_closing_stock: product.shelf_stock,
+            estimated_closing_stock: product.shelf_stock,
+            stolen_stock: 0,
+            wastage_stock: 0,
+            warehouse_stock: product.warehouse_stock,
+            sales: 0,
+            order_count: 0,
+            created_at: todayFormatted,
+            updated_at: null,
+          });
+        }
+      });
+
 
       setProducts(transformedProducts);
       setStockOperations(mergedOperations);
+      stockOperationsRef.current = mergedOperations;
     } catch (error) {
       console.error('Error loading stock operations:', error);
       toast({
@@ -150,7 +347,7 @@ const AdminStockAccounting = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast, today, errorMessages]);
+  }, [toast, errorMessages]);
 
   const applyFilters = useCallback(() => {
     let filtered = [...stockOperations];
@@ -178,24 +375,94 @@ const AdminStockAccounting = () => {
     loadStockOperations();
   }, [loadStockOperations]);
 
+  useEffect(() => {
+    const cleanup = setupRealtimeSubscription();
+
+    // Track mouse and keyboard activity
+    const handleActivity = () => trackUserActivity();
+    document.addEventListener('mousemove', handleActivity);
+    document.addEventListener('keypress', handleActivity);
+    document.addEventListener('click', handleActivity);
+
+    return () => {
+      cleanup?.();
+      document.removeEventListener('mousemove', handleActivity);
+      document.removeEventListener('keypress', handleActivity);
+      document.removeEventListener('click', handleActivity);
+    };
+  }, [setupRealtimeSubscription, trackUserActivity]);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      // Clear audit timeout
+      if (auditTimeoutRef.current) {
+        clearTimeout(auditTimeoutRef.current);
+      }
+
+      // Clear all conflict warning timeouts
+      conflictTimeoutsRef.current.forEach(timeoutId => {
+        clearTimeout(timeoutId);
+      });
+      conflictTimeoutsRef.current = [];
+
+      // Remove realtime channel
+      if (realtimeChannelRef.current) {
+        supabase.removeChannel(realtimeChannelRef.current);
+      }
+    };
+  }, []);
+
   const filteredOperations = applyFilters();
-  console.log('Filtered Operations:', filteredOperations); // Debug: log filtered operations before rendering
 
   const handleFilterChange = (filterType: keyof Filters, value: string) => {
     setFilters(prev => ({ ...prev, [filterType]: value }));
   };
 
-  const updateOperation = useCallback((id: string | undefined, updates: Partial<StockOperation>) => {
+  const updateOperation = useCallback((operationId: string | undefined, productId: string, updates: Partial<StockOperation>) => {
     setStockOperations(prev =>
-      prev.map(op => (op.id === id ? { ...op, ...updates } : op))
+      prev.map(op => {
+        // For existing operations, match by ID
+        if (operationId && op.id === operationId) {
+          return { ...op, ...updates };
+        }
+        // For new operations (no ID yet), match by product_id
+        if (!operationId && !op.id && op.product_id === productId) {
+          return { ...op, ...updates };
+        }
+        return op;
+      })
     );
   }, []);
 
-  const handleOperationChange = (productId: string, field: keyof StockOperation, value: number) => {
-    const op = stockOperations.find(op => op.product_id === productId);
+  const handleOperationChange = (operationId: string | undefined, productId: string, field: keyof StockOperation, value: number) => {
+    // Find operation by ID if it exists, otherwise by product_id for new operations
+    const op = operationId
+      ? stockOperations.find(op => op.id === operationId)
+      : stockOperations.find(op => !op.id && op.product_id === productId);
+
     if (!op) return;
 
-    const updatedOp: StockOperation = { ...op, [field]: value };
+    // Validate input value
+    const validatedValue = Math.max(0, Math.floor(value)); // Ensure non-negative integers
+    const oldValue = op[field] as number;
+
+    // Track user activity
+    trackUserActivity();
+
+    // Log audit trail for the change
+    if (oldValue !== validatedValue) {
+      logAuditTrail(
+        'update',
+        productId,
+        op.product?.name || 'Unknown Product',
+        field,
+        oldValue,
+        validatedValue
+      );
+    }
+
+    const updatedOp: StockOperation = { ...op, [field]: validatedValue };
 
     // Recalculate estimated closing stock
     if (['additional_stock', 'sales', 'stolen_stock', 'wastage_stock'].includes(field)) {
@@ -212,7 +479,7 @@ const AdminStockAccounting = () => {
       }
     }
 
-    updateOperation(op.id, updatedOp);
+    updateOperation(operationId, productId, updatedOp);
   };
 
   const handleSave = useCallback(async () => {
@@ -220,43 +487,117 @@ const AdminStockAccounting = () => {
 
     setSaving(true);
     try {
-      const operationsToSave: StockOperationRow[] = stockOperations.map(({ product, ...op }) => ({
-        ...op,
-        opening_stock: Number(op.opening_stock) || 0,
-        additional_stock: Number(op.additional_stock) || 0,
-        actual_closing_stock: Number(op.actual_closing_stock) || 0,
-        estimated_closing_stock: Number(op.estimated_closing_stock) || 0,
-        stolen_stock: Number(op.stolen_stock) || 0,
-        wastage_stock: Number(op.wastage_stock) || 0,
-        sales: Number(op.sales) || 0,
-        order_count: Number(op.order_count) || 0,
-        created_at: op.created_at || new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }));
+      const todayFormatted = new Date().toISOString().split('T')[0];
 
-      const { error } = await supabase
-        .from('daily_stock_operations')
-        .upsert(operationsToSave, { onConflict: 'id' });
+      // Separate new operations from existing ones
+      const newOperations: StockOperationRow[] = [];
+      const existingOperations: StockOperationRow[] = [];
 
-      if (error) throw error;
+      stockOperations.forEach(({ product, ...op }) => {
+        const cleanOp: StockOperationRow = {
+          ...op,
+          opening_stock: Number(op.opening_stock) || 0,
+          additional_stock: Number(op.additional_stock) || 0,
+          actual_closing_stock: Number(op.actual_closing_stock) || 0,
+          estimated_closing_stock: Number(op.estimated_closing_stock) || 0,
+          stolen_stock: Number(op.stolen_stock) || 0,
+          wastage_stock: Number(op.wastage_stock) || 0,
+          sales: Number(op.sales) || 0,
+          order_count: Number(op.order_count) || 0,
+          created_at: op.created_at || todayFormatted,
+          updated_at: todayFormatted
+        };
+
+        if (op.id) {
+          existingOperations.push(cleanOp);
+        } else {
+          newOperations.push(cleanOp);
+        }
+      });
+
+      // Handle new operations (insert)
+      if (newOperations.length > 0) {
+        const { error: insertError } = await supabase
+          .from('daily_stock_operations')
+          .insert(newOperations);
+        if (insertError) throw insertError;
+      }
+
+      // Handle existing operations (update)
+      if (existingOperations.length > 0) {
+        const { error: updateError } = await supabase
+          .from('daily_stock_operations')
+          .upsert(existingOperations, { onConflict: 'id' });
+        if (updateError) throw updateError;
+      }
 
       // Update product stocks with actual closing stock
-      const updates = stockOperations.map(op =>
-        supabase
-          .from('products')
-          .update({ shelf_stock: op.actual_closing_stock })
-          .eq('id', op.product_id)
+      // Use Promise.all for concurrent execution but limit batch size to avoid overwhelming the server
+      const batchSize = 10;
+      const productUpdateBatches = [];
+
+      for (let i = 0; i < stockOperations.length; i += batchSize) {
+        const batch = stockOperations.slice(i, i + batchSize);
+        const batchPromise = Promise.all(
+          batch.map(async op => {
+            const { error } = await supabase
+              .from('products')
+              .update({ shelf_stock: op.actual_closing_stock })
+              .eq('id', op.product_id);
+
+            if (error) {
+              console.error(`Failed to update product ${op.product_id}:`, error);
+              throw error;
+            }
+            return true;
+          })
+        );
+        productUpdateBatches.push(batchPromise);
+      }
+
+      // Execute all batches with error handling
+      try {
+        await Promise.all(productUpdateBatches);
+      } catch (batchError) {
+        console.error('Some product updates failed:', batchError);
+        // Continue with the rest of the save process, but log the error
+      }
+
+      // Log successful save to audit trail
+      await auditLogger.current.log(
+        'stock_operations_saved',
+        'daily_stock_operations',
+        {
+          operations_count: stockOperations.length,
+          new_operations: newOperations.length,
+          updated_operations: existingOperations.length,
+          user_id: user?.id,
+          user_name: profile?.name || 'Unknown User',
+          date: todayFormatted
+        },
+        'medium'
       );
 
-      await Promise.all(updates);
+      // Update local product state instead of full reload
+      setProducts(prev =>
+        prev.map(product => {
+          const updatedOp = stockOperations.find(op => op.product_id === product.id);
+          return updatedOp
+            ? { ...product, shelf_stock: updatedOp.actual_closing_stock }
+            : product;
+        })
+      );
+
+      // Update stock operations with new IDs for newly created operations
+      if (newOperations.length > 0) {
+        // Only reload if we have new operations that need IDs
+        loadStockOperations();
+      }
 
       toast({
         title: 'Success',
         description: 'Stock operations saved successfully',
       });
-
-      // Reload to get fresh data
-      loadStockOperations();
     } catch (error) {
       console.error('Error saving operations:', error);
       toast({
@@ -267,7 +608,7 @@ const AdminStockAccounting = () => {
     } finally {
       setSaving(false);
     }
-  }, [stockOperations, toast, loadStockOperations, errorMessages]);
+  }, [stockOperations, toast, loadStockOperations, errorMessages, user?.id, profile?.name]);
 
   if (loading) {
     return (
@@ -287,8 +628,60 @@ const AdminStockAccounting = () => {
             <h1 className="text-3xl font-bold">Daily Stock Accounting</h1>
             <p className="text-purple-100">Manage the stock operations for today</p>
           </div>
+          <div className="flex items-center gap-4">
+            {/* Active Users Indicator */}
+            {activeUsers.length > 1 && (
+              <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                <Users className="h-4 w-4" />
+                <span className="text-sm">{activeUsers.length - 1} other user{activeUsers.length > 2 ? 's' : ''} active</span>
+              </div>
+            )}
+
+            {/* Real-time Status */}
+            <div className="flex items-center gap-2 bg-green-500/20 px-3 py-2 rounded-lg">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm">Live</span>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Conflict Warnings */}
+      {conflictWarnings.map((warning, index) => (
+        <Alert key={index} className="border-orange-200 bg-orange-50">
+          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-orange-800">
+            {warning}. Your changes may conflict with recent updates.
+          </AlertDescription>
+        </Alert>
+      ))}
+
+      {/* Real-time Updates Panel */}
+      {realtimeUpdates.length > 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Recent Updates
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {realtimeUpdates.slice(0, 5).map((update) => (
+                <div key={update.id} className="text-xs flex items-center justify-between p-2 bg-white rounded border">
+                  <span>
+                    <strong>{update.user_name}</strong> updated <strong>{update.product_name}</strong>
+                    {' '}{update.field.replace('_', ' ')}: {update.old_value} → {update.new_value}
+                  </span>
+                  <Badge variant="outline" className="text-xs">
+                    {new Date(update.timestamp).toLocaleTimeString()}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters Section */}
       <div className="grid grid-cols-3 gap-4">
@@ -362,48 +755,57 @@ const AdminStockAccounting = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOperations.map((operation) => {
-                // Calculate sales as order_count * product.price
-                const sales = (operation.order_count || 0) * (operation.product?.price || 0);
-                // Calculate estimated closing stock
-                const estimatedClosingStock =
-                  (operation.opening_stock || 0) +
-                  (operation.additional_stock || 0) -
-                  sales;
-                // Calculate stolen stock as estimated_closing_stock - actual_closing_stock - wastage_stock
-                const stolenStock =
-                  estimatedClosingStock - (operation.actual_closing_stock || 0) - (operation.wastage_stock || 0);
-                return (
-                  <TableRow key={`${operation.product_id}-${operation.created_at}`}>
-                    <TableCell className="font-medium">
-                      {operation.product?.name || 'Unknown Product'}
-                    </TableCell>
-                    <TableCell>{operation.opening_stock}</TableCell>
-                    <TableCell>{operation.additional_stock}</TableCell>
-                    <TableCell className="text-right font-medium">{estimatedClosingStock}</TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={operation.actual_closing_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'actual_closing_stock', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={operation.wastage_stock}
-                        onChange={(e) => handleOperationChange(operation.product_id, 'wastage_stock', Number(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">{stolenStock}</TableCell>
-                    <TableCell>{sales}</TableCell>
-                  </TableRow>
-                );
-              })}
+              {filteredOperations.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                    No stock operations found for the selected filters.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredOperations.map((operation, index) => {
+                  // Calculate sales as order_count * product.price
+                  const sales = (operation.order_count || 0) * (operation.product?.price || 0);
+                  // Calculate estimated closing stock
+                  const estimatedClosingStock =
+                    (operation.opening_stock || 0) +
+                    (operation.additional_stock || 0) -
+                    sales;
+                  // Calculate stolen stock as estimated_closing_stock - actual_closing_stock - wastage_stock
+                  const stolenStock = Math.max(0,
+                    estimatedClosingStock - (operation.actual_closing_stock || 0) - (operation.wastage_stock || 0)
+                  );
+                  return (
+                    <TableRow key={operation.id || `temp-${operation.product_id}-${index}`}>
+                      <TableCell className="font-medium">
+                        {operation.product?.name || 'Unknown Product'}
+                      </TableCell>
+                      <TableCell>{operation.opening_stock}</TableCell>
+                      <TableCell>{operation.additional_stock}</TableCell>
+                      <TableCell className="text-right font-medium">{estimatedClosingStock}</TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={operation.actual_closing_stock || ''}
+                          onChange={(e) => handleOperationChange(operation.id, operation.product_id, 'actual_closing_stock', Number(e.target.value) || 0)}
+                          className="text-right"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={operation.wastage_stock || ''}
+                          onChange={(e) => handleOperationChange(operation.id, operation.product_id, 'wastage_stock', Number(e.target.value) || 0)}
+                          className="text-right"
+                        />
+                      </TableCell>
+                      <TableCell className="text-right font-medium">{stolenStock}</TableCell>
+                      <TableCell>{sales}</TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>
