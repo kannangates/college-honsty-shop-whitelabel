@@ -6,13 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { WHITELABEL_CONFIG } from '@/config';
-import { Loader2, Save, Users, Clock, AlertTriangle } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import { Loader2, Save, Users, Clock, AlertTriangle, Grid, List } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 import { useAuth } from '@/contexts/useAuth';
 import { AuditLogger } from '@/utils/auditLogger';
 import { Badge } from '@/features/gamification/components/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { StockOperationCardGrid } from '@/components/stock/StockOperationCardGrid';
+import { useResponsiveView } from '@/hooks/useResponsiveView';
 
 // Product as stored in DB
 interface Product {
@@ -92,6 +94,8 @@ const AdminStockAccounting = () => {
     status: 'all',
     stockStatus: 'all',
   });
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const isMobile = useResponsiveView();
 
   // Real-time and audit trail states
   const [realtimeUpdates, setRealtimeUpdates] = useState<RealtimeUpdate[]>([]);
@@ -106,6 +110,13 @@ const AdminStockAccounting = () => {
   const { user, profile } = useAuth();
   const errorMessages = WHITELABEL_CONFIG.messages.errors;
   const today = new Date().toISOString().split('T')[0];
+
+  // Auto-switch to cards view on mobile
+  useEffect(() => {
+    if (isMobile && viewMode === 'table') {
+      setViewMode('cards');
+    }
+  }, [isMobile, viewMode]);
 
   const broadcastUserActivity = useCallback(async () => {
     if (!user || !profile) return;
@@ -415,6 +426,12 @@ const AdminStockAccounting = () => {
 
   const filteredOperations = applyFilters();
 
+  // Calculate grand total sales
+  const grandTotalSales = filteredOperations.reduce((total, operation) => {
+    const sales = (operation.order_count || 0) * (operation.product?.price || 0);
+    return total + sales;
+  }, 0);
+
   const handleFilterChange = (filterType: keyof Filters, value: string) => {
     setFilters(prev => ({ ...prev, [filterType]: value }));
   };
@@ -629,6 +646,28 @@ const AdminStockAccounting = () => {
             <p className="text-purple-100">Manage the stock operations for today</p>
           </div>
           <div className="flex items-center gap-4">
+            {/* View Mode Toggle - Hidden on mobile */}
+            <div className="hidden sm:flex items-center border border-white/20 rounded-lg p-1">
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+                className="flex items-center gap-1 text-white hover:text-gray-900"
+              >
+                <List className="h-4 w-4" />
+                Table
+              </Button>
+              <Button
+                variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('cards')}
+                className="flex items-center gap-1 text-white hover:text-gray-900"
+              >
+                <Grid className="h-4 w-4" />
+                Cards
+              </Button>
+            </div>
+
             {/* Active Users Indicator */}
             {activeUsers.length > 1 && (
               <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
@@ -734,82 +773,116 @@ const AdminStockAccounting = () => {
         </Select>
       </div>
 
-      {/* Table Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Stock Operations</CardTitle>
-          <CardDescription>Today's stock accounting overview</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell>Product</TableCell>
-                <TableCell>Opening Stock</TableCell>
-                <TableCell>Additional Stock</TableCell>
-                <TableCell>Estimated Closing Stock</TableCell>
-                <TableCell>Actual Closing Stock</TableCell>
-                <TableCell>Wastage</TableCell>
-                <TableCell>Stolen Stock</TableCell>
-                <TableCell>Sales</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOperations.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                    No stock operations found for the selected filters.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredOperations.map((operation, index) => {
-                  // Calculate sales as order_count * product.price
-                  const sales = (operation.order_count || 0) * (operation.product?.price || 0);
-                  // Calculate estimated closing stock
-                  const estimatedClosingStock =
-                    (operation.opening_stock || 0) +
-                    (operation.additional_stock || 0) -
-                    sales;
-                  // Calculate stolen stock as estimated_closing_stock - actual_closing_stock - wastage_stock
-                  const stolenStock = Math.max(0,
-                    estimatedClosingStock - (operation.actual_closing_stock || 0) - (operation.wastage_stock || 0)
-                  );
-                  return (
-                    <TableRow key={operation.id || `temp-${operation.product_id}-${index}`}>
-                      <TableCell className="font-medium">
-                        {operation.product?.name || 'Unknown Product'}
+      {/* Stock Operations Display */}
+      {viewMode === 'table' ? (
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Stock Operations ({filteredOperations.length})</CardTitle>
+                <CardDescription>Today's stock accounting overview</CardDescription>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-green-600">₹{grandTotalSales.toLocaleString()}</div>
+                <div className="text-sm text-gray-500">Total Sales</div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Opening Stock</TableHead>
+                    <TableHead>Additional Stock</TableHead>
+                    <TableHead>Estimated Closing Stock</TableHead>
+                    <TableHead>Actual Closing Stock</TableHead>
+                    <TableHead>Wastage</TableHead>
+                    <TableHead>Stolen Stock</TableHead>
+                    <TableHead>Sales</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOperations.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                        No stock operations found for the selected filters.
                       </TableCell>
-                      <TableCell>{operation.opening_stock}</TableCell>
-                      <TableCell>{operation.additional_stock}</TableCell>
-                      <TableCell className="text-right font-medium">{estimatedClosingStock}</TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={operation.actual_closing_stock || ''}
-                          onChange={(e) => handleOperationChange(operation.id, operation.product_id, 'actual_closing_stock', Number(e.target.value) || 0)}
-                          className="text-right"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={operation.wastage_stock || ''}
-                          onChange={(e) => handleOperationChange(operation.id, operation.product_id, 'wastage_stock', Number(e.target.value) || 0)}
-                          className="text-right"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right font-medium">{stolenStock}</TableCell>
-                      <TableCell>{sales}</TableCell>
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                  ) : (
+                    filteredOperations.map((operation, index) => {
+                      // Calculate sales as order_count * product.price
+                      const sales = (operation.order_count || 0) * (operation.product?.price || 0);
+                      // Calculate estimated closing stock
+                      const estimatedClosingStock =
+                        (operation.opening_stock || 0) +
+                        (operation.additional_stock || 0) -
+                        sales;
+                      // Calculate stolen stock as estimated_closing_stock - actual_closing_stock - wastage_stock
+                      const stolenStock = Math.max(0,
+                        estimatedClosingStock - (operation.actual_closing_stock || 0) - (operation.wastage_stock || 0)
+                      );
+                      return (
+                        <TableRow key={operation.id || `temp-${operation.product_id}-${index}`}>
+                          <TableCell className="font-medium">
+                            {operation.product?.name || 'Unknown Product'}
+                          </TableCell>
+                          <TableCell>{operation.opening_stock}</TableCell>
+                          <TableCell>{operation.additional_stock}</TableCell>
+                          <TableCell className="text-right font-medium">{estimatedClosingStock}</TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={operation.actual_closing_stock || ''}
+                              onChange={(e) => handleOperationChange(operation.id, operation.product_id, 'actual_closing_stock', Number(e.target.value) || 0)}
+                              className="text-right"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={operation.wastage_stock || ''}
+                              onChange={(e) => handleOperationChange(operation.id, operation.product_id, 'wastage_stock', Number(e.target.value) || 0)}
+                              className="text-right"
+                            />
+                          </TableCell>
+                          <TableCell className="text-right font-medium">{stolenStock}</TableCell>
+                          <TableCell>{sales}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Stock Operations ({filteredOperations.length})</CardTitle>
+                <CardDescription>Today's stock accounting overview</CardDescription>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-green-600">₹{grandTotalSales.toLocaleString()}</div>
+                <div className="text-sm text-gray-500">Total Sales</div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <StockOperationCardGrid
+              operations={filteredOperations}
+              onOperationChange={handleOperationChange}
+              loading={loading}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Save Button */}
       <div className="flex justify-end">
