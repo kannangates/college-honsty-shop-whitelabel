@@ -67,6 +67,7 @@ const AdminPaymentReports = () => {
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
+      console.log('💳 Fetching payment records');
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -82,6 +83,7 @@ const AdminPaymentReports = () => {
         `)
         .order('created_at', { ascending: false });
 
+      console.log('💳 Payment records query result:', { data, error });
       if (error) throw error;
 
       const formattedData = data.map(order => {

@@ -63,7 +63,9 @@ const AdminOrderManagement = React.memo(() => {
           )
         `)
         .order('created_at', { ascending: false });
+      console.log('📦 Admin orders query result:', { data: allOrders, error: allOrdersError });
       if (allOrdersError) throw allOrdersError;
+      console.log('📦 Setting admin orders:', allOrders?.length || 0, 'orders found');
       setOrders(allOrders || []);
     } catch (error) {
       console.error('Error fetching orders:', error);

@@ -86,10 +86,25 @@ const MyOrders = () => {
   } = useRating();
 
   const fetchOrders = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, skipping order fetch');
+      setLoading(false);
+      return;
+    }
 
+    console.log('Fetching orders for user:', user.id);
+    console.log('User object:', user);
     setLoading(true);
     try {
+      // First, let's check if the user exists in the users table
+      const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('id, name, email, role')
+        .eq('id', user.id)
+        .single();
+
+      console.log('User profile check:', { userProfile, userError });
+
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -106,13 +121,32 @@ const MyOrders = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Orders query result:', { data, error, userIdUsed: user.id });
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw error;
+      }
+      console.log('Setting orders:', data?.length || 0, 'orders found');
       setOrders((data || []) as unknown as Order[]);
+
+      // If no orders found, let's check if there are any orders in the database at all
+      if (!data || data.length === 0) {
+        console.log('No orders found for user. This could mean:');
+        console.log('1. User has no orders');
+        console.log('2. RLS policy is blocking access');
+        console.log('3. User ID mismatch');
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       toast({
         title: 'Error',
-        description: 'Failed to load orders',
+        description: `Failed to load orders: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
     } finally {
@@ -137,6 +171,17 @@ const MyOrders = () => {
 
   return (
     <div className="max-w-screen-2xl mx-auto space-y-6">
+      {/* Debug Info - Remove this after fixing */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+          <strong>Debug Info:</strong>
+          <br />User ID: {user?.id || 'Not logged in'}
+          <br />User Email: {user?.email || 'N/A'}
+          <br />Orders Count: {orders.length}
+          <br />Loading: {loading ? 'Yes' : 'No'}
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-r from-[#202072] to-[#e66166] text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
