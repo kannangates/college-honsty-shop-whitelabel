@@ -840,6 +840,8 @@ const AdminStockAccounting = () => {
                         <TableRow key={operation.id || `temp-${operation.product_id}-${index}`}>
                           <TableCell className="font-medium">
                             {operation.product?.name || 'Unknown Product'}
+                            <br />
+                            <small className="text-gray-500">Price: ₹{unitPrice}</small>
                           </TableCell>
                           <TableCell>{operation.opening_stock}</TableCell>
                           <TableCell>{operation.additional_stock}</TableCell>
@@ -863,7 +865,7 @@ const AdminStockAccounting = () => {
                             />
                           </TableCell>
                           <TableCell className="text-right font-medium">{stolenStock}</TableCell>
-                          <TableCell>{sales}</TableCell>
+                          <TableCell>₹{sales.toLocaleString()}</TableCell>
                         </TableRow>
                       );
                     })
