@@ -432,8 +432,7 @@ const AdminStockAccounting = () => {
     const actualStockSold = Math.max(0,
       (operation.opening_stock || 0) +
       (operation.additional_stock || 0) -
-      (operation.actual_closing_stock || 0) -
-      (operation.wastage_stock || 0)
+      (operation.actual_closing_stock || 0)
     );
     const sales = actualStockSold * unitPrice;
     return total + sales;
@@ -825,8 +824,7 @@ const AdminStockAccounting = () => {
                       const actualStockSold = Math.max(0,
                         (operation.opening_stock || 0) +
                         (operation.additional_stock || 0) -
-                        (operation.actual_closing_stock || 0) -
-                        (operation.wastage_stock || 0)
+                        (operation.actual_closing_stock || 0)
                       );
                       const sales = actualStockSold * unitPrice;
                       // Calculate estimated closing stock (based on order count in units)

@@ -57,8 +57,7 @@ export const StockOperationCard: React.FC<StockOperationCardProps> = ({
   const actualStockSold = Math.max(0,
     (operation.opening_stock || 0) +
     (operation.additional_stock || 0) -
-    (operation.actual_closing_stock || 0) -
-    (operation.wastage_stock || 0)
+    (operation.actual_closing_stock || 0)
   );
   const sales = actualStockSold * unitPrice;
 
