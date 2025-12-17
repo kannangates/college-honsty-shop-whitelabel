@@ -142,18 +142,16 @@ const AdminStudentManagement = () => {
         ? null
         : editForm.mobile_number;
 
-      const requestBody: unknown = {
-        operation: 'update_user',
+      const requestBody = {
+        operation: 'update_user' as const,
         id: selectedStudent.id,
         name: editForm.name,
         department: editForm.department,
         status: editForm.status,
         role: editForm.role,
-        shift: editForm.shift
+        shift: editForm.shift,
+        mobile_number: mobileNumber
       };
-
-      // Always include mobile_number (can be null)
-      requestBody.mobile_number = mobileNumber;
 
       console.log('Sending update request:', requestBody);
 
