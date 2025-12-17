@@ -429,12 +429,7 @@ const AdminStockAccounting = () => {
   // Calculate grand total sales based on actual stock sold
   const grandTotalSales = filteredOperations.reduce((total, operation) => {
     const unitPrice = operation.product?.unit_price || operation.product?.price || 0;
-    const actualStockSold = Math.max(0,
-      (operation.opening_stock || 0) +
-      (operation.additional_stock || 0) -
-      (operation.actual_closing_stock || 0)
-    );
-    const sales = actualStockSold * unitPrice;
+    const sales = (operation.order_count || 0) * unitPrice;
     return total + sales;
   }, 0);
 
@@ -819,14 +814,9 @@ const AdminStockAccounting = () => {
                     </TableRow>
                   ) : (
                     filteredOperations.map((operation, index) => {
-                      // Calculate actual stock sold and sales revenue
+                      // Calculate sales revenue from actual orders
                       const unitPrice = operation.product?.unit_price || operation.product?.price || 0;
-                      const actualStockSold = Math.max(0,
-                        (operation.opening_stock || 0) +
-                        (operation.additional_stock || 0) -
-                        (operation.actual_closing_stock || 0)
-                      );
-                      const sales = actualStockSold * unitPrice;
+                      const sales = (operation.order_count || 0) * unitPrice;
                       // Calculate estimated closing stock (based on order count in units)
                       const estimatedClosingStock =
                         (operation.opening_stock || 0) +
