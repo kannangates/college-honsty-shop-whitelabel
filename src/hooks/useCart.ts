@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useStockManagement } from './useStockManagement';
 import { useBadgeService } from '@/features/gamification/hooks/useBadgeService';
+import { cartStorage } from '@/utils/cartStorage';
 
 interface Product {
   id: string;
@@ -32,13 +33,33 @@ export const useCart = () => {
   const { toast } = useToast();
   const { awardBadgesForUser } = useBadgeService();
   const { adjustShelfStock } = useStockManagement();
-  const [items, setItems] = useState<CartItem[]>([]);
+
+  // Initialize cart from localStorage
+  const [items, setItems] = useState<CartItem[]>(() => {
+    return cartStorage.isAvailable() ? cartStorage.load(user?.id) : [];
+  });
+
   const [isLoading, setIsLoading] = useState(false);
+
+  // Save cart to localStorage whenever items change
+  useEffect(() => {
+    if (cartStorage.isAvailable()) {
+      cartStorage.save(items, user?.id);
+    }
+  }, [items, user?.id]);
+
+  // Clear cart when user changes (logout/login)
+  useEffect(() => {
+    if (cartStorage.isAvailable()) {
+      const userSpecificCart = cartStorage.load(user?.id);
+      setItems(userSpecificCart);
+    }
+  }, [user?.id]);
 
   const addToCart = (product: Product) => {
     const existingItem = items.find((item: CartItem) => item.id === product.id);
     if (existingItem) {
-      setItems(items.map(item => 
+      setItems(items.map(item =>
         item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
       ));
     } else {
@@ -50,7 +71,7 @@ export const useCart = () => {
     const existingItem = items.find((item: CartItem) => item.id === productId);
     if (existingItem && existingItem.quantity > 1) {
       // Reduce quantity by 1 if more than 1
-      setItems(items.map(item => 
+      setItems(items.map(item =>
         item.id === productId ? { ...item, quantity: item.quantity - 1 } : item
       ));
     } else {
@@ -61,6 +82,10 @@ export const useCart = () => {
 
   const clearCart = () => {
     setItems([]);
+    // Also clear from localStorage
+    if (cartStorage.isAvailable()) {
+      cartStorage.clear(user?.id);
+    }
   };
 
   const getItemQuantity = (productId: string): number => {
@@ -131,8 +156,8 @@ export const useCart = () => {
       }
 
       // Clear cart
-      setItems([]);
-      
+      clearCart();
+
       toast({
         title: 'Order Placed Successfully!',
         description: `Order #${order.friendly_id || order.id.slice(0, 8)} has been created.`,
@@ -164,7 +189,7 @@ export const useCart = () => {
         // Remove the item completely
         setItems(items.filter(item => item.id !== productId));
       } else {
-        setItems(items.map(item => 
+        setItems(items.map(item =>
           item.id === productId ? { ...item, quantity } : item
         ));
       }
