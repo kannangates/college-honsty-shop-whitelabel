@@ -53,13 +53,6 @@ serve(async (req: Request) => {
     const roles = userRoles?.map(r => r.role) || [];
     const isAdmin = roles.includes('admin') || roles.includes('developer');
 
-    if (!isAdmin) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Forbidden: Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const requestBody = await req.json();
 
     // Validate input with Zod schema
@@ -93,7 +86,17 @@ serve(async (req: Request) => {
       );
     }
 
-    const { operation, productId, quantity } = validatedData;
+    const { operation, productId, quantity, source } = validatedData;
+
+    // Check permissions based on operation and source
+    const isCheckoutOperation = operation === 'adjust_shelf_stock' && source === 'Checkout';
+
+    if (!isAdmin && !isCheckoutOperation) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Forbidden: Admin access required for this operation' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     switch (operation) {
       case 'restock_warehouse': {
