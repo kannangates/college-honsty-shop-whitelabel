@@ -52,14 +52,21 @@ export const StockOperationCard: React.FC<StockOperationCardProps> = ({
   operation,
   onOperationChange
 }) => {
-  // Calculate sales as order_count * product.price
-  const sales = (operation.order_count || 0) * (operation.product?.price || 0);
+  // Calculate actual stock sold and sales revenue
+  const unitPrice = operation.product?.unit_price || operation.product?.price || 0;
+  const actualStockSold = Math.max(0,
+    (operation.opening_stock || 0) +
+    (operation.additional_stock || 0) -
+    (operation.actual_closing_stock || 0) -
+    (operation.wastage_stock || 0)
+  );
+  const sales = actualStockSold * unitPrice;
 
-  // Calculate estimated closing stock
+  // Calculate estimated closing stock (based on order count in units)
   const estimatedClosingStock =
     (operation.opening_stock || 0) +
     (operation.additional_stock || 0) -
-    sales;
+    (operation.order_count || 0);
 
   // Calculate stolen stock as estimated_closing_stock - actual_closing_stock - wastage_stock
   const stolenStock = Math.max(0,

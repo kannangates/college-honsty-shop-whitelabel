@@ -426,9 +426,16 @@ const AdminStockAccounting = () => {
 
   const filteredOperations = applyFilters();
 
-  // Calculate grand total sales
+  // Calculate grand total sales based on actual stock sold
   const grandTotalSales = filteredOperations.reduce((total, operation) => {
-    const sales = (operation.order_count || 0) * (operation.product?.price || 0);
+    const unitPrice = operation.product?.unit_price || operation.product?.price || 0;
+    const actualStockSold = Math.max(0,
+      (operation.opening_stock || 0) +
+      (operation.additional_stock || 0) -
+      (operation.actual_closing_stock || 0) -
+      (operation.wastage_stock || 0)
+    );
+    const sales = actualStockSold * unitPrice;
     return total + sales;
   }, 0);
 
@@ -813,13 +820,20 @@ const AdminStockAccounting = () => {
                     </TableRow>
                   ) : (
                     filteredOperations.map((operation, index) => {
-                      // Calculate sales as order_count * product.price
-                      const sales = (operation.order_count || 0) * (operation.product?.price || 0);
-                      // Calculate estimated closing stock
+                      // Calculate actual stock sold and sales revenue
+                      const unitPrice = operation.product?.unit_price || operation.product?.price || 0;
+                      const actualStockSold = Math.max(0,
+                        (operation.opening_stock || 0) +
+                        (operation.additional_stock || 0) -
+                        (operation.actual_closing_stock || 0) -
+                        (operation.wastage_stock || 0)
+                      );
+                      const sales = actualStockSold * unitPrice;
+                      // Calculate estimated closing stock (based on order count in units)
                       const estimatedClosingStock =
                         (operation.opening_stock || 0) +
                         (operation.additional_stock || 0) -
-                        sales;
+                        (operation.order_count || 0);
                       // Calculate stolen stock as estimated_closing_stock - actual_closing_stock - wastage_stock
                       const stolenStock = Math.max(0,
                         estimatedClosingStock - (operation.actual_closing_stock || 0) - (operation.wastage_stock || 0)
