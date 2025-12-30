@@ -31,17 +31,18 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
   const [confirmMode, setConfirmMode] = useState<'pay_now' | 'pay_later' | null>(null);
   const navigate = useNavigate();
 
+  const navigateToPayment = (mode: 'pay_now' | 'pay_later', order: { id: string; friendly_id?: string | null }) => {
+    const friendlyOrderId = order.friendly_id || order.id;
+    const encodedOrderId = encodeURIComponent(friendlyOrderId);
+    navigate(`/payment?mode=${mode}&orderId=${encodedOrderId}`);
+  };
+
   const handlePayNow = async () => {
     setLoadingPayNow(true);
     try {
       const order = await checkout('immediate');
       if (order) {
-        // Redirect to My Orders page where the Pay Now functionality works reliably
-        navigate('/my-orders');
-        toast({
-          title: 'Order Created Successfully!',
-          description: `Order #${order.friendly_id || order.id.slice(0, 8)} created. You can now pay from your orders page.`,
-        });
+        navigateToPayment('pay_now', order);
       }
     } catch (error) {
       console.error('Error creating order:', error);
@@ -55,12 +56,7 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
     try {
       const order = await checkout('later');
       if (order) {
-        // Redirect to My Orders page
-        navigate('/my-orders');
-        toast({
-          title: 'Order Created Successfully!',
-          description: `Order #${order.friendly_id || order.id.slice(0, 8)} created for later payment.`,
-        });
+        navigateToPayment('pay_later', order);
       }
     } catch (error) {
       console.error('Error creating order:', error);
@@ -95,7 +91,7 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
             <DialogTitle>Confirm Order</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            Are you sure you want to {confirmMode === 'pay_now' ? 'create this order? You will be redirected to your orders page to complete payment.' : 'create this order for later payment?'}
+            Are you sure you want to {confirmMode === 'pay_now' ? 'pay now' : 'pay later'}?
           </div>
           <DialogFooter>
             <Button onClick={handleConfirm} disabled={loadingPayNow || loadingPayLater}>
@@ -106,9 +102,9 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
                     <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                   </div>
-                  Creating Order...
+                  Processing...
                 </div>
-              ) : 'Create Order'}
+              ) : 'Confirm'}
             </Button>
             <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={loadingPayNow || loadingPayLater}>
               Cancel
@@ -241,9 +237,9 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
                         <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                       </div>
-                      Creating Order...
+                      Processing...
                     </div>
-                  ) : 'Create Order & Pay'}
+                  ) : 'Pay Now'}
                 </Button>
                 <Button
                   onClick={() => openConfirm('pay_later')}
@@ -257,7 +253,7 @@ export const CartSummary = ({ items, updateQuantity, totalPrice, checkout }: Car
                         <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                       </div>
-                      Creating Order...
+                      Processing...
                     </div>
                   ) : 'Pay Later'}
                 </Button>
