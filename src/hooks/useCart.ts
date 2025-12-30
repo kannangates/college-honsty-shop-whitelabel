@@ -102,6 +102,19 @@ export const useCart = () => {
 
     setIsLoading(true);
     try {
+      // Ensure we have a valid session before proceeding with checkout
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        console.error('Session validation failed during checkout:', sessionError);
+        toast({
+          title: 'Authentication Required',
+          description: 'Please refresh the page and try again.',
+          variant: 'destructive',
+        });
+        throw new Error('Authentication required. Please refresh the page and try again.');
+      }
+
       const totalAmount = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
 
       // Map payment modes to database enum values

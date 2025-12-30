@@ -29,15 +29,61 @@ export const useStockManagement = () => {
     try {
       console.log('Executing stock operation:', payload);
 
+      // Ensure we have a valid session before making the call
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        console.error('Session validation failed:', sessionError);
+        throw new Error('Authentication required. Please refresh the page and try again.');
+      }
+
       const { data, error } = await supabase.functions.invoke('stock-management', {
         body: payload
       });
 
       if (error) {
+        console.error('Stock management error:', error);
+
+        // If it's a 403 error, try refreshing the session and retry once
+        if (error.message?.includes('403') || error.message?.includes('Forbidden')) {
+          console.log('403 error detected, attempting to refresh session and retry...');
+
+          toast({
+            title: "Refreshing Session",
+            description: "Retrying operation with fresh authentication...",
+          });
+
+          await supabase.auth.refreshSession();
+
+          // Retry the operation once
+          const { data: retryData, error: retryError } = await supabase.functions.invoke('stock-management', {
+            body: payload
+          });
+
+          if (retryError) {
+            throw new Error(retryError.message || 'Stock operation failed after retry');
+          }
+
+          if (!retryData.success) {
+            console.error('Stock operation failed on retry:', retryData.error);
+            throw new Error(retryData.error || 'Stock operation failed after retry');
+          }
+
+          if (payload.operation !== 'get_stock_status' && retryData.message) {
+            toast({
+              title: "Stock Updated",
+              description: retryData.message,
+            });
+          }
+
+          return retryData;
+        }
+
         throw new Error(error.message || 'Stock operation failed');
       }
 
       if (!data.success) {
+        console.error('Stock operation failed:', data.error);
         throw new Error(data.error || 'Stock operation failed');
       }
 
