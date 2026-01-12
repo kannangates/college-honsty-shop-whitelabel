@@ -18,29 +18,23 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { token, secretKey }: CaptchaVerificationRequest = await req.json();
+    const requestBody = await req.json();
 
-    if (!token || !secretKey) {
+    // Validate input with Zod schema
+    const validationResult = captchaVerificationSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      type ZodIssue = { path: Array<string | number>; message: string };
+      const issues = (validationResult as unknown as { error: { issues: ZodIssue[] } }).error.issues as ZodIssue[];
       return new Response(
-        JSON.stringify({ error: 'Token and secret key are required' }),
+        JSON.stringify({
+          error: 'Validation failed',
+          details: issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-        const requestBody = await req.json();
-    
-        // Validate input with Zod schema
-        const validationResult = captchaVerificationSchema.safeParse(requestBody);
-        if (!validationResult.success) {
-          return new Response(
-            JSON.stringify({
-              error: 'Validation failed',
-              details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
-            }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
 
-        const { token, secretKey } = validationResult.data;
+    const { token, secretKey } = validationResult.data;
 
     // Verify with hCaptcha
     const verificationData = new FormData();

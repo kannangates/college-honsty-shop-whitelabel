@@ -58,11 +58,12 @@ serve(async (req) => {
     const requestBody = await req.json();
     const validationResult = updateRoleSchema.safeParse(requestBody);
     if (!validationResult.success) {
-      const validationError = validationResult as { error: { issues: Array<{ path: Array<string | number>; message: string }> } };
+      type ZodIssue = { path: Array<string | number>; message: string };
+      const issues = (validationResult as unknown as { error: { issues: ZodIssue[] } }).error.issues as ZodIssue[];
       return new Response(
         JSON.stringify({
           error: 'Validation failed',
-          details: validationError.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+          details: issues.map(e => ({ field: e.path.join('.'), message: e.message }))
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

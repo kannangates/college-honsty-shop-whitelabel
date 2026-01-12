@@ -1,7 +1,7 @@
 
 // supabase/functions/auth-login/index.ts
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { authLoginSchema } from "../_shared/schemas.ts";
 
 const corsHeaders = {
@@ -36,12 +36,14 @@ const handler = async (req: Request): Promise<Response> => {
     const validationResult = authLoginSchema.safeParse(requestBody);
 
     if (!validationResult.success) {
+      type ZodIssue = { path: Array<string | number>; message: string };
+      const issues = (validationResult as unknown as { error: { issues: ZodIssue[] } }).error.issues as ZodIssue[];
       return new Response(
         JSON.stringify({
           error: "Validation failed",
-          details: validationResult.error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message
+          details: issues.map(e => ({
+            field: e.path.join("."),
+            message: e.message
           }))
         }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }

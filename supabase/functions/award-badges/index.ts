@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { triggerN8nWebhook } from '../_shared/n8nWebhook.ts';
@@ -40,10 +39,12 @@ Deno.serve(async (req) => {
     // Validate input with Zod schema
     const validationResult = badgeAwardRequestSchema.safeParse(requestBody);
     if (!validationResult.success) {
+      type ZodIssue = { path: Array<string | number>; message: string };
+      const issues = (validationResult as unknown as { error: { issues: ZodIssue[] } }).error.issues as ZodIssue[];
       return new Response(
         JSON.stringify({
           error: 'Validation failed',
-          details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+          details: issues.map(e => ({ field: e.path.join('.'), message: e.message }))
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -155,7 +156,7 @@ async function checkAchievementBadges(
   badges: Badge[], 
   earnedBadgeIds: Set<string>, 
   newBadges: string[],
-  orderId?: string
+  _orderId?: string
 ) {
   // Get user's order count and payment data
   const { data: orders } = await supabase

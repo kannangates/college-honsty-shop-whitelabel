@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8';
 import { forgotPasswordSchema } from '../_shared/schemas.ts';
 
 const corsHeaders = {
@@ -39,31 +39,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { studentId }: ForgotPasswordRequest = await req.json();
-    console.log('Password reset request for student ID:', studentId);
+    const requestBody = await req.json();
+    console.log('Password reset request');
 
-    if (!studentId) {
+    // Validate input with Zod schema
+    const validationResult = forgotPasswordSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      type ZodIssue = { path: Array<string | number>; message: string };
+      const issues = (validationResult as unknown as { error: { issues: ZodIssue[] } }).error.issues as ZodIssue[];
       return new Response(
-        JSON.stringify({ error: 'Student ID is required' }),
+        JSON.stringify({
+          error: 'Validation failed',
+          details: issues.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-        const requestBody = await req.json();
-    
-        // Validate input with Zod schema
-        const validationResult = forgotPasswordSchema.safeParse(requestBody);
-        if (!validationResult.success) {
-          return new Response(
-            JSON.stringify({
-              error: 'Validation failed',
-              details: validationResult.error.issues.map(e => ({ field: e.path.join('.'), message: e.message }))
-            }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
 
-        const { studentId } = validationResult.data;
-        console.log('Password reset request for student ID:', studentId);
+    const { studentId } = validationResult.data;
+    console.log('Password reset request for student ID:', studentId);
 
     // Find user by student ID
     console.log('Looking up user with student ID:', studentId);

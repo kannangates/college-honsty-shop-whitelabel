@@ -58,37 +58,21 @@ serve(async (req: Request) => {
     const requestBody = await req.json();
 
     // Validate input with Zod schema
-    let validatedData;
-    try {
-      validatedData = stockOperationSchema.parse(requestBody);
-    } catch (error) {
-      if (error instanceof Error && 'issues' in error) {
-        const zodError = error as { issues: Array<{ path: string[]; message: string }> };
-        const errorDetails = zodError.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message
-        }));
-
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Validation failed',
-            details: errorDetails
-          }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
+    const validationResult = stockOperationSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      type ZodIssue = { path: Array<string | number>; message: string };
+      const issues = (validationResult as unknown as { error: { issues: ZodIssue[] } }).error.issues as ZodIssue[];
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Invalid request data'
+          error: 'Validation failed',
+          details: issues.map(e => ({ field: e.path.join('.'), message: e.message }))
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { operation, productId, quantity, source } = validatedData;
+    const { operation, productId, quantity, source } = validationResult.data;
 
     // Check permissions based on operation and source
     const isCheckoutOperation = operation === 'adjust_shelf_stock' && source === 'Checkout';
