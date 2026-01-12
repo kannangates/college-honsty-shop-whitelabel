@@ -4,6 +4,16 @@ A modern honesty shop management system built specifically for **Shasun
 College**. This application promotes integrity and trust by allowing students to
 purchase items on an honor system, tracking their honesty points and badges.
 
+## Recent Changes (2026-01-12)
+
+- **Fixes**: Corrected Zod `safeParse` handling in Supabase edge functions so
+  TypeScript can safely access validation errors when parsing fails.
+- **Files Updated**: `supabase/functions/get-database-schema/index.ts`,
+  `supabase/functions/update-table-stats/index.ts`.
+- **Other**: Removed an unused `SupabaseClient` import from
+  `supabase/functions/get-database-schema/index.ts` and addressed related lint
+  errors.
+
 ## ✨ Features
 
 ### Core Features

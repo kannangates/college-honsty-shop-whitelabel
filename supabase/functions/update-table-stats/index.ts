@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
         const refreshSchema = z.enum(['true', 'false']).optional();
         const refreshValidation = refreshSchema.safeParse(refreshParam);
     
-        if (!refreshValidation.success) {
+        if (refreshValidation.success === false) {
           return new Response(
             JSON.stringify({
               error: 'Invalid refresh parameter',
