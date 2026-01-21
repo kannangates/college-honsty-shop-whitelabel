@@ -51,15 +51,19 @@ function intToBytes(num: number): Uint8Array {
  * Generate HMAC-SHA1 hash
  */
 async function hmacSha1(key: Uint8Array, message: Uint8Array): Promise<Uint8Array> {
+  // Convert to ArrayBuffer to satisfy Deno's stricter type checking
+  const keyBuffer = key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength) as ArrayBuffer;
+  const messageBuffer = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength) as ArrayBuffer;
+  
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key,
+    keyBuffer,
     { name: 'HMAC', hash: 'SHA-1' },
     false,
     ['sign']
   );
 
-  const signature = await crypto.subtle.sign('HMAC', cryptoKey, message);
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageBuffer);
   return new Uint8Array(signature);
 }
 

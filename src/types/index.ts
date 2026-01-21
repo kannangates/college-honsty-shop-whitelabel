@@ -33,7 +33,7 @@ export * from './common';
 export * from './api';
 
 // Branding & Configuration
-export type { BrandingConfig, ColorScheme, MessagesJSON, WhitelabelConfig } from './branding';
+export type { ThemeJSON, FormsConfig, AppConfig, SystemConfig, ConfigJSON, MessagesJSON } from './branding';
 
 // Supabase & API
 export * from './supabase';
