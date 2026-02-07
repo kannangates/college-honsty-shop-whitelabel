@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 import { LoadingSpinner } from "./components/common/LoadingSpinner";
 import { registerServiceWorker } from "./utils/registerServiceWorker";
 import GlobalErrorBoundary from "./components/common/GlobalErrorBoundary";
-import "./App.css";
 
 // Environment check removed for production
 

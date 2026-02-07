@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { Share2, Pin } from 'lucide-react';
-import html2canvas from 'html2canvas';
 
 // --- PROPS INTERFACE ---
 interface NotificationCardProps {
@@ -58,6 +57,7 @@ export const NotificationCard = ({ notification, onMarkAsRead, onReactionUpdate 
     onReactionUpdate(notification.id, 'share');
     if (!cardRef.current) return;
     try {
+      const html2canvas = (await import('html2canvas')).default;
       cardRef.current.classList.add('is-exporting');
       const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true });
       cardRef.current.classList.remove('is-exporting');

@@ -1,6 +1,7 @@
-import React from 'react';
-import TopPointsCelebration from '../ui/TopPointsCelebration';
-import RankCelebration from '../ui/RankCelebration';
+import React, { Suspense, lazy } from 'react';
+
+const TopPointsCelebration = lazy(() => import('../ui/TopPointsCelebration'));
+const RankCelebration = lazy(() => import('../ui/RankCelebration'));
 
 interface CelebrationManagerProps {
   showCelebration: boolean;
@@ -18,13 +19,13 @@ export const CelebrationManager: React.FC<CelebrationManagerProps> = ({
   onRankCelebrationComplete
 }) => {
   return (
-    <>
+    <Suspense fallback={null}>
       {showCelebration && (
         <TopPointsCelebration onComplete={onCelebrationComplete} />
       )}
       {showRankCelebration && currentUserRank && (
         <RankCelebration rank={currentUserRank} />
       )}
-    </>
+    </Suspense>
   );
 };

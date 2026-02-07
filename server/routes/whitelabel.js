@@ -10,10 +10,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Supabase client for auth verification
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || 'https://vkuagjkrpbagrchsqmsf.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://vkuagjkrpbagrchsqmsf.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY is missing. Admin operations may fail.');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Middleware to verify admin/developer access
 const requireAdminOrDeveloper = async (req, res, next) => {
@@ -27,9 +31,10 @@ const requireAdminOrDeveloper = async (req, res, next) => {
     const token = authHeader.replace('Bearer ', '');
 
     // Use the anon key client to verify the user's JWT token
+    // We use the same URL as the admin client
     const anonClient = createClient(
-      process.env.VITE_SUPABASE_URL || 'https://vkuagjkrpbagrchsqmsf.supabase.co',
-      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
+      supabaseUrl,
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
     );
 
     const { data: { user }, error } = await anonClient.auth.getUser(token);

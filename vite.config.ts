@@ -35,6 +35,9 @@ export default defineConfig(({ mode }) => ({
       transformMixedEsModules: true,
     },
   },
+  esbuild: {
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
+  },
   server: {
     host: "::",
     port: 8080,
