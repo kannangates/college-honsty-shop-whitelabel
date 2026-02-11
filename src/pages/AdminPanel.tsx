@@ -366,27 +366,57 @@ const AdminPanel = () => {
                   </div>
                   <div>
                     <Label htmlFor="studentId" className="text-xs">Student ID</Label>
-                    <StudentIdCombobox
-                      value={announcement.studentId}
-                      onChange={(studentId) => {
-                        setAnnouncement(prev => ({
-                          ...prev,
-                          studentId,
-                          department: studentId.trim() !== '' ? '' : prev.department,
-                        }));
-                      }}
-                      disabled={announcement.department.trim() !== ''}
-                    />
+                    <div className="flex gap-2 items-center">
+                      <div className="flex-1">
+                        <StudentIdCombobox
+                          value={announcement.studentId}
+                          onChange={(studentId) => {
+                            setAnnouncement(prev => ({
+                              ...prev,
+                              studentId,
+                              department: studentId.trim() !== '' ? '' : prev.department,
+                            }));
+                          }}
+                          disabled={announcement.department.trim() !== ''}
+                        />
+                      </div>
+                      {announcement.studentId.trim() !== '' && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs px-2 h-8 text-destructive"
+                          onClick={() => setAnnouncement(prev => ({ ...prev, studentId: '' }))}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="department" className="text-xs">Target Department</Label>
-                    <DepartmentCombobox
-                      value={announcement.department}
-                      onChange={(label) => {
-                        setAnnouncement(prev => ({ ...prev, department: label, studentId: label.trim() !== '' ? '' : prev.studentId }));
-                      }}
-                      disabled={announcement.studentId.trim() !== ''}
-                    />
+                    <div className="flex gap-2 items-center">
+                      <div className="flex-1">
+                        <DepartmentCombobox
+                          value={announcement.department}
+                          onChange={(label) => {
+                            setAnnouncement(prev => ({ ...prev, department: label, studentId: label.trim() !== '' ? '' : prev.studentId }));
+                          }}
+                          disabled={announcement.studentId.trim() !== ''}
+                        />
+                      </div>
+                      {announcement.department.trim() !== '' && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs px-2 h-8 text-destructive"
+                          onClick={() => setAnnouncement(prev => ({ ...prev, department: '' }))}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="pinTill" className="text-xs">Pin notification till date</Label>

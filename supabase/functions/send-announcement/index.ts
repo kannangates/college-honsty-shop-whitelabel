@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       let query = supabase
         .from('users')
         .select('id')
-        .eq('role', 'student')
+        .eq('status', 'active')
 
       if (deptFilter.length > 0) {
         const deptNames = deptFilter.map(code => deptCodeToDisplay[code]).filter(Boolean)
