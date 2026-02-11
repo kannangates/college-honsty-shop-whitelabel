@@ -78,6 +78,7 @@ export const PaymentStatusModal = ({ open, onOpenChange, onStatusUpdated, orderD
 
     try {
       const updateData: Record<string, unknown> = {
+        id: orderData.id,
         payment_status: formData.payment_status,
       };
 
@@ -92,12 +93,26 @@ export const PaymentStatusModal = ({ open, onOpenChange, onStatusUpdated, orderD
         updateData.paid_at = null;
       }
 
-      const { error } = await supabase
-        .from('orders')
-        .update(updateData)
-        .eq('id', orderData.id);
+      // Use edge function for admin updates (bypasses RLS)
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/order-management`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            operation: 'update_order',
+            ...updateData,
+          }),
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update payment status');
+      }
 
       toast({
         title: 'Success',
@@ -110,7 +125,7 @@ export const PaymentStatusModal = ({ open, onOpenChange, onStatusUpdated, orderD
       console.error('Error updating payment status:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update payment status',
+        description: error instanceof Error ? error.message : 'Failed to update payment status',
         variant: 'destructive',
       });
     } finally {
