@@ -81,24 +81,38 @@ const AdminOrderManagement = React.memo(() => {
 
   const fetchStats = useCallback(async () => {
     try {
-      // Calculate stats locally from orders if not provided by backend
+      // Calculate today's stats from orders
       let todayOrders = 0, revenue = 0, unpaidRevenue = 0, avgOrder = 0;
-      const today = new Date().toDateString();
-      let paidOrders = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of today
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1); // Start of tomorrow
+
+      let paidOrdersToday = 0;
+
       orders.forEach(order => {
-        const isToday = new Date(order.created_at).toDateString() === today;
-        if (isToday) todayOrders++;
-        // Revenue: paid orders
-        if (order.payment_status === 'paid') {
-          revenue += order.total_amount;
-          paidOrders++;
-        }
-        // Unpaid Revenue: unpaid orders (exclude cancelled)
-        if (order.payment_status === 'unpaid') {
-          unpaidRevenue += order.total_amount;
+        const orderDate = new Date(order.created_at);
+        const isToday = orderDate >= today && orderDate < tomorrow;
+
+        if (isToday) {
+          todayOrders++;
+
+          // Today's Revenue: paid orders from today
+          if (order.payment_status === 'paid') {
+            revenue += order.total_amount;
+            paidOrdersToday++;
+          }
+
+          // Today's Unpaid Revenue: unpaid orders from today
+          if (order.payment_status === 'unpaid') {
+            unpaidRevenue += order.total_amount;
+          }
         }
       });
-      avgOrder = paidOrders > 0 ? Math.round(revenue / paidOrders) : 0;
+
+      // Today's Average Order: average of paid orders from today
+      avgOrder = paidOrdersToday > 0 ? Math.round(revenue / paidOrdersToday) : 0;
+
       setStats({ todayOrders, revenue, unpaidRevenue, avgOrder });
     } catch (error) {
       console.error('Error calculating stats:', error);

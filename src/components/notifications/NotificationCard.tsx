@@ -16,24 +16,10 @@ interface NotificationCardProps {
     is_read: boolean;
     reach_count: number;
     shared_count: number;
-    imageUrl?: string; 
   };
   onMarkAsRead: (id: string) => void;
   onReactionUpdate: (id: string, type: 'reach' | 'share') => void;
 }
-
-// --- ANNOUNCEMENT PLACEHOLDER (Updated Colors) ---
-const AnnouncementPlaceholder = () => (
-  <div className="w-full aspect-video bg-slate-100 flex items-center justify-center p-4">
-    <div className="text-center text-slate-400">
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto">
-        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-      </svg>
-      <p className="text-xs font-semibold mt-2">ANNOUNCEMENT</p>
-    </div>
-  </div>
-);
 
 
 // --- MAIN COMPONENT ---
@@ -74,7 +60,7 @@ export const NotificationCard = ({ notification, onMarkAsRead, onReactionUpdate 
       console.error('Error exporting notification:', error);
     }
   };
-  
+
   const getRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -88,7 +74,7 @@ export const NotificationCard = ({ notification, onMarkAsRead, onReactionUpdate 
     if (hours < 24) return `${hours}h ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
-  
+
   const getTypeBadge = (type: string) => {
     const typeMap: { [key: string]: { emoji: string; className: string } } = {
       'top_rank_change': { emoji: '🏆', className: 'bg-amber-100 text-amber-800' },
@@ -104,7 +90,7 @@ export const NotificationCard = ({ notification, onMarkAsRead, onReactionUpdate 
       </Badge>
     );
   };
-  
+
   return (
     <Card
       ref={cardRef}
@@ -133,15 +119,6 @@ export const NotificationCard = ({ notification, onMarkAsRead, onReactionUpdate 
           </div>
         </div>
       </div>
-
-      {notification.imageUrl && (
-        <div className="w-full aspect-video bg-slate-100">
-          <img src={notification.imageUrl} alt={notification.title} className="w-full h-full object-cover" />
-        </div>
-      )}
-      {!notification.imageUrl && notification.type === 'announcement' && (
-        <AnnouncementPlaceholder />
-      )}
 
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center gap-1 bg-slate-100 rounded-full p-1">

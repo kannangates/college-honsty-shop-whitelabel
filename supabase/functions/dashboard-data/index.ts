@@ -97,17 +97,18 @@ Deno.serve(async (req: Request) => {
 
     // Parallel execution of independent queries for better performance
     const [
-      totalOrders,
+      todayOrders,
       allUnpaidOrdersValue,
       todayUnpaidOrders,
       topStudentsData,
       topDepartmentsData,
       stockData
     ] = await Promise.all([
-      // Total orders count (all time) - all users
+      // Today's orders count - all users
       supabase
         .from('orders')
-        .select('id', { count: 'exact', head: true }),
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStart.toISOString()),
 
       // Total unpaid orders value (all time) - all users
       supabase
@@ -177,7 +178,7 @@ Deno.serve(async (req: Request) => {
 
     const dashboardData = {
       stats: {
-        totalOrders: totalOrders.count || 0,
+        totalOrders: todayOrders.count || 0,
         userPendingOrders: currentUserOrdersCount,
         todayUnpaidOrders: todayUnpaidOrders.count || 0,
         totalUnpaidOrdersValue: totalUnpaidValue,

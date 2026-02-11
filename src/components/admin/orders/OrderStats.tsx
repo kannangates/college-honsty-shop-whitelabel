@@ -21,21 +21,21 @@ export const OrderStats = ({ stats }: OrderStatsProps) => {
       iconColor: "text-blue-600"
     },
     {
-      title: "Revenue",
+      title: "Today's Revenue",
       value: `₹${stats.revenue}`,
       icon: DollarSign,
       bgColor: "bg-green-100",
       iconColor: "text-green-600"
     },
     {
-      title: "Unpaid Revenue",
+      title: "Today's Unpaid Revenue",
       value: `₹${stats.unpaidRevenue}`,
       icon: DollarSign,
       bgColor: "bg-yellow-100",
       iconColor: "text-yellow-600"
     },
     {
-      title: "Avg Order",
+      title: "Today's Avg Order",
       value: `₹${stats.avgOrder}`,
       icon: TrendingUp,
       bgColor: "bg-purple-100",
