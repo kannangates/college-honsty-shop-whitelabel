@@ -48,7 +48,6 @@ Deno.serve(async (req) => {
           target_user_id: requestBody.target_user_id,
           is_pinned: requestBody.is_pinned || false,
           pin_till: requestBody.pin_till || null,
-          image_url: requestBody.imageUrl || null,
           created_at: new Date().toISOString()
         })
         .select()
@@ -79,7 +78,7 @@ Deno.serve(async (req) => {
         'commerce': 'B.COM',
         'psychology': 'B.Sc (PSYCHOLOGY)',
         'management': 'B B A',
-        'all': null
+        'all': ''
       }
 
       let deptFilter = requestBody.department
@@ -126,7 +125,6 @@ Deno.serve(async (req) => {
         target_user_id: user.id,
         is_pinned: requestBody.is_pinned || false,
         pin_till: requestBody.pin_till || null,
-        image_url: requestBody.imageUrl || null,
         created_at: new Date().toISOString()
       }))
 
