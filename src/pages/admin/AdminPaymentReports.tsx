@@ -84,9 +84,18 @@ const AdminPaymentReports = () => {
         .order('created_at', { ascending: false });
 
       console.log('💳 Payment records query result:', { data, error });
-      if (error) throw error;
+      if (error) {
+        console.error('💳 Supabase error:', error);
+        throw error;
+      }
 
-      const formattedData = data.map(order => {
+      if (!data || !Array.isArray(data)) {
+        console.warn('⚠️ No data returned from payment records query');
+        setPaymentRecords([]);
+        return;
+      }
+
+      const formattedData = data.map((order: any) => {
         const getStatusLabel = (status: string) => {
           switch (status) {
             case 'paid': return 'Paid';
@@ -97,19 +106,24 @@ const AdminPaymentReports = () => {
           }
         };
 
-        return {
-          id: order.id,
-          studentId: order.users?.student_id || 'Unknown',
-          studentName: order.users?.name || 'Unknown',
-          amount: order.total_amount,
-          date: order.paid_at ? format(new Date(order.paid_at), 'yyyy-MM-dd') : format(new Date(order.created_at), 'yyyy-MM-dd'),
-          method: order.payment_mode || 'N/A',
-          status: getStatusLabel(order.payment_status) as PaymentRecord['status'],
-          transactionId: order.transaction_id || 'N/A',
-          orderId: order.friendly_id || order.id.slice(0, 8),
-          createdAt: order.created_at
-        };
-      });
+        try {
+          return {
+            id: order.id || '',
+            studentId: order.users?.student_id || 'Unknown',
+            studentName: order.users?.name || 'Unknown',
+            amount: order.total_amount || 0,
+            date: order.paid_at ? format(new Date(order.paid_at), 'yyyy-MM-dd') : format(new Date(order.created_at || new Date()), 'yyyy-MM-dd'),
+            method: order.payment_mode || 'N/A',
+            status: getStatusLabel(order.payment_status || 'unpaid') as PaymentRecord['status'],
+            transactionId: order.transaction_id || 'N/A',
+            orderId: order.friendly_id || order.id?.slice(0, 8) || 'N/A',
+            createdAt: order.created_at
+          };
+        } catch (mapError) {
+          console.error('Error mapping order:', mapError, order);
+          return null;
+        }
+      }).filter((record: PaymentRecord | null): record is PaymentRecord => record !== null);
 
       setPaymentRecords(formattedData);
     } catch (error) {
