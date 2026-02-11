@@ -15,6 +15,7 @@ import { Badge } from '@/features/gamification/components/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { StockOperationCardGrid } from '@/components/stock/StockOperationCardGrid';
 import { useResponsiveView } from '@/hooks/useResponsiveView';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 // Product as stored in DB
 interface Product {
@@ -654,9 +655,8 @@ const AdminStockAccounting = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <span className="ml-2">Loading stock operations...</span>
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner text="Loading stock operations..." />
       </div>
     );
   }

@@ -32,9 +32,9 @@ export const ProductFilters = ({
 }: ProductFiltersProps) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-      <div className="flex flex-col lg:flex-row gap-4 items-center">
+      <div className="flex flex-col sm:flex-row gap-4 items-center w-full">
         {/* Search Input */}
-        <div className="w-full lg:w-80">
+        <div className="flex-1 min-w-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -47,7 +47,7 @@ export const ProductFilters = ({
         </div>
 
         {/* Category Filter */}
-        <div className="w-full lg:w-48">
+        <div className="flex-1 min-w-[200px]">
           <Select value={selectedCategory} onValueChange={onCategoryChange}>
             <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
               <SelectValue placeholder="Category" />
@@ -64,7 +64,7 @@ export const ProductFilters = ({
         </div>
 
         {/* Status Filter */}
-        <div className="w-full lg:w-40">
+        <div className="flex-1 min-w-[180px]">
           <Select value={selectedStatus} onValueChange={onStatusChange}>
             <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
               <SelectValue placeholder="Status" />
@@ -78,7 +78,7 @@ export const ProductFilters = ({
         </div>
 
         {/* Stock Filter */}
-        <div className="w-full lg:w-44">
+        <div className="flex-1 min-w-[200px]">
           <Select value={stockFilter} onValueChange={onStockFilterChange}>
             <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
               <SelectValue placeholder="Stock Level" />

@@ -55,10 +55,10 @@ export const OrderFilters = ({
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="space-y-4">
-        {/* First Row: Search and Filters */}
+        {/* First Row: Search, Filters, and Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search Box */}
-          <div className="relative flex-1">
+          {/* Search Box - Reduced Width */}
+          <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search by student name, ID, or order number..."
@@ -119,26 +119,26 @@ export const OrderFilters = ({
               </PopoverContent>
             </Popover>
           </div>
-        </div>
 
-        {/* Second Row: Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
-          <Button
-            variant="outline"
-            onClick={onClearDateFilter}
-            className="h-11 px-4 border-gray-200 hover:border-gray-300 w-full sm:w-auto"
-          >
-            Clear Filters
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onRefresh}
-            disabled={loading}
-            className="h-11 px-4 border-gray-200 hover:border-gray-300 w-full sm:w-auto"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          {/* Action Buttons - Moved to same row */}
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={onClearDateFilter}
+              className="h-11 px-4 border-gray-200 hover:border-gray-300 flex-1 sm:flex-none"
+            >
+              Clear
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onRefresh}
+              disabled={loading}
+              className="h-11 px-4 border-gray-200 hover:border-gray-300 flex-1 sm:flex-none"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
     </div>
