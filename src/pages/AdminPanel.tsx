@@ -375,6 +375,7 @@ const AdminPanel = () => {
                           department: studentId.trim() !== '' ? '' : prev.department,
                         }));
                       }}
+                      disabled={announcement.department.trim() !== ''}
                     />
                   </div>
                   <div>
@@ -382,7 +383,7 @@ const AdminPanel = () => {
                     <DepartmentCombobox
                       value={announcement.department}
                       onChange={(label) => {
-                        setAnnouncement({ ...announcement, department: label });
+                        setAnnouncement(prev => ({ ...prev, department: label, studentId: label.trim() !== '' ? '' : prev.studentId }));
                       }}
                       disabled={announcement.studentId.trim() !== ''}
                     />
