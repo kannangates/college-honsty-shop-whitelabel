@@ -102,13 +102,13 @@ const ProductTable = () => {
                 <div className="text-center py-8 px-4">
                   <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {searchTerm || selectedCategory !== 'all' || stockFilter !== 'all'
+                    {searchTerm
                       ? 'No products match your filters'
                       : (productMessages.no_products || 'No products available')
                     }
                   </h3>
                   <p className="text-gray-500">
-                    {searchTerm || selectedCategory !== 'all' || stockFilter !== 'all'
+                    {searchTerm
                       ? 'Try adjusting your search criteria or filters'
                       : (productMessages.check_back || 'Check back later for new products')
                     }
