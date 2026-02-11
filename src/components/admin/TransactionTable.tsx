@@ -3,9 +3,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Edit, Trash2, Smartphone, Building2, Banknote, CreditCard, QrCode, Clock } from 'lucide-react';
+import { Download, Edit, Smartphone, Building2, Banknote, CreditCard, QrCode, Clock } from 'lucide-react';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useDataExport } from '@/hooks/useDataExport';
 import { format } from 'date-fns';
 import { getPaymentStatusClass, getPaymentMethodIcon, formatPaymentMethod } from '@/utils/statusSystem';
@@ -37,9 +36,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   onEditStatus,
   onDelete
 }) => {
-  const [deletingTransactions, setDeletingTransactions] = useState<Set<string>>(new Set());
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const { exportData, isExporting } = useDataExport();
 
 
@@ -55,28 +51,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
     } catch (error) {
       return dateString; // Return original if parsing fails
     }
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!pendingDeleteId || !onDelete) return;
-
-    setDeletingTransactions(prev => new Set(prev).add(pendingDeleteId));
-    try {
-      await onDelete(pendingDeleteId);
-    } finally {
-      setDeletingTransactions(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(pendingDeleteId);
-        return newSet;
-      });
-      setConfirmDialogOpen(false);
-      setPendingDeleteId(null);
-    }
-  };
-
-  const openDeleteDialog = (transactionId: string) => {
-    setPendingDeleteId(transactionId);
-    setConfirmDialogOpen(true);
   };
 
   const handleExport = () => {
@@ -191,34 +165,15 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {!isStaticRecord && (
-                        <div className="flex gap-2">
-                          {onDelete && (
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              disabled={deletingTransactions.has(transaction.id)}
-                              onClick={() => openDeleteDialog(transaction.id)}
-                              aria-label="Delete Transaction"
-                            >
-                              {deletingTransactions.has(transaction.id) ? (
-                                'Deleting...'
-                              ) : (
-                                <Trash2 className="h-4 w-4" />
-                              )}
-                            </Button>
-                          )}
-                          {onEditStatus && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => onEditStatus(transaction)}
-                              aria-label="Edit Status"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
+                      {!isStaticRecord && onEditStatus && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onEditStatus(transaction)}
+                          aria-label="Edit Status"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                       )}
                     </TableCell>
                   </TableRow>
@@ -228,15 +183,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
           </TableBody>
         </Table>
       </CardContent>
-
-      <ConfirmDialog
-        open={confirmDialogOpen}
-        onOpenChange={setConfirmDialogOpen}
-        title="Delete Transaction"
-        description={`Are you sure you want to delete this transaction? This action cannot be undone.`}
-        onConfirm={handleDeleteConfirm}
-        destructive={true}
-      />
     </Card>
   );
 };

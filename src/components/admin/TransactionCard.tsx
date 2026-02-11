@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Edit, Trash2, Calendar, User, Hash, Receipt, Smartphone, Building2, Banknote, QrCode, Clock } from 'lucide-react';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { format } from 'date-fns';
 import { getPaymentStatusClass, getPaymentIconClass, getPaymentBackgroundClass, getPaymentMethodIcon, formatPaymentMethod, getBadgeVariantClass } from '@/utils/statusSystem';
 
@@ -32,8 +30,6 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
   onEditStatus,
   onDelete
 }) => {
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
 
 
@@ -52,22 +48,6 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
   };
 
   const isStaticRecord = !!transaction.items; // Static records have items array
-
-  const handleDeleteConfirm = async () => {
-    if (!onDelete) return;
-
-    setIsDeleting(true);
-    try {
-      await onDelete(transaction.id);
-    } finally {
-      setIsDeleting(false);
-      setConfirmDialogOpen(false);
-    }
-  };
-
-  const openDeleteDialog = () => {
-    setConfirmDialogOpen(true);
-  };
 
   return (
     <Card className="w-full max-w-sm bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -173,42 +153,19 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
         </div>
 
         {/* Action Buttons - Only show for non-static records */}
-        {!isStaticRecord && (
+        {!isStaticRecord && onEditStatus && (
           <div className="flex gap-3 pt-2">
-            {onDelete && (
-              <Button
-                onClick={openDeleteDialog}
-                disabled={isDeleting}
-                className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white border-0 h-10 text-sm font-medium"
-                size="sm"
-              >
-                <Trash2 className="h-4 w-4" />
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </Button>
-            )}
-
-            {onEditStatus && (
-              <Button
-                onClick={() => onEditStatus(transaction)}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white border-0 h-10 text-sm font-medium"
-                size="sm"
-              >
-                <Edit className="h-4 w-4" />
-                Edit
-              </Button>
-            )}
+            <Button
+              onClick={() => onEditStatus(transaction)}
+              className="flex-1 flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white border-0 h-10 text-sm font-medium"
+              size="sm"
+            >
+              <Edit className="h-4 w-4" />
+              Edit
+            </Button>
           </div>
         )}
       </CardContent>
-
-      <ConfirmDialog
-        open={confirmDialogOpen}
-        onOpenChange={setConfirmDialogOpen}
-        title="Delete Transaction"
-        description={`Are you sure you want to delete the transaction for ${transaction.studentName} (${transaction.studentId}) of ₹${transaction.amount.toFixed(2)}? This action cannot be undone.`}
-        onConfirm={handleDeleteConfirm}
-        destructive={true}
-      />
     </Card>
   );
 };

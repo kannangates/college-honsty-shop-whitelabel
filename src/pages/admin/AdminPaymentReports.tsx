@@ -182,7 +182,7 @@ const AdminPaymentReports = () => {
   const handleEditPaymentStatus = (payment: PaymentRecord) => {
     setEditingPaymentStatus({
       id: payment.id,
-      orderId: payment.orderId || payment.id,
+      orderId: payment.id,
       studentName: payment.studentName,
       studentId: payment.studentId,
       amount: payment.amount,
