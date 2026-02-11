@@ -36,6 +36,9 @@ verify_jwt = true
 [functions.send-email]
 verify_jwt = true
 
+[functions.send-announcement]
+verify_jwt = true
+
 [functions.stock-management]
 verify_jwt = true
 

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import DepartmentCombobox from '@/components/ui/DepartmentCombobox';
+import StudentIdCombobox from '@/components/ui/StudentIdCombobox';
 import { Shield, Users, Package, Settings, Mail, CreditCard, Award, University, Megaphone, ReceiptIndianRupee, ReceiptText, Gamepad2, Code2, Server, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -135,11 +136,15 @@ const AdminPanel = () => {
   ];
 
   const handleSendAnnouncement = async () => {
-    // Map label to code once here
-
     // Validation: if Student ID is filled, pinTill must be selected
     if (announcement.studentId.trim() && !announcement.pinTill.trim()) {
       alert("Please select 'Pin notification till date' when targeting a specific student.");
+      return;
+    }
+
+    // Validation: either studentId or department must be filled
+    if (!announcement.studentId.trim() && !announcement.department.trim()) {
+      alert("Please select either a specific student or a department.");
       return;
     }
 
@@ -148,6 +153,8 @@ const AdminPanel = () => {
     try {
       const deptCode = deptCodeFromLabel[announcement.department] || announcement.department;
       let targetUserId = null;
+      let targetDepartment = null;
+
       if (announcement.studentId.trim()) {
         // Query users table for the UUID
         const { data: user, error: userError } = await supabase
@@ -165,36 +172,36 @@ const AdminPanel = () => {
           return;
         }
         targetUserId = user.id;
+      } else {
+        // Use department
+        targetDepartment = deptCode === 'all' ? ['all'] : [deptCode];
       }
-      // Create notification record with proper typing
-      const notificationData = {
-        title: announcement.title,
-        body: announcement.description,
-        type: 'announcement' as const, // Explicitly type as 'announcement'
-        target_user_id: targetUserId,
-        is_pinned: announcement.pinTill ? true : false,
-        department: deptCode === 'all' ? null : [deptCode],
-        pin_till: announcement.pinTill || null
-      };
 
-      const { data, error } = await supabase
-        .from('notifications')
-        .insert(notificationData) // Remove array wrapper - insert single object
-        .select()
-        .single();
+      // Call the Edge Function
+      const { data, error } = await supabase.functions.invoke('send-announcement', {
+        body: {
+          title: announcement.title,
+          description: announcement.description,
+          type: 'announcement',
+          target_user_id: targetUserId,
+          is_pinned: announcement.pinTill ? true : false,
+          department: targetDepartment,
+          pin_till: announcement.pinTill || null,
+          imageUrl: announcement.imageUrl || null
+        }
+      });
 
       if (error) {
         console.error('Error creating notification:', error);
         toast({
           title: 'Error',
-          description: 'Failed to send announcement',
+          description: error.message || 'Failed to send announcement',
           variant: 'destructive',
         });
         return;
       }
 
-      console.log('Notification created:', data);
-      console.log("User from context:", user);
+      console.log('Announcement sent:', data);
 
       // Show success
       setAnnouncementSent(true);
@@ -359,20 +366,15 @@ const AdminPanel = () => {
                   </div>
                   <div>
                     <Label htmlFor="studentId" className="text-xs">Student ID</Label>
-                    <Input
-                      id="studentId"
-                      type="text"
+                    <StudentIdCombobox
                       value={announcement.studentId}
-                      onChange={(e) => {
-                        const studentId = e.target.value;
+                      onChange={(studentId) => {
                         setAnnouncement(prev => ({
                           ...prev,
                           studentId,
                           department: studentId.trim() !== '' ? '' : prev.department,
                         }));
                       }}
-                      placeholder="Enter student ID (optional)"
-                      className="text-sm h-8"
                     />
                   </div>
                   <div>
