@@ -350,9 +350,8 @@ const AdminPaymentReports = () => {
                   <Calendar
                     mode="range"
                     selected={dateRange}
-                    onSelect={setDateRange}
+                    onSelect={(range) => setDateRange(range ?? { from: undefined, to: undefined })}
                     numberOfMonths={2}
-                    captionLayout="dropdown"
                   />
                 </PopoverContent>
               </Popover>
