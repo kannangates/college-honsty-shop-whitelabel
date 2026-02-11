@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import React from 'react';
@@ -159,6 +159,35 @@ export const useDashboardData = () => {
       return [];
     }
   }, [todaysStats?.todays_sold_products]);
+
+  // Real-time subscription to invalidate dashboard data when orders change
+  const queryClient = useQueryClient();
+
+  React.useEffect(() => {
+    console.log('🔄 Setting up real-time subscription for dashboard data');
+
+    const ordersSubscription = supabase
+      .channel('dashboard-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('📊 Real-time order change detected, invalidating dashboard cache:', payload);
+          // Invalidate the dashboard data cache to trigger a refetch
+          queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔄 Cleaning up dashboard orders subscription');
+      supabase.removeChannel(ordersSubscription);
+    };
+  }, [queryClient]);
 
   // Log any errors for debugging
   React.useEffect(() => {

@@ -88,13 +88,13 @@ const AdminOrderManagement = React.memo(() => {
       orders.forEach(order => {
         const isToday = new Date(order.created_at).toDateString() === today;
         if (isToday) todayOrders++;
-        // Revenue: completed orders
-        if (order.payment_status === 'completed') {
+        // Revenue: paid orders
+        if (order.payment_status === 'paid') {
           revenue += order.total_amount;
           paidOrders++;
         }
-        // Unpaid Revenue: pending, processing, failed
-        if (["pending", "processing", "failed"].includes(order.payment_status)) {
+        // Unpaid Revenue: unpaid orders (exclude cancelled)
+        if (order.payment_status === 'unpaid') {
           unpaidRevenue += order.total_amount;
         }
       });
