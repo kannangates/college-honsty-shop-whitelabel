@@ -116,9 +116,11 @@ const AdminPaymentReports = () => {
           switch (status) {
             case 'paid': return 'Paid';
             case 'unpaid': return 'Unpaid';
+            case 'pending': return 'Pending';
+            case 'refunded': return 'Refunded';
             case 'cancelled': return 'Cancelled';
             case 'failed': return 'Unpaid'; // Map failed to unpaid for simplicity
-            default: return 'Unpaid'; // Default to unpaid instead of pending
+            default: return 'Unpaid'; // Default to unpaid
           }
         };
 
@@ -250,7 +252,8 @@ const AdminPaymentReports = () => {
     { value: 'all', label: 'All' },
     { value: 'paid', label: 'Paid' },
     { value: 'unpaid', label: 'Unpaid' },
-    { value: 'cancelled', label: 'Cancelled' }
+    { value: 'pending', label: 'Pending' },
+    { value: 'refunded', label: 'Refunded' }
   ], []);
 
   const filteredRecords = useMemo(() => {

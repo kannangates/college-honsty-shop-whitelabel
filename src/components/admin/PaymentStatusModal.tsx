@@ -178,7 +178,8 @@ export const PaymentStatusModal = ({ open, onOpenChange, onStatusUpdated, orderD
               <SelectContent>
                 <SelectItem value="unpaid">Unpaid</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="refunded">Refunded</SelectItem>
               </SelectContent>
             </Select>
             {errors.payment_status && (

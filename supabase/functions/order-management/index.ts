@@ -74,7 +74,9 @@ serve(async (req: Request) => {
       id?: string;
       payment_status?: 'paid' | 'unpaid' | 'pending' | 'refunded';
       order_status?: 'pending' | 'processing' | 'completed' | 'cancelled';
-      transaction_id?: string;
+      transaction_id?: string | null;
+      payment_mode?: string | null;
+      paid_at?: string | null;
       updated_by?: string;
     };
 
@@ -179,6 +181,7 @@ serve(async (req: Request) => {
         const id = params.id;
         const updateData: Record<string, unknown> = { ...(params as Record<string, unknown>) };
         delete updateData.id;
+        delete updateData.operation; // Remove operation field from update data
 
         // Get current order data before update to check status change
         const { data: currentOrder, error: currentOrderError } = await supabase

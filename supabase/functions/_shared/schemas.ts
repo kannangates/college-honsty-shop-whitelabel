@@ -98,7 +98,9 @@ export const orderUpdateSchema = z.object({
   id: uuidSchema,
   payment_status: z.enum(['paid', 'unpaid', 'pending', 'refunded']).optional(),
   order_status: z.enum(['pending', 'processing', 'completed', 'cancelled']).optional(),
-  transaction_id: z.string().max(255).optional(),
+  transaction_id: z.string().max(255).nullable().optional(),
+  payment_mode: z.string().max(50).nullable().optional(),
+  paid_at: z.string().datetime().nullable().optional(),
   updated_by: uuidSchema.optional()
 });
 
@@ -157,7 +159,9 @@ export const orderManagementSchema = z.discriminatedUnion('operation', [
     id: uuidSchema,
     payment_status: z.enum(['paid', 'unpaid', 'pending', 'refunded']).optional(),
     order_status: z.enum(['pending', 'processing', 'completed', 'cancelled']).optional(),
-    transaction_id: z.string().max(255).optional(),
+    transaction_id: z.string().max(255).nullable().optional(),
+    payment_mode: z.string().max(50).nullable().optional(),
+    paid_at: z.string().datetime().nullable().optional(),
     updated_by: uuidSchema.optional()
   })
 ]);

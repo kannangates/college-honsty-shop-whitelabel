@@ -2,7 +2,7 @@
 export type UserRole = 'student' | 'admin' | 'developer' | 'teacher';
 export type PaymentMode = 'qr_manual' | 'razorpay' | 'pay_later';
 export type NotificationType = 'order_placed' | 'payment_received' | 'general_announcement' | 'student_promotion' | 'new_product_alert';
-export type PaymentStatus = 'paid' | 'unpaid' | 'cancelled';
+export type PaymentStatus = 'paid' | 'unpaid' | 'pending' | 'refunded';
 
 // Fix for database compatibility 
 export type DatabasePaymentStatus = string;
