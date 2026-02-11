@@ -8,7 +8,7 @@
     "payment": {
       "experience": "dynamic_qr",
       "upi": {
-        "vpa": "shasunhonesty@upi",
+        "vpa": "coer@idfcbank",
         "payee_name": "Shasun Honesty Shop",
         "note_prefix": "Order"
       },
