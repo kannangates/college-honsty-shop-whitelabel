@@ -281,6 +281,11 @@ const AdminStockAccounting = () => {
       // Format today's date to match the database format
       const todayFormatted = new Date().toISOString().split('T')[0];
 
+      // Calculate yesterday's date
+      const yesterdayDate = new Date();
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayFormatted = yesterdayDate.toISOString().split('T')[0];
+
       // Load today's operations
       const { data: operationsData, error: operationsError } = await supabase
         .from('daily_stock_operations')
@@ -288,6 +293,22 @@ const AdminStockAccounting = () => {
         .eq('created_at', todayFormatted);
 
       if (operationsError) throw operationsError;
+
+      // Load yesterday's operations to get closing stock
+      const { data: yesterdayOperationsData, error: yesterdayError } = await supabase
+        .from('daily_stock_operations')
+        .select('product_id, actual_closing_stock')
+        .eq('created_at', yesterdayFormatted);
+
+      if (yesterdayError) throw yesterdayError;
+
+      // Create a map of yesterday's closing stock by product_id
+      const yesterdayClosingStockMap = new Map<string, number>();
+      (yesterdayOperationsData ?? []).forEach(op => {
+        if (op.product_id && op.actual_closing_stock !== null) {
+          yesterdayClosingStockMap.set(op.product_id, op.actual_closing_stock);
+        }
+      });
 
       // Type assertion for operationsData with proper handling
       const opsData: StockOperationRow[] = (operationsData ?? []).map((op: Omit<StockOperationRow, 'updated_at' | 'warehouse_stock'> & {
@@ -325,14 +346,17 @@ const AdminStockAccounting = () => {
       transformedProducts.forEach(product => {
         const hasOperation = opsData.some(op => op.product_id === product.id);
         if (!hasOperation) {
+          // Get previous day's closing stock, fall back to current shelf_stock if not found
+          const openingStock = yesterdayClosingStockMap.get(product.id) ?? product.shelf_stock;
+
           mergedOperations.push({
             id: undefined,
             product_id: product.id,
             product,
-            opening_stock: product.shelf_stock,
+            opening_stock: openingStock,
             additional_stock: 0,
-            actual_closing_stock: product.shelf_stock,
-            estimated_closing_stock: product.shelf_stock,
+            actual_closing_stock: openingStock,
+            estimated_closing_stock: openingStock,
             stolen_stock: 0,
             wastage_stock: 0,
             warehouse_stock: product.warehouse_stock,
