@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/features/gamification/components/badge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { getPaymentStatusClass, getPaymentIconClass, getPaymentBackgroundClass, getPaymentMethodIcon, formatPaymentMethod, getBadgeVariantClass } from '@/utils/statusSystem';
+import { User, Calendar, Hash, Receipt, Edit } from 'lucide-react';
+import { getPaymentStatusClass, getPaymentBackgroundClass, getPaymentMethodIcon, formatPaymentMethod, getBadgeVariantClass } from '@/utils/statusSystem';
 
 interface PaymentRecord {
   id: string;
