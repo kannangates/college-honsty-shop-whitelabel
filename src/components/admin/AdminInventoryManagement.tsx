@@ -13,7 +13,7 @@ import { PRODUCT_CATEGORIES } from '@/constants/productCategories';
 import { useAuth } from '@/hooks/useAuth';
 import { useProductContext } from '@/contexts/useProductContext';
 
-import { InventoryFilters } from './InventoryFilters';
+import { ProductFilters } from '@/components/product/ProductFilters';
 import { AddProductModal } from './AddProductModal';
 import { EditProductModal } from './EditProductModal';
 import { RestockModal } from './RestockModal';
@@ -57,7 +57,10 @@ export const AdminInventoryManagement = () => {
     status: '',
     stockLevel: ''
   });
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('active');
+  const [stockFilter, setStockFilter] = useState('all');
   const [showLowStock, setShowLowStock] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -142,18 +145,37 @@ export const AdminInventoryManagement = () => {
   useEffect(() => {
     let filtered = products;
 
-    if (selectedCategory && selectedCategory !== 'all') {
+    // Apply status filter
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(product => product.status === selectedStatus);
+    }
+
+    // Apply category filter
+    if (selectedCategory !== 'all') {
       filtered = filtered.filter(product => product.category === selectedCategory);
     }
 
-    if (showLowStock) {
+    // Apply search filter
+    if (searchTerm) {
       filtered = filtered.filter(product =>
-        (product.shelf_stock || 0) < 10 || (product.warehouse_stock || 0) < 10
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
+    // Apply stock filter
+    if (stockFilter === 'in-stock') {
+      filtered = filtered.filter(product => (product.shelf_stock || 0) > 0);
+    } else if (stockFilter === 'low-stock') {
+      filtered = filtered.filter(product => {
+        const stock = product.shelf_stock || 0;
+        return stock > 0 && stock <= 10;
+      });
+    } else if (stockFilter === 'out-of-stock') {
+      filtered = filtered.filter(product => (product.shelf_stock || 0) === 0);
+    }
+
     setFilteredProducts(filtered);
-  }, [products, selectedCategory, showLowStock]);
+  }, [products, selectedCategory, selectedStatus, searchTerm, stockFilter]);
 
 
 
@@ -328,13 +350,20 @@ export const AdminInventoryManagement = () => {
       {/* Low Stock Alert removed as requested */}
 
       {/* Filters */}
-      <InventoryFilters
+      <ProductFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
-        showLowStock={showLowStock}
-        onLowStockToggle={() => setShowLowStock(!showLowStock)}
-        categories={PRODUCT_CATEGORIES}
-        lowStockCount={lowStockProducts.length}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        stockFilter={stockFilter}
+        onStockFilterChange={setStockFilter}
+        outOfStockCount={lowStockProducts.length}
+        lowStockCount={lowStockProducts.filter(p => {
+          const stock = p.shelf_stock || 0;
+          return stock > 0 && stock <= 10;
+        }).length}
       />
 
       {/* Products Display */}

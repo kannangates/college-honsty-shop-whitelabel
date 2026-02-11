@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Package, Grid, List } from 'lucide-react';
 import { CartSummary } from '@/components/product/CartSummary';
-import { ProductFilters } from '@/components/product/ProductFilters';
+import { ProductSearch } from '@/components/product/ProductSearch';
 import { ProductCardGrid } from '@/components/product/ProductCardGrid';
 import { WHITELABEL_CONFIG } from '@/config';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,9 +21,6 @@ const ProductTable = () => {
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('active');
-  const [stockFilter, setStockFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
 
   // Auto-switch to cards view on mobile
@@ -37,16 +34,6 @@ const ProductTable = () => {
   const filteredProducts = useMemo(() => {
     let filtered = products.filter(product => !product.is_archived);
 
-    // Apply status filter
-    if (selectedStatus !== 'all') {
-      filtered = filtered.filter(product => product.status === selectedStatus);
-    }
-
-    // Apply category filter
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
-
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(product =>
@@ -54,35 +41,8 @@ const ProductTable = () => {
       );
     }
 
-    // Apply stock filter
-    if (stockFilter === 'in-stock') {
-      filtered = filtered.filter(product => (product.shelf_stock || 0) > 0);
-    } else if (stockFilter === 'low-stock') {
-      filtered = filtered.filter(product => {
-        const stock = product.shelf_stock || 0;
-        return stock > 0 && stock <= 10;
-      });
-    } else if (stockFilter === 'out-of-stock') {
-      filtered = filtered.filter(product => (product.shelf_stock || 0) === 0);
-    }
-
     return filtered;
-  }, [products, searchTerm, selectedCategory, selectedStatus, stockFilter]);
-
-  // Calculate stock counts for filter badges
-  const stockCounts = useMemo(() => {
-    const activeProducts = products.filter(product =>
-      product.status === 'active' && !product.is_archived
-    );
-
-    const outOfStock = activeProducts.filter(product => (product.shelf_stock || 0) === 0).length;
-    const lowStock = activeProducts.filter(product => {
-      const stock = product.shelf_stock || 0;
-      return stock > 0 && stock <= 10;
-    }).length;
-
-    return { outOfStock, lowStock };
-  }, [products]);
+  }, [products, searchTerm]);
 
   const handleAddToCart = (product: Product) => {
     addItem(product);
@@ -98,18 +58,10 @@ const ProductTable = () => {
 
   return (
     <div className="w-full space-y-6">
-      {/* Filters Section */}
-      <ProductFilters
+      {/* Search Section */}
+      <ProductSearch
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-        selectedStatus={selectedStatus}
-        onStatusChange={setSelectedStatus}
-        stockFilter={stockFilter}
-        onStockFilterChange={setStockFilter}
-        outOfStockCount={stockCounts.outOfStock}
-        lowStockCount={stockCounts.lowStock}
       />
 
       {/* Main Content */}
