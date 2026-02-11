@@ -271,7 +271,7 @@ const Settings = () => {
                       className="border-0 rounded-xl bg-white/70 backdrop-blur-sm"
                     />
                   </div>
-                  <div>
+                  <div className="hidden">
                     <Label htmlFor="mobile_number" className="text-sm font-medium text-gray-700">Mobile Number</Label>
                     <Input
                       id="mobile_number"

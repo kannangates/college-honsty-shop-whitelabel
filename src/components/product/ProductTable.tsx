@@ -24,7 +24,7 @@ const ProductTable = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [stockFilter, setStockFilter] = useState('all');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
 
   // Auto-switch to cards view on mobile
   useEffect(() => {
