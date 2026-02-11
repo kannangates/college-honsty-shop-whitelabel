@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { CalendarIcon, CreditCard, Search, RefreshCw, Plus, Edit, Trash2 } from 'lucide-react';
+import { CalendarIcon, CreditCard, Search, RefreshCw, Plus } from 'lucide-react';
 import { TransactionTable } from '@/components/admin/TransactionTable';
 import { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,22 @@ const AdminPaymentReports = () => {
     paidAt?: string;
   }
 
+  interface OrderData {
+    id: string;
+    friendly_id?: string;
+    total_amount?: number;
+    paid_at?: string;
+    created_at?: string;
+    payment_mode?: string;
+    transaction_id?: string;
+    payment_status?: string;
+    users?: {
+      name?: string;
+      student_id?: string;
+      email?: string;
+    };
+  }
+
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPayment, setEditingPayment] = useState<EditingPayment | null>(null);
@@ -95,7 +111,7 @@ const AdminPaymentReports = () => {
         return;
       }
 
-      const formattedData = data.map((order: any) => {
+      const formattedData = data.map((order: OrderData) => {
         const getStatusLabel = (status: string) => {
           switch (status) {
             case 'paid': return 'Paid';
@@ -182,17 +198,6 @@ const AdminPaymentReports = () => {
     };
   }, [fetchPayments]);
 
-  const handleEditPayment = (payment: PaymentRecord) => {
-    setEditingPayment({
-      id: payment.id,
-      orderId: payment.orderId || payment.id,
-      transactionId: payment.transactionId || '',
-      paymentMethod: payment.method,
-      paidAt: payment.date
-    });
-    setIsPaymentRecordOpen(true);
-  };
-
   const handleEditPaymentStatus = (payment: PaymentRecord) => {
     setEditingPaymentStatus({
       id: payment.id,
@@ -247,10 +252,6 @@ const AdminPaymentReports = () => {
     { value: 'unpaid', label: 'Unpaid' },
     { value: 'cancelled', label: 'Cancelled' }
   ], []);
-
-  const formatDate = (date: Date | undefined): string => {
-    return date ? format(date, 'yyyy-MM-dd') : '';
-  };
 
   const filteredRecords = useMemo(() => {
     // Only use real payment records from Supabase
