@@ -399,7 +399,7 @@ const AdminStockAccounting = () => {
             op.actual_closing_stock || 0,
             op.wastage_stock || 0
           );
-          const unitPrice = product.unit_price || product.price || 0;
+          const unitPrice = product.unit_price || 0;
           const salesAmount = computeSalesAmount(unitPrice, orderQty);
           mergedOperations.push({
             ...op,
@@ -421,7 +421,7 @@ const AdminStockAccounting = () => {
           const orderQty = todaySoldQtyMap.get(product.id) ?? 0;
           const estimatedClosing = computeEstimatedClosing(openingStock, 0, orderQty);
           const stolenStock = computeStolenStock(estimatedClosing, openingStock, 0);
-          const unitPrice = product.unit_price || product.price || 0;
+          const unitPrice = product.unit_price || 0;
           const salesAmount = computeSalesAmount(unitPrice, orderQty);
 
           mergedOperations.push({
